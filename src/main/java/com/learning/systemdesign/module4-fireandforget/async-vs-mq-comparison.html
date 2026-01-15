@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@Async vs Message Queue Explained</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+        }
+        
+        .hero-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .hero-box {
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .async-box {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+        
+        .mq-box {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+            color: white;
+        }
+        
+        .hero-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+        }
+        
+        .hero-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .architecture-section {
+            background: #f8f9ff;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 40px 0;
+        }
+        
+        .arch-title {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .architecture-visual {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
+        
+        .arch-diagram {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .arch-header {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 3px solid;
+        }
+        
+        .async-header {
+            color: #fa709a;
+            border-color: #fa709a;
+        }
+        
+        .mq-header {
+            color: #30cfd0;
+            border-color: #30cfd0;
+        }
+        
+        .diagram-component {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .component-label {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        
+        .component-desc {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .diagram-arrow {
+            text-align: center;
+            font-size: 2em;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        
+        .same-app {
+            background: #ffe5e5;
+            border: 2px dashed #ff6b6b;
+            padding: 30px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .different-apps {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+            margin-top: 20px;
+        }
+        
+        .app-box {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .broker-box {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-table th {
+            background: #667eea;
+            color: white;
+            padding: 20px;
+            text-align: left;
+            font-size: 1.1em;
+        }
+        
+        .comparison-table td {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8f9ff;
+        }
+        
+        .feature-name {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .async-col {
+            background: #fff5f8;
+        }
+        
+        .mq-col {
+            background: #f0f9ff;
+        }
+        
+        .pro {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .con {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .neutral {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        
+        .crash-scenario {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin: 30px 0;
+        }
+        
+        .crash-title {
+            font-size: 1.8em;
+            color: #dc3545;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .crash-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .crash-box {
+            padding: 25px;
+            border-radius: 10px;
+        }
+        
+        .crash-async {
+            background: #ffebee;
+            border: 3px solid #dc3545;
+        }
+        
+        .crash-mq {
+            background: #e8f5e9;
+            border: 3px solid #28a745;
+        }
+        
+        .timeline {
+            margin: 20px 0;
+        }
+        
+        .timeline-step {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 8px;
+        }
+        
+        .timeline-number {
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .use-case-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .use-case-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .use-case-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .use-case-icon {
+            font-size: 3em;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .use-case-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .use-async {
+            border-top: 4px solid #fa709a;
+        }
+        
+        .use-mq {
+            border-top: 4px solid #30cfd0;
+        }
+        
+        .key-point {
+            background: #fff3cd;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border-left: 5px solid #ffc107;
+        }
+        
+        .code-example {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .highlight {
+            background: #ffd93d;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        @media (max-width: 968px) {
+            .hero-comparison,
+            .architecture-visual,
+            .crash-comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .different-apps {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ @Async vs Message Queue<br>The Complete Comparison</h1>
+        
+        <!-- Hero Comparison -->
+        <div class="hero-comparison">
+            <div class="hero-box async-box">
+                <div class="hero-icon">🏃‍♂️</div>
+                <div class="hero-title">@Async</div>
+                <div class="hero-subtitle">In-Memory Thread Pool<br>Same Application</div>
+            </div>
+            
+            <div class="hero-box mq-box">
+                <div class="hero-icon">📬</div>
+                <div class="hero-title">Message Queue</div>
+                <div class="hero-subtitle">External Broker<br>Distributed System</div>
+            </div>
+        </div>
+        
+        <!-- Architecture Comparison -->
+        <div class="architecture-section">
+            <div class="arch-title">🏗️ How They Work (Architecture)</div>
+            
+            <div class="architecture-visual">
+                <!-- @Async Architecture -->
+                <div class="arch-diagram">
+                    <div class="arch-header async-header">@Async Architecture</div>
+                    
+                    <div class="same-app">
+                        <div style="text-align: center; font-weight: bold; font-size: 1.2em; margin-bottom: 20px; color: #ff6b6b;">
+                            ⚠️ Everything in ONE Application
+                        </div>
+                        
+                        <div class="diagram-component" style="background: #e3f2fd;">
+                            <div class="component-label">👤 Controller</div>
+                            <div class="component-desc">Receives HTTP request</div>
+                        </div>
+                        
+                        <div class="diagram-arrow">⬇️</div>
+                        
+                        <div class="diagram-component" style="background: #f3e5f5;">
+                            <div class="component-label">💼 Service</div>
+                            <div class="component-desc">Publishes event</div>
+                        </div>
+                        
+                        <div class="diagram-arrow">⬇️</div>
+                        
+                        <div class="diagram-component" style="background: #fff3cd;">
+                            <div class="component-label">📦 Memory Queue</div>
+                            <div class="component-desc">Task stored in RAM</div>
+                        </div>
+                        
+                        <div class="diagram-arrow">⬇️</div>
+                        
+                        <div class="diagram-component" style="background: #e8f5e9;">
+                            <div class="component-label">⚙️ Worker Thread</div>
+                            <div class="component-desc">Executes task</div>
+                        </div>
+                    </div>
+                    
+                    <div class="key-point" style="margin-top: 20px;">
+                        <strong>Key:</strong> If your server crashes, tasks in the memory queue are LOST forever! 💀
+                    </div>
+                </div>
+                
+                <!-- Message Queue Architecture -->
+                <div class="arch-diagram">
+                    <div class="arch-header mq-header">Message Queue Architecture</div>
+                    
+                    <div class="different-apps">
+                        <div class="app-box">
+                            <strong style="font-size: 1.2em;">Application 1</strong>
+                            <div style="margin-top: 15px;">
+                                <div style="background: #f8f9ff; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                                    <strong>📤 Producer</strong>
+                                    <div style="font-size: 0.9em; color: #666; margin-top: 5px;">Sends messages</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="font-size: 2em;">↔️</div>
+                        
+                        <div class="broker-box">
+                            <strong style="font-size: 1.3em;">🏢 Message Broker</strong>
+                            <div style="font-size: 0.9em; margin-top: 10px;">
+                                (RabbitMQ / Kafka / SQS)
+                            </div>
+                            <div style="margin-top: 15px; background: white; padding: 15px; border-radius: 8px;">
+                                <strong>💾 Persistent Storage</strong>
+                                <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
+                                    Messages saved to disk!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="diagram-arrow">⬇️</div>
+                    
+                    <div class="app-box" style="margin-top: 20px;">
+                        <strong style="font-size: 1.2em;">Application 2 (Consumer)</strong>
+                        <div style="margin-top: 15px;">
+                            <div style="background: #f8f9ff; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                                <strong>📥 Consumer</strong>
+                                <div style="font-size: 0.9em; color: #666; margin-top: 5px;">Processes messages</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="key-point" style="margin-top: 20px; background: #e8f5e9; border-color: #28a745;">
+                        <strong>Key:</strong> If consumer crashes, messages are SAFE on broker's disk! ✅
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Crash Scenario -->
+        <div class="crash-scenario">
+            <div class="crash-title">💥 What Happens When Server Crashes?</div>
+            
+            <div class="crash-comparison">
+                <div class="crash-box crash-async">
+                    <h3 style="color: #dc3545; margin-bottom: 20px;">❌ @Async (In-Memory)</h3>
+                    
+                    <div class="timeline">
+                        <div class="timeline-step">
+                            <div class="timeline-number">1</div>
+                            <div>
+                                <strong>10:00:00</strong><br>
+                                100 email tasks in memory queue
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-step" style="background: #ffebee;">
+                            <div class="timeline-number" style="background: #dc3545;">💥</div>
+                            <div>
+                                <strong>10:00:05</strong><br>
+                                Server crashes! Power outage!
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-step">
+                            <div class="timeline-number">3</div>
+                            <div>
+                                <strong>10:05:00</strong><br>
+                                Server restarts
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-step" style="background: #ffebee;">
+                            <div class="timeline-number" style="background: #dc3545;">😱</div>
+                            <div>
+                                <strong>Result:</strong><br>
+                                <span style="color: #dc3545; font-weight: bold;">ALL 100 emails LOST!</span><br>
+                                <small>Memory queue cleared when app crashed</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="crash-box crash-mq">
+                    <h3 style="color: #28a745; margin-bottom: 20px;">✅ Message Queue</h3>
+                    
+                    <div class="timeline">
+                        <div class="timeline-step">
+                            <div class="timeline-number">1</div>
+                            <div>
+                                <strong>10:00:00</strong><br>
+                                100 messages in RabbitMQ (on disk)
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-step" style="background: #ffebee;">
+                            <div class="timeline-number" style="background: #dc3545;">💥</div>
+                            <div>
+                                <strong>10:00:05</strong><br>
+                                Consumer app crashes! Power outage!
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-step">
+                            <div class="timeline-number">3</div>
+                            <div>
+                                <strong>10:05:00</strong><br>
+                                Consumer app restarts
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-step" style="background: #e8f5e9;">
+                            <div class="timeline-number" style="background: #28a745;">😊</div>
+                            <div>
+                                <strong>Result:</strong><br>
+                                <span style="color: #28a745; font-weight: bold;">ALL 100 emails SAFE!</span><br>
+                                <small>Consumer resumes processing from broker</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detailed Comparison Table -->
+        <div style="margin: 50px 0;">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">📊 Feature-by-Feature Comparison</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Feature</th>
+                        <th style="width: 37.5%;" class="async-col">@Async (Spring)</th>
+                        <th style="width: 37.5%;" class="mq-col">Message Queue (RabbitMQ/Kafka)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="feature-name">💾 Data Storage</td>
+                        <td class="async-col">
+                            <span class="con">❌ In Memory (RAM)</span><br>
+                            <small>Lost on crash/restart</small>
+                        </td>
+                        <td class="mq-col">
+                            <span class="pro">✅ Persistent (Disk)</span><br>
+                            <small>Survives crashes</small>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="feature-name">🏗️ Architecture</td>
+                        <td class="async-col">
+                            <span class="con">❌ Single Application</span><br>
+                            <small>Everything in one JVM</small>
+                        </td>
+                        <td class="mq-col">
+                            <span class="pro">✅ Distributed</span><br>
+                            <small>Producer & Consumer separate</small>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="feature-name">📈 Scalability</td>
+                        <td class="async-col">
+                            <span class="neutral">⚠️ Vertical Only</span><br>
+                            <small>Add CPU/RAM to same server</small>
+                        </td>
+                        <td class="mq-col">
+                            <span class="pro">✅ Horizontal</span><br>
+                            <small>Add more consumer instances</small>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="feature-name">⚙️ Setup Complexity</td>
+                        <td class="async-col">
+                            <span class="pro">✅ Very Simple</span><br>
+                            <small>Just annotations, no infra</small>
+                        </td>
+                        <td class="mq-col">
+                            <span class="con">❌ Complex</span><br>
+                            <small>Need broker setup & maintenance</small>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="feature-name">⏱️ Development Time</td>
+                        <td class="async-col">
+                            <span class="pro">✅ Minutes</span><br>
+                            <small>Add @Async annotation</small>
+                        </td>
+                        <td class="mq-col">
+                            <span class="con">❌ Hours/Days</span><br>
+                            <small>Install broker, config, test</small>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="feature-name">🔄 Retry Logic</td>
+                        <td class="async-col">
+                            <span class="neutral">⚠️ Manual</span><br>
+                            <small>You write try-catch</small>
+                        </td>
+                        <td class="mq-col">
+                            <span class="pro">✅ Built-in</span><br>
+                            <small>Automatic retry policies</small>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="feature-name">📊 Monitoring</td>
+                        <td class="async-col">
+                            <span class="con">❌ Basic Logs</span><br>
+                            <small>Just console output</small>
+                        </td>
+                        <td class="mq-col">
+                            <span class="pro">✅ Rich Dashboards</span><br>
+                            <small>Built-in UI, metrics, alerts</small>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="feature-name">🔀 Message Ordering</td>
+                        <td class="async-col">
+                            <span class="con">❌ No Guarantee</span><br>
+                            <small>Depends on thread availability</small>
+                        </td>
+                        <td class="mq-col">
+                            <span class="pro">✅ Can Guarantee</span><br>
+                            <small>FIFO queues available</small>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="feature-name">🔒 Transaction Support</td>
+                        <td class="async-col">
+                            <span class="neutral">⚠️ Limited</span><br>
+                            <small>Only within same app</small>
+                        </td>
+                        <td class="mq-col">
+                            <span class="pro">✅ Full Support</span><br>
+                            <small>Distributed transactions</small>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="feature-name">🔐 Security</td>
+                        <td class="async-col">
+                            <span class="neutral">⚠️ Basic</span><br>
+                            <small>Same app security</small>
+                        </td>
+                        <td class="mq-col">
+                            <span class="pro">✅ Advanced</span><br>
+                            <small>SSL, auth, encryption</small>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="feature-name">💰 Cost</td>
+                        <td class="async-col">
+                            <span class="pro">✅ Free</span><br>
+                            <small>No extra infrastructure</small>
+                        </td>
+                        <td class="mq-col">
+                            <span class="con">❌ Additional Cost</span><br>
+                            <small>Broker servers, maintenance</small>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="feature-name">🌐 Use Across Services</td>
+                        <td class="async-col">
+                            <span class="con">❌ Same App Only</span><br>
+                            <small>Can't communicate between apps</small>
+                        </td>
+                        <td class="mq-col">
+                            <span class="pro">✅ Multiple Services</span><br>
+                            <small>Perfect for microservices</small>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="feature-name">📉 Failure Impact</td>
+                        <td class="async-col">
+                            <span class="con">❌ High</span><br>
+                            <small>All tasks lost on crash</small>
+                        </td>
+                        <td class="mq-col">
+                            <span class="pro">✅ Low</span><br>
+                            <small>Messages preserved</small>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- When to Use What -->
+        <div style="margin: 50px 0;">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">🎯 When to Use What?</h2>
+            
+            <div class="use-case-grid">
+                <!-- @Async Use Cases -->
+                <div class="use-case-card use-async">
+                    <div class="use-case-icon">📧</div>
+                    <div class="use-case-title">Welcome Emails</div>
+                    <p style="color: #666; text-align: center;">
+                        Non-critical. If lost, user won't die. Use <strong>@Async</strong>
+                    </p>
+                </div>
+                
+                <div class="use-case-card use-async">
+                    <div class="use-case-icon">📊</div>
+                    <div class="use-case-title">Analytics/Logging</div>
+                    <p style="color: #666; text-align: center;">
+                        Nice to have. Losing some data acceptable. Use <strong>@Async</strong>
+                    </p>
+                </div>
+                
+                <div class="use-case-card use-async">
+                    <div class="use-case-icon">🔔</div>
+                    <div class="use-case-title">Notifications</div>
+                    <p style="color: #666; text-align: center;">
+                        Simple alerts. Can resend if needed. Use <strong>@Async</strong>
+                    </p>
+                </div>
+                
+                <div class="use-case-card use-async">
+                    <div class="use-case-icon">🖼️</div>
+                    <div class="use-case-title">Image Processing</div>
+                    <p style="color: #666; text-align: center;">
+                        Single app, low volume. Use <strong>@Async</strong>
+                    </p>
+                </div>
+                
+                <!-- Message Queue Use Cases -->
+                <div class="use-case-card use-mq">
+                    <div class="use-case-icon">💳</div>
+                    <div class="use-case-title">Payment Processing</div>
+                    <p style="color: #666; text-align: center;">
+                        <strong>CRITICAL!</strong> Cannot lose. Use <strong>Message Queue</strong>
+                    </p>
+                </div>
+                
+                <div class="use-case-card use-mq">
+                    <div class="use-case-icon">📦</div>
+                    <div class="use-case-title">Order Fulfillment</div>
+                    <p style="color: #666; text-align: center;">
+                        Business critical. Must be reliable. Use <strong>Message Queue</strong>
+                    </p>
+                </div>
+                
+                <div class="use-case-card use-mq">
+                    <div class="use-case-icon">🏦</div>
+                    <div class="use-case-title">Financial Transactions</div>
+                    <p style="color: #666; text-align: center;">
+                        Money involved! Zero data loss. Use <strong>Message Queue</strong>
+                    </p>
+                </div>
+                
+                <div class="use-case-card use-mq">
+                    <div class="use-case-icon">🔗</div>
+                    <div class="use-case-title">Microservices Communication</div>
+                    <p style="color: #666; text-align: center;">
+                        Multiple services need to talk. Use <strong>Message Queue</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Code Comparison -->
+        <div style="margin: 50px 0;">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">💻 Code Comparison</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div>
+                    <h3 style="color: #fa709a; margin-bottom: 15px;">@Async Implementation</h3>
+                    <div class="code-example">
+<span style="color: #68d391;">// 1. Enable Async</span><br>
+@Configuration<br>
+<span class="highlight">@EnableAsync</span><br>
+public class AsyncConfig { ... }<br>
+<br>
+<span style="color: #68d391;">// 2. Mark method</span><br>
+@Component<br>
+public class EmailListener {<br>
+<br>
+&nbsp;&nbsp;<span class="highlight">@Async</span><br>
+&nbsp;&nbsp;@EventListener<br>
+&nbsp;&nbsp;public void send(Event e) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;emailService.send(e);<br>
+&nbsp;&nbsp;}<br>
+}<br>
+<br>
+<span style="color: #68d391;">// That's it! 🎉</span>
+                    </div>
+                    <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                        <strong style="color: #28a745;">✅ Pros:</strong> Simple, fast setup!
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 style="color: #30cfd0; margin-bottom: 15px;">RabbitMQ Implementation</h3>
+                    <div class="code-example">
+<span style="color: #68d391;">// 1. Add dependency</span><br>
+spring-boot-starter-amqp<br>
+<br>
+<span style="color: #68d391;">// 2. Configure broker</span><br>
+spring.rabbitmq.host=localhost<br>
+spring.rabbitmq.port=5672<br>
+<br>
+<span style="color: #68d391;">// 3. Producer</span><br>
+rabbitTemplate.convertAndSend(<br>
+&nbsp;&nbsp;"queue-name", message<br>
+);<br>
+<br>
+<span style="color: #68d391;">// 4. Consumer</span><br>
+@RabbitListener(queues="queue-name")<br>
+public void process(Message m) { ... }<br>
+<br>
+<span style="color: #68d391;">// Plus: Install RabbitMQ server!</span>
+                    </div>
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                        <strong style="color: #f57c00;">⚠️ Trade-off:</strong> More setup, more power!
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Real World Analogy -->
+        <div class="key-point" style="background: #e8f5e9; border-color: #28a745;">
+            <h3 style="margin-bottom: 15px; color: #28a745;">🌍 Real-World Analogy</h3>
+            
+            <div style="display: grid; gap: 20px; margin-top: 20px;">
+                <div style="background: white; padding: 20px; border-radius: 10px;">
+                    <strong style="font-size: 1.2em; color: #fa709a;">🏃‍♂️ @Async = Sticky Notes on Your Desk</strong>
+                    <p style="margin-top: 10px; color: #666;">
+                        You write tasks on sticky notes and put them on your desk. You do them when you have time.
+                        <br><br>
+                        <strong>Problem:</strong> If someone cleans your desk (server crash), all notes are gone! 💀
+                    </p>
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 10px;">
+                    <strong style="font-size: 1.2em; color: #30cfd0;">📬 Message Queue = Post Office</strong>
+                    <p style="margin-top: 10px; color: #666;">
+                        You send letters through the post office. They're stored safely in postal facilities.
+                        <br><br>
+                        <strong>Benefit:</strong> Even if your house burns down (server crash), your letters are safe at the post office! ✅
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Decision Tree -->
+        <div style="margin: 50px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; border-radius: 15px; color: white;">
+            <h2 style="text-align: center; margin-bottom: 30px;">🌳 Decision Tree: Which Should You Use?</h2>
+            
+            <div style="background: white; color: #333; padding: 30px; border-radius: 10px;">
+                <div style="text-align: center; font-size: 1.3em; font-weight: bold; margin-bottom: 30px;">
+                    Start Here: Ask Yourself...
+                </div>
+                
+                <div style="display: grid; gap: 20px;">
+                    <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                        <strong style="font-size: 1.1em;">❓ Is it business-critical?</strong>
+                        <div style="margin-top: 10px; color: #666;">
+                            Payment, order, financial transaction?<br>
+                            <strong style="color: #30cfd0;">→ YES:</strong> Use <strong>Message Queue</strong><br>
+                            <strong style="color: #fa709a;">→ NO:</strong> Continue to next question...
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                        <strong style="font-size: 1.1em;">❓ Do you have multiple services?</strong>
+                        <div style="margin-top: 10px; color: #666;">
+                            Microservices that need to communicate?<br>
+                            <strong style="color: #30cfd0;">→ YES:</strong> Use <strong>Message Queue</strong><br>
+                            <strong style="color: #fa709a;">→ NO:</strong> Continue to next question...
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                        <strong style="font-size: 1.1em;">❓ Can you tolerate data loss?</strong>
+                        <div style="margin-top: 10px; color: #666;">
+                            Is it OK if some tasks are lost on crash?<br>
+                            <strong style="color: #fa709a;">→ YES:</strong> Use <strong>@Async</strong><br>
+                            <strong style="color: #30cfd0;">→ NO:</strong> Use <strong>Message Queue</strong>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                        <strong style="font-size: 1.1em;">❓ Need to scale horizontally?</strong>
+                        <div style="margin-top: 10px; color: #666;">
+                            Planning to add more consumer instances?<br>
+                            <strong style="color: #30cfd0;">→ YES:</strong> Use <strong>Message Queue</strong><br>
+                            <strong style="color: #fa709a;">→ NO:</strong> Use <strong>@Async</strong>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                        <strong style="font-size: 1.1em;">❓ Want fast development?</strong>
+                        <div style="margin-top: 10px; color: #666;">
+                            Need it working in 5 minutes?<br>
+                            <strong style="color: #fa709a;">→ YES:</strong> Use <strong>@Async</strong><br>
+                            <strong style="color: #30cfd0;">→ NO:</strong> Can invest time in <strong>Message Queue</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Summary -->
+        <div style="background: #f8f9ff; padding: 40px; border-radius: 15px; margin-top: 50px;">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">📚 Summary</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <h3 style="color: #fa709a; margin-bottom: 15px;">🏃‍♂️ @Async: The Quick Solution</h3>
+                    <ul style="line-height: 2; color: #666;">
+                        <li>✅ Super simple to implement</li>
+                        <li>✅ No extra infrastructure</li>
+                        <li>✅ Perfect for non-critical tasks</li>
+                        <li>❌ Data lost on crash</li>
+                        <li>❌ Single application only</li>
+                        <li>❌ Limited scalability</li>
+                    </ul>
+                    <div style="margin-top: 20px; padding: 15px; background: #fff5f8; border-radius: 8px;">
+                        <strong>Use for:</strong> Emails, logs, analytics, notifications
+                    </div>
+                </div>
+                
+                <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <h3 style="color: #30cfd0; margin-bottom: 15px;">📬 Message Queue: The Reliable Solution</h3>
+                    <ul style="line-height: 2; color: #666;">
+                        <li>✅ Data persisted (survives crashes)</li>
+                        <li>✅ Distributed architecture</li>
+                        <li>✅ Horizontal scaling</li>
+                        <li>❌ Complex setup</li>
+                        <li>❌ Extra infrastructure cost</li>
+                        <li>❌ Longer development time</li>
+                    </ul>
+                    <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 8px;">
+                        <strong>Use for:</strong> Payments, orders, critical notifications, microservices
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>

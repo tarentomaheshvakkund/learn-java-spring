@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caching Strategy Explained Simply</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #f5576c;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+        }
+        
+        .analogy-section {
+            background: #fff5f8;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border-left: 5px solid #f5576c;
+        }
+        
+        .analogy-title {
+            font-size: 1.8em;
+            color: #f5576c;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .emoji {
+            font-size: 1.5em;
+        }
+        
+        .speed-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .speed-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .speed-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .speed-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+        
+        .speed-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .speed-time {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        
+        .slow {
+            color: #dc3545;
+            border-top: 4px solid #dc3545;
+        }
+        
+        .fast {
+            color: #28a745;
+            border-top: 4px solid #28a745;
+        }
+        
+        .super-fast {
+            color: #ffc107;
+            border-top: 4px solid #ffc107;
+        }
+        
+        .cache-flow {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .flow-title {
+            font-size: 1.8em;
+            color: #f5576c;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+        
+        .flow-diagram {
+            display: grid;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .flow-step {
+            background: #f8f9ff;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #f5576c;
+            position: relative;
+        }
+        
+        .flow-step-number {
+            background: #f5576c;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-right: 15px;
+        }
+        
+        .flow-step-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .flow-branch {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .branch-box {
+            padding: 25px;
+            border-radius: 15px;
+            border: 3px solid;
+        }
+        
+        .hit-branch {
+            background: #e8f5e9;
+            border-color: #28a745;
+        }
+        
+        .miss-branch {
+            background: #ffebee;
+            border-color: #dc3545;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+        
+        .highlight {
+            background: #ffd93d;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .key-point {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 5px solid #ffc107;
+        }
+        
+        .problem-section {
+            background: #ffebee;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border-left: 5px solid #dc3545;
+        }
+        
+        .problem-title {
+            font-size: 1.8em;
+            color: #dc3545;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .solution-section {
+            background: #e8f5e9;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border-left: 5px solid #28a745;
+        }
+        
+        .solution-title {
+            font-size: 1.8em;
+            color: #28a745;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-table th {
+            background: #f5576c;
+            color: white;
+            padding: 20px;
+            text-align: left;
+            font-size: 1.1em;
+        }
+        
+        .comparison-table td {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:hover {
+            background: #fff5f8;
+        }
+        
+        .pro {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .con {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .timeline {
+            position: relative;
+            margin: 30px 0;
+        }
+        
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+        }
+        
+        .timeline-marker {
+            background: #f5576c;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.3em;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        
+        .timeline-content {
+            flex-grow: 1;
+        }
+        
+        .performance-stats {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .stat-box {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 10px;
+        }
+        
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .architecture-visual {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .arch-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .arch-header {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid;
+            text-align: center;
+        }
+        
+        .inmemory-header {
+            color: #fa709a;
+            border-color: #fa709a;
+        }
+        
+        .redis-header {
+            color: #30cfd0;
+            border-color: #30cfd0;
+        }
+        
+        @media (max-width: 968px) {
+            .flow-branch {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Caching Strategy<br>Explained Simply</h1>
+        
+        <!-- Library Analogy -->
+        <div class="analogy-section">
+            <div class="analogy-title">
+                <span class="emoji">📚</span>
+                <span>Think of it Like a Library vs Your Desk</span>
+            </div>
+            
+            <div style="background: white; padding: 30px; border-radius: 15px; margin-top: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 30px; align-items: center;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 5em; margin-bottom: 20px;">🏛️</div>
+                        <strong style="font-size: 1.5em; color: #dc3545;">Database (Library)</strong>
+                        <div style="margin-top: 20px; color: #666;">
+                            <strong>Slow but has everything</strong><br><br>
+                            📖 Need a book? Walk to library<br>
+                            🔍 Search through shelves<br>
+                            🚶‍♂️ Walk back home<br>
+                            ⏱️ Takes 50 minutes
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 3em; color: #f5576c;">VS</div>
+                    
+                    <div style="text-align: center;">
+                        <div style="font-size: 5em; margin-bottom: 20px;">🪑</div>
+                        <strong style="font-size: 1.5em; color: #28a745;">Cache (Your Desk)</strong>
+                        <div style="margin-top: 20px; color: #666;">
+                            <strong>Fast but limited space</strong><br><br>
+                            📚 Keep most-used books here<br>
+                            ✋ Grab instantly<br>
+                            💨 No walking needed<br>
+                            ⏱️ Takes 1 minute
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="key-point" style="margin-top: 30px; font-size: 1.1em;">
+                    <strong>🎯 The Idea:</strong> Keep frequently-accessed data in fast storage (RAM) instead of always going to slow storage (Database)
+                </div>
+            </div>
+        </div>
+        
+        <!-- Speed Comparison -->
+        <div class="analogy-section">
+            <div class="analogy-title">
+                <span class="emoji">🏎️</span>
+                <span>Speed Comparison: Why Cache?</span>
+            </div>
+            
+            <div class="speed-comparison">
+                <div class="speed-card slow">
+                    <div class="speed-icon">🐢</div>
+                    <div class="speed-title">Database (Disk)</div>
+                    <div class="speed-time">50ms</div>
+                    <p style="color: #666; margin-top: 15px;">
+                        Read from hard disk<br>
+                        Network latency<br>
+                        Query processing
+                    </p>
+                </div>
+                
+                <div class="speed-card fast">
+                    <div class="speed-icon">🚗</div>
+                    <div class="speed-title">Cache (RAM)</div>
+                    <div class="speed-time">1ms</div>
+                    <p style="color: #666; margin-top: 15px;">
+                        Read from memory<br>
+                        No disk access<br>
+                        Instant lookup
+                    </p>
+                </div>
+                
+                <div class="speed-card super-fast">
+                    <div class="speed-icon">🚀</div>
+                    <div class="speed-title">Improvement</div>
+                    <div class="speed-time">50x</div>
+                    <p style="color: #666; margin-top: 15px;">
+                        Faster response<br>
+                        Better UX<br>
+                        Less DB load
+                    </p>
+                </div>
+            </div>
+            
+            <div class="performance-stats">
+                <h2 style="margin-bottom: 20px; font-size: 2em;">📊 The Impact</h2>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">Without Cache</div>
+                        <div class="stat-number">50ms</div>
+                        <div>per request</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">With Cache</div>
+                        <div class="stat-number">1ms</div>
+                        <div>per request</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Performance</div>
+                        <div class="stat-number">50x</div>
+                        <div>faster!</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Database Load</div>
+                        <div class="stat-number">90%</div>
+                        <div>reduced!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cache-Aside Pattern -->
+        <div class="cache-flow">
+            <div class="flow-title">🔄 Cache-Aside Pattern (How It Works)</div>
+            
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="flow-step-title">
+                        <span class="flow-step-number">1</span>
+                        User Requests Data
+                    </div>
+                    <p style="color: #666; margin-top: 10px;">
+                        GET /api/v6/users/123 → "Give me user 123"
+                    </p>
+                </div>
+                
+                <div style="text-align: center; font-size: 2em; color: #f5576c; margin: 20px 0;">⬇️</div>
+                
+                <div class="flow-step">
+                    <div class="flow-step-title">
+                        <span class="flow-step-number">2</span>
+                        Check Cache First
+                    </div>
+                    <p style="color: #666; margin-top: 10px;">
+                        Is User 123 in cache (RAM)?
+                    </p>
+                    
+                    <div class="flow-branch">
+                        <div class="branch-box hit-branch">
+                            <strong style="font-size: 1.3em; color: #28a745;">✅ CACHE HIT</strong>
+                            <p style="margin-top: 15px; color: #666;">
+                                Found in cache!<br><br>
+                                <strong style="color: #28a745;">→ Return immediately (1ms)</strong><br>
+                                ✨ Database not touched<br>
+                                🚀 Super fast response
+                            </p>
+                        </div>
+                        
+                        <div class="branch-box miss-branch">
+                            <strong style="font-size: 1.3em; color: #dc3545;">❌ CACHE MISS</strong>
+                            <p style="margin-top: 15px; color: #666;">
+                                Not in cache!<br><br>
+                                <strong style="color: #dc3545;">→ Go to Step 3</strong><br>
+                                🐢 Need to query database<br>
+                                ⏱️ Slower response (50ms)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; font-size: 2em; color: #f5576c; margin: 20px 0;">⬇️ (Only on Cache Miss)</div>
+                
+                <div class="flow-step">
+                    <div class="flow-step-title">
+                        <span class="flow-step-number">3</span>
+                        Query Database
+                    </div>
+                    <p style="color: #666; margin-top: 10px;">
+                        SELECT * FROM users WHERE id = 123<br>
+                        (This is the slow part - 50ms)
+                    </p>
+                </div>
+                
+                <div style="text-align: center; font-size: 2em; color: #f5576c; margin: 20px 0;">⬇️</div>
+                
+                <div class="flow-step">
+                    <div class="flow-step-title">
+                        <span class="flow-step-number">4</span>
+                        Store in Cache for Next Time
+                    </div>
+                    <p style="color: #666; margin-top: 10px;">
+                        cache.put("users:123", userData)<br>
+                        (Next request will be fast!)
+                    </p>
+                </div>
+                
+                <div style="text-align: center; font-size: 2em; color: #f5576c; margin: 20px 0;">⬇️</div>
+                
+                <div class="flow-step" style="background: #e8f5e9; border-color: #28a745;">
+                    <div class="flow-step-title">
+                        <span class="flow-step-number" style="background: #28a745;">5</span>
+                        Return to User
+                    </div>
+                    <p style="color: #666; margin-top: 10px;">
+                        User gets their data!<br>
+                        <strong>First time:</strong> 50ms (miss)<br>
+                        <strong>Second time:</strong> 1ms (hit)
+                    </p>
+                </div>
+            </div>
+            
+            <div class="key-point" style="margin-top: 30px; font-size: 1.1em;">
+                <strong>🎯 "Cache-Aside" Name Explained:</strong><br><br>
+                The cache sits <strong>"aside"</strong> (next to) the main flow. App checks cache first, but if not there, it goes around to the database. It's <strong>"lazy loading"</strong> - only requested data gets cached.
+            </div>
+        </div>
+        
+        <!-- Spring @Cacheable -->
+        <div class="analogy-section">
+            <div class="analogy-title">
+                <span class="emoji">☕</span>
+                <span>Spring Boot Makes It Easy: @Cacheable</span>
+            </div>
+            
+            <p style="margin: 20px 0; font-size: 1.1em;">Spring handles all the "check cache first" logic automatically!</p>
+            
+            <div class="code-block">
+<span style="color: #68d391;">// UserService.java</span><br>
+<span class="highlight">@Cacheable(value = "users", key = "#id")</span><br>
+public UserResponse getUserById(Long id) {<br>
+&nbsp;&nbsp;<span style="color: #68d391;">// This line ONLY runs on Cache Miss!</span><br>
+&nbsp;&nbsp;return userRepository.findById(id)...;<br>
+}
+            </div>
+            
+            <div style="background: white; padding: 30px; border-radius: 15px; margin-top: 20px;">
+                <h3 style="color: #f5576c; margin-bottom: 20px;">🔍 What Happens Behind the Scenes?</h3>
+                
+                <div style="display: grid; gap: 20px;">
+                    <div style="background: #f8f9ff; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea;">
+                        <strong style="font-size: 1.1em;">Step 1: Spring Intercepts Method Call</strong>
+                        <p style="margin-top: 10px; color: #666;">
+                            When you call getUserById(123), Spring's AOP proxy intercepts it
+                        </p>
+                    </div>
+                    
+                    <div style="background: #f8f9ff; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea;">
+                        <strong style="font-size: 1.1em;">Step 2: Check Cache</strong>
+                        <p style="margin-top: 10px; color: #666;">
+                            Looks in cache named "users" for key "123"
+                        </p>
+                    </div>
+                    
+                    <div style="background: #e8f5e9; padding: 20px; border-radius: 10px; border-left: 4px solid #28a745;">
+                        <strong style="font-size: 1.1em;">If Found (Cache Hit):</strong>
+                        <p style="margin-top: 10px; color: #666;">
+                            Return cached value immediately<br>
+                            <strong>Method body NEVER executes</strong><br>
+                            Database query SKIPPED ✅
+                        </p>
+                    </div>
+                    
+                    <div style="background: #ffebee; padding: 20px; border-radius: 10px; border-left: 4px solid #dc3545;">
+                        <strong style="font-size: 1.1em;">If Not Found (Cache Miss):</strong>
+                        <p style="margin-top: 10px; color: #666;">
+                            Execute method body (query database)<br>
+                            Store result in cache<br>
+                            Return result
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="key-point" style="margin-top: 20px;">
+                <strong>📝 Parameters Explained:</strong><br><br>
+                • <strong>value = "users"</strong> → Cache name (like a Map name)<br>
+                • <strong>key = "#id"</strong> → The unique identifier (parameter value)<br>
+                • Think: <code>Map&lt;String, Object&gt; usersCache = {"123" → UserData}</code>
+            </div>
+        </div>
+        
+        <!-- The Stale Data Problem -->
+        <div class="problem-section">
+            <div class="problem-title">😱 The "Stale Data" Problem</div>
+            
+            <p style="font-size: 1.1em; margin-bottom: 20px;">
+                Caching introduces a trade-off: <strong>Speed vs. Consistency</strong>
+            </p>
+            
+            <div style="background: white; padding: 30px; border-radius: 15px; margin-top: 20px;">
+                <h3 style="color: #dc3545; margin-bottom: 20px;">🐛 The Bug Scenario:</h3>
+                
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker">1</div>
+                        <div class="timeline-content">
+                            <strong>10:00:00 - User Fetches Profile</strong><br>
+                            GET /users/123 → Returns: { "name": "Alice" }<br>
+                            <small style="color: #666;">✅ Now "Alice" is cached in RAM</small>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker">2</div>
+                        <div class="timeline-content">
+                            <strong>10:05:00 - User Updates Profile</strong><br>
+                            PUT /users/123 → { "name": "Al" }<br>
+                            <small style="color: #666;">✅ Database updated to "Al"</small>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item" style="background: #ffebee;">
+                        <div class="timeline-marker" style="background: #dc3545;">😱</div>
+                        <div class="timeline-content">
+                            <strong style="color: #dc3545;">10:06:00 - Another User Fetches Profile</strong><br>
+                            GET /users/123 → Returns: { "name": "Alice" } ❌<br>
+                            <small style="color: #dc3545;">⚠️ STALE DATA! Cache still has "Alice" but DB has "Al"</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="key-point" style="margin-top: 30px; background: #ffebee; border-color: #dc3545;">
+                    <strong>📞 The Phone Book Analogy:</strong><br><br>
+                    Imagine you have an old phone book (cache) with John's number as 555-1234.<br>
+                    John changes his number to 555-9999 (database updated).<br>
+                    But you keep calling 555-1234 because your phone book is outdated!<br><br>
+                    <strong>Solution:</strong> You need to update or throw away the old phone book entry!
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cache Eviction Solution -->
+        <div class="solution-section">
+            <div class="solution-title">✅ The Solution: Cache Eviction</div>
+            
+            <p style="font-size: 1.1em; margin-bottom: 20px;">
+                When data changes, DELETE the old cache entry!
+            </p>
+            
+            <div class="code-block">
+<span style="color: #68d391;">// UserService.java</span><br>
+<span class="highlight">@CacheEvict(value = "users", key = "#id")</span><br>
+public void updateUser(Long id, UpdateUserRequest req) {<br>
+&nbsp;&nbsp;<span style="color: #68d391;">// 1. Update database</span><br>
+&nbsp;&nbsp;userRepository.save(...);<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;<span style="color: #68d391;">// 2. Spring AUTOMATICALLY deletes cache entry</span><br>
+&nbsp;&nbsp;<span style="color: #68d391;">// cache.remove("users:123")</span><br>
+}
+            </div>
+            
+            <div style="background: white; padding: 30px; border-radius: 15px; margin-top: 20px;">
+                <h3 style="color: #28a745; margin-bottom: 20px;">🔄 The Fixed Flow:</h3>
+                
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker">1</div>
+                        <div class="timeline-content">
+                            <strong>User Updates Profile</strong><br>
+                            PUT /users/123 → { "name": "Al" }
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker">2</div>
+                        <div class="timeline-content">
+                            <strong>Database Updated</strong><br>
+                            users table: { id: 123, name: "Al" }
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item" style="background: #e8f5e9;">
+                        <div class="timeline-marker" style="background: #28a745;">3</div>
+                        <div class="timeline-content">
+                            <strong>Cache Evicted (Deleted)</strong><br>
+                            @CacheEvict removes "users:123" from cache<br>
+                            <small style="color: #28a745;">✅ Old "Alice" data is gone!</small>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker">4</div>
+                        <div class="timeline-content">
+                            <strong>Next Request</strong><br>
+                            GET /users/123 → Cache Miss → Query DB → Returns "Al"<br>
+                            <small style="color: #666;">Fresh data from database! Then cached for next time.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="key-point" style="margin-top: 20px; background: #e8f5e9; border-color: #28a745;">
+                <strong>🎯 Alternative: @CachePut</strong><br><br>
+                Instead of deleting, you can UPDATE the cache:<br>
+                <code>@CachePut(value = "users", key = "#id")</code><br><br>
+                Use when: Reads happen immediately after writes<br>
+                Benefit: Next request is INSTANT (already in cache)<br>
+                Trade-off: Slightly more complex logic
+            </div>
+        </div>
+        
+        <!-- In-Memory vs Redis -->
+        <div style="margin: 50px 0;">
+            <h2 style="text-align: center; color: #f5576c; margin-bottom: 30px;">🏗️ In-Memory vs Distributed Cache</h2>
+            
+            <div class="architecture-visual">
+                <div class="arch-card">
+                    <div class="arch-header inmemory-header">
+                        📝 In-Memory Cache<br>(Your Module)
+                    </div>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <div style="background: #fff5f8; padding: 30px; border-radius: 15px; margin: 20px 0;">
+                            <strong style="font-size: 1.5em;">Server 1</strong>
+                            <div style="margin-top: 15px;">
+                                <div style="background: #ffe5e5; padding: 15px; border-radius: 8px;">
+                                    Cache: { "123" → "Alice" }
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #fff5f8; padding: 30px; border-radius: 15px; margin: 20px 0;">
+                            <strong style="font-size: 1.5em;">Server 2</strong>
+                            <div style="margin-top: 15px;">
+                                <div style="background: #ffe5e5; padding: 15px; border-radius: 8px;">
+                                    Cache: { } (empty!)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #ffebee; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                        <strong style="color: #dc3545;">⚠️ Problem:</strong><br>
+                        Each server has its OWN cache!<br>
+                        Inconsistent data across servers
+                    </div>
+                </div>
+                
+                <div class="arch-card">
+                    <div class="arch-header redis-header">
+                        ☁️ Redis<br>(Distributed Cache)
+                    </div>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <div style="background: #f0f9ff; padding: 20px; border-radius: 15px; margin: 10px 0;">
+                            <strong>Server 1</strong> →
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 30px; border-radius: 15px; margin: 20px 0; border: 3px solid #ffc107;">
+                            <strong style="font-size: 1.5em;">🗄️ Redis Server</strong>
+                            <div style="margin-top: 15px;">
+                                <div style="background: white; padding: 15px; border-radius: 8px;">
+                                    Shared Cache:<br>
+                                    { "123" → "Alice" }
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #f0f9ff; padding: 20px; border-radius: 15px; margin: 10px 0;">
+                            <strong>Server 2</strong> →
+                        </div>
+                    </div>
+                    
+                    <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                        <strong style="color: #28a745;">✅ Benefit:</strong><br>
+                        All servers share ONE cache!<br>
+                        Consistent data everywhere
+                    </div>
+                </div>
+            </div>
+            
+            <table class="comparison-table" style="margin-top: 40px;">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Feature</th>
+                        <th style="width: 37.5%;">In-Memory (ConcurrentMap)</th>
+                        <th style="width: 37.5%;">Redis (Distributed)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Speed</strong></td>
+                        <td class="pro">✅ Fastest (JVM Heap)</td>
+                        <td class="neutral" style="color: #ffc107; font-weight: bold;">⚠️ Fast (Network overhead)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Capacity</strong></td>
+                        <td class="con">❌ Limited by JVM (OOM risk)</td>
+                        <td class="pro">✅ Terabytes (Separate server)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Consistency</strong></td>
+                        <td class="con">❌ Each server has own cache</td>
+                        <td class="pro">✅ All servers share cache</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Persistence</strong></td>
+                        <td class="con">❌ Lost on restart</td>
+                        <td class="pro">✅ Can persist to disk</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Setup</strong></td>
+                        <td class="pro">✅ Just annotations</td>
+                        <td class="con">❌ Need Redis server</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cost</strong></td>
+                        <td class="pro">✅ Free (built-in)</td>
+                        <td class="con">❌ Infrastructure cost</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Best For</strong></td>
+                        <td>Small, static data<br>Single server<br>Config/settings</td>
+                        <td>Large, dynamic data<br>Multiple servers<br>User sessions</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="key-point" style="margin-top: 30px; font-size: 1.1em;">
+                <strong>🎯 Production Rule:</strong><br><br>
+                • <strong>In-Memory</strong> → Small apps, configuration data, single server<br>
+                • <strong>Redis</strong> → Production apps, user data, microservices, load-balanced servers
+            </div>
+        </div>
+        
+        <!-- Testing Verification -->
+        <div class="analogy-section">
+            <div class="analogy-title">
+                <span class="emoji">🧪</span>
+                <span>How to Verify It's Working</span>
+            </div>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-marker">1</div>
+                    <div class="timeline-content">
+                        <strong>Create a User</strong>
+                        <div class="code-block" style="margin-top: 10px;">
+POST /api/v6/users<br>
+{ "username": "flash", "email": "run@fast.com" }<br>
+<br>
+<span style="color: #68d391;">// Response: { "id": 1, ... }</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item" style="background: #ffebee;">
+                    <div class="timeline-marker" style="background: #dc3545;">2</div>
+                    <div class="timeline-content">
+                        <strong>First Request (Cache Miss)</strong>
+                        <div class="code-block" style="margin-top: 10px;">
+GET /api/v6/users/1<br>
+<br>
+<span style="color: #ff6b6b;">// Console Log:</span><br>
+<span style="color: #ff6b6b;">Fetching User from Database for ID: 1</span><br>
+<br>
+<span style="color: #68d391;">// Response: 50ms ⏱️</span>
+                        </div>
+                        <p style="margin-top: 10px; color: #dc3545;">
+                            Cache was empty → Queried database → Stored in cache
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item" style="background: #e8f5e9;">
+                    <div class="timeline-marker" style="background: #28a745;">3</div>
+                    <div class="timeline-content">
+                        <strong>Second Request (Cache Hit)</strong>
+                        <div class="code-block" style="margin-top: 10px;">
+GET /api/v6/users/1<br>
+<br>
+<span style="color: #28a745;">// Console Log: (Nothing!)</span><br>
+<br>
+<span style="color: #68d391;">// Response: 1ms ⚡</span>
+                        </div>
+                        <p style="margin-top: 10px; color: #28a745;">
+                            ✅ Found in cache → Method body NEVER executed → Database NOT touched!
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item" style="background: #e8f5e9;">
+                    <div class="timeline-marker" style="background: #28a745;">4</div>
+                    <div class="timeline-content">
+                        <strong>Requests 3, 4, 5... (All Cache Hits)</strong>
+                        <p style="margin-top: 10px; color: #666;">
+                            Run the same GET request 10 more times.<br>
+                            No console logs! All requests served from cache instantly! ⚡⚡⚡
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Summary -->
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 40px; border-radius: 15px; color: white; margin-top: 50px;">
+            <h2 style="text-align: center; margin-bottom: 30px; font-size: 2em;">📚 Summary</h2>
+            
+            <div style="display: grid; gap: 20px;">
+                <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 10px;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">1️⃣</div>
+                    <strong style="font-size: 1.3em;">Why Cache?</strong>
+                    <p style="margin-top: 10px; opacity: 0.9;">
+                        Database is slow (50ms). RAM is fast (1ms). Cache = Store frequently-used data in RAM for 50x speed!
+                    </p>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 10px;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">2️⃣</div>
+                    <strong style="font-size: 1.3em;">Cache-Aside Pattern</strong>
+                    <p style="margin-top: 10px; opacity: 0.9;">
+                        Check cache first → If found (hit), return it → If not (miss), query DB and store in cache for next time
+                    </p>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 10px;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">3️⃣</div>
+                    <strong style="font-size: 1.3em;">Spring @Cacheable</strong>
+                    <p style="margin-top: 10px; opacity: 0.9;">
+                        Annotation does all the work! Method only runs on cache miss. Magic via AOP (proxy intercepts calls).
+                    </p>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 10px;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">4️⃣</div>
+                    <strong style="font-size: 1.3em;">Stale Data Problem</strong>
+                    <p style="margin-top: 10px; opacity: 0.9;">
+                        Cache can have old data after updates. Solution: @CacheEvict deletes old cache entry when data changes.
+                    </p>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 10px;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">5️⃣</div>
+                    <strong style="font-size: 1.3em;">In-Memory vs Redis</strong>
+                    <p style="margin-top: 10px; opacity: 0.9;">
+                        In-Memory: Fast, simple, single server. Redis: Shared across servers, production-ready, scalable.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>
