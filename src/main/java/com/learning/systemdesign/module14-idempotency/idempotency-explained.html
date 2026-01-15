@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 14: Idempotency Explained</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f6f8;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #2c3e50;
+        }
+
+        h1 {
+            text-align: center;
+            border-bottom: 3px solid #8e44ad;
+            /* Purple for Idempotency/Magic */
+            padding-bottom: 10px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-container {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .note {
+            background-color: #e8f4fd;
+            border-left: 5px solid #3498db;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #c7254e;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Module 14: Idempotency (Safety Net)</h1>
+
+        <h2>1. The Concept</h2>
+        <p><strong>Idempotency</strong> is a fancy mathematical term that means: <em>"Doing it multiple times has the
+                same effect as doing it once."</em></p>
+        <p>In payment systems, this is critical. If I click "Pay" twice by accident, I should only be charged once.</p>
+
+        <div class="note">
+            <strong>Implementation:</strong> We require the client to send a unique ID (<code>X-Request-Id</code>). We
+            remember this ID. If we see it again, we reject the request.
+        </div>
+
+        <h2>2. Sequence Diagram: The Happy Flow</h2>
+        <p>How a unique request is processed successfully.</p>
+        <div class="chart-container">
+            <pre class="mermaid">
+sequenceDiagram
+    participant Client
+    participant AOP as Idempotency Aspect
+    participant Cache as ID Cache
+    participant Service as Payment Service
+
+    Client->>AOP: POST /payment (ID: 1001)
+    AOP->>Cache: Exists(1001)?
+    Cache-->>AOP: No (False)
+    
+    AOP->>Service: Proceed()
+    Service-->>AOP: "Payment Success"
+    
+    AOP->>Cache: Save(1001)
+    AOP->>Client: 200 OK
+        </pre>
+        </div>
+
+        <h2>3. Sequence Diagram: The Duplicate Flow</h2>
+        <p>What happens when the client retries the same request.</p>
+        <div class="chart-container">
+            <pre class="mermaid">
+sequenceDiagram
+    participant Client
+    participant AOP as Idempotency Aspect
+    participant Cache as ID Cache
+    participant Service as Payment Service
+
+    Client->>AOP: POST /payment (ID: 1001)
+    note right of Client: ⚠️ Duplicate Retry!
+    
+    AOP->>Cache: Exists(1001)?
+    Cache-->>AOP: Yes (True)
+    
+    AOP--xService: BLOCKED!
+    AOP-->>Client: 409 Conflict / 500 Error
+        </pre>
+        </div>
+
+        <h2>4. State Diagram</h2>
+        <p>The lifecycle of a Request ID.</p>
+        <div class="chart-container">
+            <pre class="mermaid">
+stateDiagram-v2
+    [*] --> NewRequest
+    
+    NewRequest --> CheckCache: Client sends Header
+    
+    CheckCache --> Process: ID Not Found
+    CheckCache --> Reject: ID Found
+    
+    Process --> StoreID: Business Logic Done
+    StoreID --> [*]: Response Sent
+    
+    Reject --> [*]: Error Response Sent
+        </pre>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

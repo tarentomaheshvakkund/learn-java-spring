@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT Authentication Explained Simply</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+        }
+        
+        .analogy-section {
+            background: #f8f9ff;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .analogy-title {
+            font-size: 1.8em;
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .emoji {
+            font-size: 1.5em;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .comparison-box {
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid;
+        }
+        
+        .stateful-box {
+            background: #ffe5e5;
+            border-color: #dc3545;
+        }
+        
+        .stateless-box {
+            background: #e8f5e9;
+            border-color: #28a745;
+        }
+        
+        .comparison-box h3 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .jwt-structure {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .jwt-parts {
+            display: grid;
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .jwt-part {
+            background: #f8f9ff;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid;
+        }
+        
+        .jwt-header {
+            border-color: #dc3545;
+        }
+        
+        .jwt-payload {
+            border-color: #ffc107;
+        }
+        
+        .jwt-signature {
+            border-color: #28a745;
+        }
+        
+        .jwt-visual {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .jwt-token {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+            font-size: 0.9em;
+        }
+        
+        .token-header {
+            background: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            word-break: break-all;
+        }
+        
+        .token-payload {
+            background: #ffc107;
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 8px;
+            word-break: break-all;
+        }
+        
+        .token-signature {
+            background: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            word-break: break-all;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+        
+        .highlight {
+            background: #ffd93d;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .key-point {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 5px solid #ffc107;
+        }
+        
+        .security-visual {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        
+        .flow-diagram {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+        }
+        
+        .flow-number {
+            background: #667eea;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5em;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        
+        .flow-content {
+            flex-grow: 1;
+        }
+        
+        .flow-title {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-table th {
+            background: #667eea;
+            color: white;
+            padding: 20px;
+            text-align: left;
+            font-size: 1.1em;
+        }
+        
+        .comparison-table td {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8f9ff;
+        }
+        
+        .pro {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .con {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .warning-box {
+            background: #ffebee;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 5px solid #dc3545;
+        }
+        
+        .success-box {
+            background: #e8f5e9;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 5px solid #28a745;
+        }
+        
+        .filter-chain {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .filter-box {
+            background: #667eea;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 150px;
+            font-weight: bold;
+        }
+        
+        .filter-arrow {
+            font-size: 2em;
+            color: #667eea;
+        }
+        
+        .attack-demo {
+            background: #ffebee;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border: 3px solid #dc3545;
+        }
+        
+        @media (max-width: 968px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-chain {
+                flex-direction: column;
+            }
+            
+            .filter-arrow {
+                transform: rotate(90deg);
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 JWT Authentication<br>Explained Simply</h1>
+        
+        <!-- Hotel Key Card Analogy -->
+        <div class="analogy-section">
+            <div class="analogy-title">
+                <span class="emoji">🏨</span>
+                <span>Think of it Like a Hotel Key Card</span>
+            </div>
+            
+            <div style="background: white; padding: 30px; border-radius: 15px; margin-top: 20px;">
+                <div class="comparison-grid">
+                    <div style="text-align: center;">
+                        <div style="font-size: 5em; margin-bottom: 20px;">🎟️</div>
+                        <strong style="font-size: 1.5em; color: #dc3545;">Old Way: Session (Ticket Stub)</strong>
+                        <div style="margin-top: 20px; color: #666; text-align: left; padding: 0 20px;">
+                            <strong>How it works:</strong><br><br>
+                            1️⃣ Check in at hotel → Get stub: "A123"<br>
+                            2️⃣ Hotel keeps your info in logbook<br>
+                            3️⃣ Show stub at door → Guard checks logbook<br>
+                            4️⃣ Guard says "Yes, A123 = John Smith"<br><br>
+                            <strong style="color: #dc3545;">Problem:</strong> Guard must check logbook EVERY time! (Stateful)
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <div style="font-size: 5em; margin-bottom: 20px;">💳</div>
+                        <strong style="font-size: 1.5em; color: #28a745;">New Way: JWT (Smart Card)</strong>
+                        <div style="margin-top: 20px; color: #666; text-align: left; padding: 0 20px;">
+                            <strong>How it works:</strong><br><br>
+                            1️⃣ Check in at hotel → Get card with chip<br>
+                            2️⃣ Card contains: "John Smith, Room 301"<br>
+                            3️⃣ Card has special seal (can't fake)<br>
+                            4️⃣ Door reads card → Validates seal → Opens<br><br>
+                            <strong style="color: #28a745;">Benefit:</strong> No logbook needed! Card has everything! (Stateless)
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="key-point" style="margin-top: 30px; font-size: 1.1em;">
+                    <strong>🎯 The Big Idea:</strong> JWT is like a sealed envelope with your identity inside. The seal proves it's authentic. No need to check a central database every time!
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stateful vs Stateless Comparison -->
+        <div style="margin: 50px 0;">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">🆚 Stateful vs Stateless</h2>
+            
+            <div class="comparison-grid">
+                <div class="comparison-box stateful-box">
+                    <h3 style="color: #dc3545;">🎟️ Session (Stateful)</h3>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                        <strong>How it works:</strong>
+                        <div class="code-block" style="margin-top: 15px;">
+<span style="color: #68d391;">// 1. Login</span><br>
+Server: "OK, you're user 'john'"<br>
+Server stores: { "abc123" → "john" }<br>
+Sends cookie: "abc123"<br>
+<br>
+<span style="color: #68d391;">// 2. Each Request</span><br>
+Client sends: "abc123"<br>
+Server looks up: "abc123" → "john"<br>
+<span style="color: #ff6b6b;">// Must check database/memory!</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <div class="con">❌ Cons:</div>
+                        <ul style="margin: 10px 0 0 20px; color: #666;">
+                            <li>Server must store sessions (memory/Redis)</li>
+                            <li>Hard to scale (sticky sessions needed)</li>
+                            <li>Database lookup on EVERY request</li>
+                        </ul>
+                        
+                        <div class="pro" style="margin-top: 15px;">✅ Pros:</div>
+                        <ul style="margin: 10px 0 0 20px; color: #666;">
+                            <li>Easy to revoke (delete session)</li>
+                            <li>Server has full control</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="comparison-box stateless-box">
+                    <h3 style="color: #28a745;">💳 JWT (Stateless)</h3>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                        <strong>How it works:</strong>
+                        <div class="code-block" style="margin-top: 15px;">
+<span style="color: #68d391;">// 1. Login</span><br>
+Server: "OK, you're user 'john'"<br>
+Creates token: { user: "john", exp: ... }<br>
+Signs with secret key<br>
+Sends: "eyJhbGc...xyz" (JWT)<br>
+<br>
+<span style="color: #68d391;">// 2. Each Request</span><br>
+Client sends: "eyJhbGc...xyz"<br>
+Server verifies signature<br>
+<span style="color: #68d391;">// No database needed! ✅</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <div class="pro">✅ Pros:</div>
+                        <ul style="margin: 10px 0 0 20px; color: #666;">
+                            <li>No server storage needed</li>
+                            <li>Easy to scale (any server can verify)</li>
+                            <li>No database lookup</li>
+                            <li>Works across microservices</li>
+                        </ul>
+                        
+                        <div class="con" style="margin-top: 15px;">❌ Cons:</div>
+                        <ul style="margin: 10px 0 0 20px; color: #666;">
+                            <li>Hard to revoke (valid until expiry)</li>
+                            <li>Token can be large</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <table class="comparison-table" style="margin-top: 40px;">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Feature</th>
+                        <th style="width: 37.5%;">Session (Stateful)</th>
+                        <th style="width: 37.5%;">JWT (Stateless)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Storage</strong></td>
+                        <td class="con">❌ Server Memory/Redis</td>
+                        <td class="pro">✅ Client Side (Header)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scalability</strong></td>
+                        <td class="con">❌ Hard (Sticky Sessions)</td>
+                        <td class="pro">✅ Easy (Any server works)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Database Hit</strong></td>
+                        <td class="con">❌ Every request</td>
+                        <td class="pro">✅ None (just verify)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Revocation</strong></td>
+                        <td class="pro">✅ Easy (Delete session)</td>
+                        <td class="con">❌ Hard (Valid till expiry)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data</strong></td>
+                        <td>Opaque ID (abc123)</td>
+                        <td>JSON Payload (username, role, etc)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cross-Domain</strong></td>
+                        <td class="con">❌ Cookie restrictions</td>
+                        <td class="pro">✅ Works anywhere</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mobile Apps</strong></td>
+                        <td class="con">❌ Cookies tricky</td>
+                        <td class="pro">✅ Perfect fit</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- JWT Structure -->
+        <div class="jwt-structure">
+            <h2 style="color: #667eea; text-align: center; margin-bottom: 30px;">🔍 JWT Anatomy: What's Inside?</h2>
+            
+            <p style="text-align: center; font-size: 1.1em; margin-bottom: 20px;">
+                A JWT looks like: <code style="background: #f0f0f0; padding: 5px 10px; border-radius: 5px;">aaaaa.bbbbb.ccccc</code>
+            </p>
+            
+            <div class="jwt-visual">
+                <div class="jwt-token">
+                    <div class="token-header">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9</div>
+                    <div style="color: white; font-size: 1.5em;">.</div>
+                    <div class="token-payload">eyJzdWIiOiJqb2huIiwiaWF0IjoxNTE2MjM5MDIyfQ</div>
+                    <div style="color: white; font-size: 1.5em;">.</div>
+                    <div class="token-signature">SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</div>
+                </div>
+                
+                <div style="margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                    <div style="text-align: center;">
+                        <div style="color: #dc3545; font-weight: bold; margin-bottom: 10px;">HEADER</div>
+                        <div style="font-size: 0.85em;">Algorithm info</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #ffc107; font-weight: bold; margin-bottom: 10px;">PAYLOAD</div>
+                        <div style="font-size: 0.85em;">Your data (claims)</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #28a745; font-weight: bold; margin-bottom: 10px;">SIGNATURE</div>
+                        <div style="font-size: 0.85em;">Security seal</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="jwt-parts">
+                <div class="jwt-part jwt-header">
+                    <h3 style="color: #dc3545; margin-bottom: 15px;">1️⃣ HEADER (How it's signed)</h3>
+                    <div class="code-block">
+{<br>
+&nbsp;&nbsp;"alg": "HS256",    <span style="color: #68d391;">// Algorithm: HMAC-SHA256</span><br>
+&nbsp;&nbsp;"typ": "JWT"       <span style="color: #68d391;">// Type: JSON Web Token</span><br>
+}
+                    </div>
+                    <p style="margin-top: 15px; color: #666;">
+                        Just metadata. Says "I'm a JWT signed with HS256 algorithm"
+                    </p>
+                </div>
+                
+                <div class="jwt-part jwt-payload">
+                    <h3 style="color: #ffc107; margin-bottom: 15px;">2️⃣ PAYLOAD (The actual data - "Claims")</h3>
+                    <div class="code-block">
+{<br>
+&nbsp;&nbsp;"sub": "john_bond",      <span style="color: #68d391;">// Subject (Username)</span><br>
+&nbsp;&nbsp;"iat": 1516239022,       <span style="color: #68d391;">// Issued At (timestamp)</span><br>
+&nbsp;&nbsp;"exp": 1516249022,       <span style="color: #68d391;">// Expires (timestamp)</span><br>
+&nbsp;&nbsp;"role": "user"           <span style="color: #68d391;">// Custom claim</span><br>
+}
+                    </div>
+                    
+                    <div class="warning-box" style="margin-top: 20px;">
+                        <strong style="color: #dc3545; font-size: 1.2em;">⚠️ CRITICAL WARNING!</strong><br><br>
+                        The payload is <strong>Base64 encoded, NOT encrypted!</strong><br><br>
+                        Anyone can decode it and read it! Try it: <code>jwt.io</code><br><br>
+                        <strong>NEVER put passwords, credit cards, or secrets here!</strong><br>
+                        ✅ OK: username, role, user ID<br>
+                        ❌ BAD: password, SSN, credit card
+                    </div>
+                </div>
+                
+                <div class="jwt-part jwt-signature">
+                    <h3 style="color: #28a745; margin-bottom: 15px;">3️⃣ SIGNATURE (The Security - Tamper Protection)</h3>
+                    <div class="code-block">
+<span style="color: #68d391;">// How it's created:</span><br>
+HMACSHA256(<br>
+&nbsp;&nbsp;base64(header) + "." + base64(payload),<br>
+&nbsp;&nbsp;<span class="highlight">SECRET_KEY</span> <span style="color: #68d391;">// Only server knows this!</span><br>
+)
+                    </div>
+                    
+                    <div style="margin-top: 20px; background: white; padding: 20px; border-radius: 10px;">
+                        <strong style="font-size: 1.1em;">🔒 This is what makes JWT secure!</strong>
+                        
+                        <div style="margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px;">
+                            <strong style="color: #28a745;">✅ What happens:</strong><br><br>
+                            1. Server creates token with secret key<br>
+                            2. Client receives token<br>
+                            3. Client sends token with each request<br>
+                            4. Server verifies signature with secret key<br>
+                            5. If signature matches → Token is valid ✅
+                        </div>
+                        
+                        <div style="margin-top: 15px; padding: 15px; background: #ffebee; border-radius: 8px;">
+                            <strong style="color: #dc3545;">❌ If hacker tries to tamper:</strong><br><br>
+                            1. Hacker changes payload: <code>{"role": "user"}</code> → <code>{"role": "admin"}</code><br>
+                            2. But hacker doesn't know SECRET_KEY<br>
+                            3. Signature won't match new payload<br>
+                            4. Server rejects: "Invalid signature" 🚫
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Attack Demo -->
+        <div class="attack-demo">
+            <h3 style="color: #dc3545; font-size: 1.8em; margin-bottom: 20px; text-align: center;">
+                🎭 Hacker Attack Demo: Why Signature Matters
+            </h3>
+            
+            <div style="display: grid; gap: 25px;">
+                <div style="background: white; padding: 25px; border-radius: 15px;">
+                    <strong style="font-size: 1.2em; color: #333;">Step 1: Original Token (Valid)</strong>
+                    <div class="code-block" style="margin-top: 15px;">
+Header: { "alg": "HS256" }<br>
+Payload: { "user": "john", <span class="highlight">"role": "user"</span> }<br>
+Signature: xyz123abc <span style="color: #68d391;">← Created with SECRET_KEY</span><br>
+<br>
+<span style="color: #28a745;">✅ Server validates: Signature matches!</span>
+                    </div>
+                </div>
+                
+                <div style="background: white; padding: 25px; border-radius: 15px;">
+                    <strong style="font-size: 1.2em; color: #dc3545;">Step 2: Hacker Tries to Change (Invalid)</strong>
+                    <div class="code-block" style="margin-top: 15px;">
+Header: { "alg": "HS256" }<br>
+Payload: { "user": "john", <span class="highlight" style="background: #ff6b6b; color: white;">"role": "ADMIN"</span> } <span style="color: #ff6b6b;">← Changed!</span><br>
+Signature: xyz123abc <span style="color: #ff6b6b;">← Old signature (doesn't match new payload)</span><br>
+<br>
+<span style="color: #dc3545;">❌ Server rejects: "Invalid signature!"</span><br>
+<span style="color: #dc3545;">❌ Access Denied: 403 Forbidden</span>
+                    </div>
+                </div>
+                
+                <div style="background: white; padding: 25px; border-radius: 15px;">
+                    <strong style="font-size: 1.2em; color: #333;">Why Hacker Can't Win:</strong>
+                    <ul style="margin: 15px 0 0 20px; color: #666; line-height: 2;">
+                        <li>Payload is Base64 encoded (easy to decode and read)</li>
+                        <li>Hacker can change payload easily</li>
+                        <li>BUT! Hacker doesn't know SECRET_KEY</li>
+                        <li>Without SECRET_KEY, can't create valid signature</li>
+                        <li>Server checks: "Does signature match payload?" → NO → Rejected 🚫</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="key-point" style="margin-top: 25px; font-size: 1.1em;">
+                <strong>🔑 The Secret Key is Everything!</strong><br><br>
+                Keep it safe! Never commit to Git! Never share it!<br>
+                Use environment variables: <code>JWT_SECRET=your-super-secret-key-here</code>
+            </div>
+        </div>
+        
+        <!-- Spring Security Filter Chain -->
+        <div class="flow-diagram">
+            <h2 style="color: #667eea; text-align: center; margin-bottom: 30px;">⛓️ Spring Security Filter Chain</h2>
+            
+            <p style="text-align: center; font-size: 1.1em; margin-bottom: 30px;">
+                Spring Security = Chain of Filters. Each request passes through them!
+            </p>
+            
+            <div class="filter-chain">
+                <div class="filter-box">
+                    📨<br>Client<br>Request
+                </div>
+                <div class="filter-arrow">→</div>
+                <div class="filter-box">
+                    🔓<br>CSRF<br>Filter
+                </div>
+                <div class="filter-arrow">→</div>
+                <div class="filter-box" style="background: #ffc107; color: #333;">
+                    💳<br>JWT<br>Filter<br><small>(Your custom filter!)</small>
+                </div>
+                <div class="filter-arrow">→</div>
+                <div class="filter-box">
+                    🔐<br>Auth<br>Filter
+                </div>
+                <div class="filter-arrow">→</div>
+                <div class="filter-box" style="background: #28a745;">
+                    🎯<br>Your<br>Controller
+                </div>
+            </div>
+            
+            <div style="margin-top: 40px;">
+                <h3 style="color: #667eea; margin-bottom: 20px;">What Your JWT Filter Does:</h3>
+                
+                <div class="flow-step">
+                    <div class="flow-number">1</div>
+                    <div class="flow-content">
+                        <div class="flow-title">Check Authorization Header</div>
+                        <p style="color: #666; margin-top: 10px;">
+                            Look for: <code>Authorization: Bearer eyJhbGc...</code><br>
+                            If missing → Continue (user is anonymous)
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="flow-number">2</div>
+                    <div class="flow-content">
+                        <div class="flow-title">Extract & Validate Token</div>
+                        <p style="color: #666; margin-top: 10px;">
+                            Extract token from header<br>
+                            Verify signature with SECRET_KEY<br>
+                            Check expiration time<br>
+                            If invalid → Continue (user is anonymous)
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="flow-number">3</div>
+                    <div class="flow-content">
+                        <div class="flow-title">Load User & Set Authentication</div>
+                        <p style="color: #666; margin-top: 10px;">
+                            Extract username from token payload<br>
+                            Create Spring User object<br>
+                            Store in SecurityContextHolder<br>
+                            (This tells Spring "Hey, this user is logged in!")
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flow-step" style="background: #e8f5e9;">
+                    <div class="flow-number" style="background: #28a745;">4</div>
+                    <div class="flow-content">
+                        <div class="flow-title">Continue to Next Filter</div>
+                        <p style="color: #666; margin-top: 10px;">
+                            Next filter checks: "Is user authenticated?"<br>
+                            If YES → Allow access ✅<br>
+                            If NO and URL requires auth → 403 Forbidden ❌
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Complete Auth Flow -->
+        <div class="security-visual">
+            <h2 style="text-align: center; margin-bottom: 30px; font-size: 2em;">🔄 Complete Authentication Flow</h2>
+            
+            <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                <strong style="font-size: 1.3em;">Phase 1: Registration & Login</strong>
+                
+                <div style="margin-top: 20px; display: grid; gap: 15px;">
+                    <div style="background: white; color: #333; padding: 20px; border-radius: 10px;">
+                        <strong>1️⃣ User Registers</strong>
+                        <div class="code-block" style="margin-top: 10px;">
+POST /api/v7/auth/register<br>
+{ "username": "james", "password": "secret123" }<br>
+<br>
+<span style="color: #68d391;">→ Server hashes password & stores in DB</span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; color: #333; padding: 20px; border-radius: 10px;">
+                        <strong>2️⃣ User Logs In</strong>
+                        <div class="code-block" style="margin-top: 10px;">
+POST /api/v7/auth/login<br>
+{ "username": "james", "password": "secret123" }<br>
+<br>
+<span style="color: #68d391;">→ Server validates credentials</span><br>
+<span style="color: #68d391;">→ Creates JWT with username + expiration</span><br>
+<span style="color: #68d391;">→ Signs with SECRET_KEY</span><br>
+<br>
+Response: { "token": "eyJhbGc..." }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                <strong style="font-size: 1.3em;">Phase 2: Using the Token</strong>
+                
+                <div style="margin-top: 20px; display: grid; gap: 15px;">
+                    <div style="background: white; color: #333; padding: 20px; border-radius: 10px;">
+                        <strong>3️⃣ Client Stores Token</strong>
+                        <p style="margin-top: 10px; color: #666;">
+                            Usually in: localStorage, sessionStorage, or memory<br>
+                            <small>⚠️ Vulnerable to XSS in localStorage. Use httpOnly cookies for production!</small>
+                        </p>
+                    </div>
+                    
+                    <div style="background: white; color: #333; padding: 20px; border-radius: 10px;">
+                        <strong>4️⃣ Client Sends Token with Each Request</strong>
+                        <div class="code-block" style="margin-top: 10px;">
+GET /api/v7/users<br>
+<span class="highlight">Authorization: Bearer eyJhbGc...</span><br>
+<br>
+<span style="color: #68d391;">→ JWT Filter extracts token</span><br>
+<span style="color: #68d391;">→ Verifies signature</span><br>
+<span style="color: #68d391;">→ Sets authentication in SecurityContext</span><br>
+<span style="color: #68d391;">→ Controller receives authenticated user!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Security Config -->
+        <div class="analogy-section">
+            <div class="analogy-title">
+                <span class="emoji">⚙️</span>
+                <span>Security Configuration</span>
+            </div>
+            
+            <div class="code-block">
+<span style="color: #68d391;">// SecurityConfig.java</span><br>
+@Configuration<br>
+public class SecurityConfig {<br>
+<br>
+&nbsp;&nbsp;@Bean<br>
+&nbsp;&nbsp;public SecurityFilterChain filterChain(HttpSecurity http) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;http<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">.csrf(csrf -> csrf.disable())</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #68d391;">// CSRF protection OFF - we're stateless (no cookies)</span><br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">.sessionManagement(s -> s.sessionCreationPolicy(STATELESS))</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #68d391;">// Server forgets you immediately after each request</span><br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">.authorizeHttpRequests(auth -> auth</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">.requestMatchers("/api/v7/auth/**").permitAll()</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #68d391;">// Open door: /auth/login, /auth/register</span><br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">.anyRequest().authenticated()</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #68d391;">// Locked door: Everything else needs JWT</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">)</span>;<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return http.build();<br>
+&nbsp;&nbsp;}<br>
+}
+            </div>
+            
+            <div class="key-point" style="margin-top: 20px;">
+                <strong>🎯 What This Does:</strong><br><br>
+                • <strong>CSRF Disabled:</strong> We don't use cookies, so CSRF attack doesn't apply<br>
+                • <strong>Stateless:</strong> Server doesn't remember you between requests<br>
+                • <strong>Public endpoints:</strong> /auth/login, /auth/register are open to everyone<br>
+                • <strong>Protected endpoints:</strong> Everything else requires valid JWT
+            </div>
+        </div>
+        
+        <!-- Testing -->
+        <div style="margin: 50px 0;">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">🧪 Testing It Out</h2>
+            
+            <div class="flow-step">
+                <div class="flow-number">1</div>
+                <div class="flow-content">
+                    <div class="flow-title">Register a User</div>
+                    <div class="code-block" style="margin-top: 10px;">
+POST /api/v7/auth/register<br>
+{<br>
+&nbsp;&nbsp;"username": "james_bond",<br>
+&nbsp;&nbsp;"email": "007@mi6.gov",<br>
+&nbsp;&nbsp;"password": "secret007"<br>
+}<br>
+<br>
+<span style="color: #68d391;">→ Response: 201 Created</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="flow-number">2</div>
+                <div class="flow-content">
+                    <div class="flow-title">Login to Get JWT</div>
+                    <div class="code-block" style="margin-top: 10px;">
+POST /api/v7/auth/login<br>
+{<br>
+&nbsp;&nbsp;"username": "james_bond",<br>
+&nbsp;&nbsp;"password": "secret007"<br>
+}<br>
+<br>
+<span style="color: #68d391;">→ Response:</span><br>
+{<br>
+&nbsp;&nbsp;"token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqYW1lc19ib25kIi..."<br>
+}
+                    </div>
+                    <p style="margin-top: 15px; color: #28a745; font-weight: bold;">
+                        ✅ Copy this token! You'll need it for next step!
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flow-step" style="background: #ffebee;">
+                <div class="flow-number" style="background: #dc3545;">3</div>
+                <div class="flow-content">
+                    <div class="flow-title">Try Without Token (Should Fail)</div>
+                    <div class="code-block" style="margin-top: 10px;">
+GET /api/v7/users<br>
+<span style="color: #ff6b6b;">← No Authorization header!</span><br>
+<br>
+<span style="color: #dc3545;">→ Response: 403 Forbidden ❌</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flow-step" style="background: #e8f5e9;">
+                <div class="flow-number" style="background: #28a745;">4</div>
+                <div class="flow-content">
+                    <div class="flow-title">Try With Token (Should Work)</div>
+                    <div class="code-block" style="margin-top: 10px;">
+GET /api/v7/users<br>
+<span class="highlight">Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...</span><br>
+<span style="color: #68d391;">← Include the JWT!</span><br>
+<br>
+<span style="color: #28a745;">→ Response: 200 OK ✅</span><br>
+{<br>
+&nbsp;&nbsp;"users": [...list of users...]<br>
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Production Considerations -->
+        <div class="security-visual">
+            <h2 style="text-align: center; margin-bottom: 30px; font-size: 2em;">🏭 Production Considerations</h2>
+            
+            <div style="display: grid; gap: 25px;">
+                <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px;">
+                    <strong style="font-size: 1.5em;">1️⃣ Refresh Tokens</strong>
+                    <p style="margin-top: 15px; opacity: 0.9;">
+                        <strong>Problem:</strong> JWT valid until expiry. Can't revoke!<br><br>
+                        <strong>Solution:</strong> Short-lived access tokens (15 mins) + Long-lived refresh tokens (7 days)<br><br>
+                        • Access token expires quickly (limited damage)<br>
+                        • Refresh token stored in DB (can be revoked)<br>
+                        • Client uses refresh token to get new access token
+                    </p>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px;">
+                    <strong style="font-size: 1.5em;">2️⃣ HTTPS is MANDATORY!</strong>
+                    <p style="margin-top: 15px; opacity: 0.9;">
+                        <strong>Why:</strong> JWT sent in plain text header<br><br>
+                        Without HTTPS:<br>
+                        • Anyone on WiFi can sniff JWT<br>
+                        • Hacker steals JWT = Hacker becomes you!<br>
+                        • Man-in-the-middle attacks<br><br>
+                        <strong style="font-size: 1.2em; color: #ffd93d;">⚠️ NEVER use JWT over HTTP in production!</strong>
+                    </p>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px;">
+                    <strong style="font-size: 1.5em;">3️⃣ Role-Based Access Control (RBAC)</strong>
+                    <p style="margin-top: 15px; opacity: 0.9;">
+                        Add roles to JWT payload:
+                    </p>
+                    <div class="code-block" style="margin-top: 15px;">
+{<br>
+&nbsp;&nbsp;"sub": "james",<br>
+&nbsp;&nbsp;<span class="highlight">"role": "ADMIN"</span>,<br>
+&nbsp;&nbsp;"permissions": ["READ", "WRITE", "DELETE"]<br>
+}
+                    </div>
+                    <p style="margin-top: 15px; opacity: 0.9;">
+                        Then in your controller:
+                    </p>
+                    <div class="code-block" style="margin-top: 15px;">
+@PreAuthorize("hasRole('ADMIN')")<br>
+@DeleteMapping("/users/{id}")<br>
+public void deleteUser(@PathVariable Long id) {<br>
+&nbsp;&nbsp;<span style="color: #68d391;">// Only ADMIN can delete!</span><br>
+}
+                    </div>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px;">
+                    <strong style="font-size: 1.5em;">4️⃣ Token Storage (Frontend)</strong>
+                    <p style="margin-top: 15px; opacity: 0.9;">
+                        Options for storing JWT:<br><br>
+                        <strong style="color: #ff6b6b;">❌ localStorage:</strong> Vulnerable to XSS<br>
+                        <strong style="color: #ffc107;">⚠️ sessionStorage:</strong> Better but still XSS risk<br>
+                        <strong style="color: #68d391;">✅ httpOnly Cookie:</strong> Best (not accessible to JS)<br>
+                        <strong style="color: #68d391;">✅ Memory only:</strong> Most secure (lost on refresh)
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Summary -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; border-radius: 15px; color: white; margin-top: 50px;">
+            <h2 style="text-align: center; margin-bottom: 30px; font-size: 2em;">📚 Summary</h2>
+            
+            <div style="display: grid; gap: 20px;">
+                <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 10px;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">1️⃣</div>
+                    <strong style="font-size: 1.3em;">JWT = Smart Card with Seal</strong>
+                    <p style="margin-top: 10px; opacity: 0.9;">
+                        Contains your identity. Signed with secret key. Server verifies signature. No database lookup needed!
+                    </p>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 10px;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">2️⃣</div>
+                    <strong style="font-size: 1.3em;">Three Parts: Header.Payload.Signature</strong>
+                    <p style="margin-top: 10px; opacity: 0.9;">
+                        Header = algorithm. Payload = your data (Base64, NOT encrypted!). Signature = security (HMAC with secret).
+                    </p>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 10px;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">3️⃣</div>
+                    <strong style="font-size: 1.3em;">Stateless = Easy to Scale</strong>
+                    <p style="margin-top: 10px; opacity: 0.9;">
+                        No server storage needed. Any server can verify token. Perfect for microservices!
+                    </p>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 10px;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">4️⃣</div>
+                    <strong style="font-size: 1.3em;">Signature Prevents Tampering</strong>
+                    <p style="margin-top: 10px; opacity: 0.9;">
+                        Hacker can change payload but can't fake signature without SECRET_KEY. Server rejects invalid signatures.
+                    </p>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 10px;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">5️⃣</div>
+                    <strong style="font-size: 1.3em;">Production: Refresh Tokens + HTTPS + RBAC</strong>
+                    <p style="margin-top: 10px; opacity: 0.9;">
+                        Short-lived JWTs. HTTPS mandatory. Add roles for access control. Store safely (httpOnly cookies).
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>
