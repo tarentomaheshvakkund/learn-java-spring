@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrier Threads vs Virtual Threads</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #6366f1;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 40px;
+        }
+        .analogy-box {
+            background: #fef3c7;
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid #f59e0b;
+            margin: 30px 0;
+        }
+        .analogy-box h2 {
+            color: #f59e0b;
+            margin-top: 0;
+        }
+        .visual-demo {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border: 3px solid #6366f1;
+        }
+        .carrier {
+            background: #3b82f6;
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px auto;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            max-width: 600px;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+            position: relative;
+        }
+        .carrier::before {
+            content: "🚂";
+            font-size: 2em;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .virtual {
+            background: #10b981;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin: 10px;
+            display: inline-block;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3);
+        }
+        .virtual::before {
+            content: "📦";
+            margin-right: 8px;
+        }
+        .virtual-waiting {
+            background: #94a3b8;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin: 10px;
+            display: inline-block;
+            font-weight: bold;
+            opacity: 0.7;
+        }
+        .virtual-waiting::before {
+            content: "😴";
+            margin-right: 8px;
+        }
+        .arrow {
+            text-align: center;
+            font-size: 3em;
+            color: #6366f1;
+            margin: 20px 0;
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .comparison-card {
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .carrier-card {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+        .virtual-card {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        .comparison-card h3 {
+            margin-top: 0;
+            font-size: 1.8em;
+        }
+        .comparison-card ul {
+            text-align: left;
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+        .key-point {
+            background: #dbeafe;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #3b82f6;
+        }
+        .example-box {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+        }
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #92400e;
+        }
+        .timeline {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .timeline-step {
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 5px solid #6366f1;
+        }
+        .step1 { background: #dbeafe; }
+        .step2 { background: #fef3c7; }
+        .step3 { background: #d1fae5; }
+        .step4 { background: #e0e7ff; }
+        .big-idea {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.4em;
+            font-weight: bold;
+            margin: 30px 0;
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        th {
+            background: #6366f1;
+            color: white;
+            font-size: 1.1em;
+        }
+        tr:hover {
+            background: #f3f4f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚂 Carrier Threads vs 📦 Virtual Threads</h1>
+
+        <!-- THE PERFECT ANALOGY -->
+        <div class="analogy-box">
+            <h2>🚂 The Train and Packages Analogy</h2>
+            <div style="font-size: 1.2em; line-height: 1.8;">
+                <p><strong>Carrier Thread = 🚂 Train (Railway Engine)</strong></p>
+                <ul>
+                    <li>A <strong>real, physical train</strong> on the tracks</li>
+                    <li>There are only a <strong>few trains</strong> (expensive to run!)</li>
+                    <li>The train does the <strong>actual movement</strong></li>
+                    <li>These are <strong>OS threads</strong> - real operating system resources</li>
+                </ul>
+
+                <p style="margin-top: 30px;"><strong>Virtual Thread = 📦 Package (Cargo)</strong></p>
+                <ul>
+                    <li>Lightweight <strong>packages</strong> that need to be delivered</li>
+                    <li>You can have <strong>millions of packages</strong> (cheap!)</li>
+                    <li>A package can only move when it's <strong>loaded on a train</strong></li>
+                    <li>When the package is waiting, it's <strong>stored in the warehouse</strong> (not using a train)</li>
+                </ul>
+
+                <div style="background: white; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                    <p style="text-align: center; font-size: 1.3em; color: #f59e0b; margin: 0;">
+                        <strong>🎯 Key Idea: Many packages share a few trains!</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISUAL DEMONSTRATION -->
+        <div class="visual-demo">
+            <h2 style="color: #6366f1; text-align: center;">How They Work Together</h2>
+            
+            <div class="timeline">
+                <div class="timeline-step step1">
+                    <h3>⏱️ Time 0: Virtual Thread A is Running</h3>
+                    <div class="carrier">
+                        CARRIER THREAD #1
+                        <div style="font-size: 0.7em; margin-top: 10px;">(OS Thread - REAL)</div>
+                        <div style="margin-top: 20px;">
+                            <div class="virtual">Virtual Thread A - RUNNING CODE 🏃</div>
+                        </div>
+                    </div>
+                    <p style="text-align: center; margin-top: 15px;">Virtual Thread A is <span class="highlight">mounted</span> on Carrier Thread #1</p>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="timeline-step step2">
+                    <h3>⏱️ Time 1: Virtual Thread A Starts Waiting</h3>
+                    <div class="carrier">
+                        CARRIER THREAD #1
+                        <div style="font-size: 0.7em; margin-top: 10px;">(OS Thread - NOW FREE! 🎉)</div>
+                        <div style="margin-top: 20px;">
+                            <div style="color: #94a3b8; font-size: 0.9em;">Empty - Ready for another virtual thread</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <div class="virtual-waiting">Virtual Thread A - WAITING (database query...)</div>
+                    </div>
+                    <p style="text-align: center; margin-top: 15px;">Virtual Thread A is <span class="highlight">unmounted</span> - stored in JVM memory, not using OS resources!</p>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="timeline-step step3">
+                    <h3>⏱️ Time 2: Carrier Thread Picks Up Virtual Thread B</h3>
+                    <div class="carrier">
+                        CARRIER THREAD #1
+                        <div style="font-size: 0.7em; margin-top: 10px;">(Same OS Thread! 🚂)</div>
+                        <div style="margin-top: 20px;">
+                            <div class="virtual">Virtual Thread B - RUNNING CODE 🏃</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <div class="virtual-waiting">Virtual Thread A - Still waiting...</div>
+                    </div>
+                    <p style="text-align: center; margin-top: 15px;">The <strong>same carrier thread</strong> is now running a <strong>different virtual thread</strong>!</p>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <div class="timeline-step step4">
+                    <h3>⏱️ Time 3: Virtual Thread A is Ready Again</h3>
+                    <div class="carrier">
+                        CARRIER THREAD #1
+                        <div style="font-size: 0.7em; margin-top: 10px;">(OS Thread)</div>
+                        <div style="margin-top: 20px;">
+                            <div class="virtual">Virtual Thread A - RESUMED! 🎉</div>
+                        </div>
+                    </div>
+                    <p style="text-align: center; margin-top: 15px;">Database response arrived! Virtual Thread A gets <span class="highlight">re-mounted</span> and continues</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DETAILED COMPARISON -->
+        <div class="comparison-grid">
+            <div class="comparison-card carrier-card">
+                <h3>🚂 CARRIER THREAD</h3>
+                <ul>
+                    <li><strong>Type:</strong> Real OS Thread</li>
+                    <li><strong>Weight:</strong> Heavy (1-2 MB)</li>
+                    <li><strong>Count:</strong> FEW (typically = CPU cores)</li>
+                    <li><strong>Speed:</strong> Slow to create</li>
+                    <li><strong>Job:</strong> Execute actual code on CPU</li>
+                    <li><strong>Created by:</strong> Operating System</li>
+                    <li><strong>Pool:</strong> ForkJoinPool</li>
+                </ul>
+            </div>
+
+            <div class="comparison-card virtual-card">
+                <h3>📦 VIRTUAL THREAD</h3>
+                <ul>
+                    <li><strong>Type:</strong> JVM-managed abstraction</li>
+                    <li><strong>Weight:</strong> Lightweight (few KB)</li>
+                    <li><strong>Count:</strong> MILLIONS possible!</li>
+                    <li><strong>Speed:</strong> Instant to create</li>
+                    <li><strong>Job:</strong> Represent a task/work</li>
+                    <li><strong>Created by:</strong> Java Virtual Machine</li>
+                    <li><strong>Pool:</strong> NO pooling needed!</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- THE BIG IDEA -->
+        <div class="big-idea">
+            💡 THE KEY DIFFERENCE:<br><br>
+            A Virtual Thread <strong>CANNOT RUN BY ITSELF</strong>.<br>
+            It needs to be <strong>MOUNTED</strong> on a Carrier Thread to execute!<br><br>
+            Think: A package needs a train to move! 🚂📦
+        </div>
+
+        <!-- DETAILED TABLE -->
+        <h2 style="color: #6366f1;">📊 Side-by-Side Comparison</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Aspect</th>
+                    <th>Carrier Thread 🚂</th>
+                    <th>Virtual Thread 📦</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>What is it?</strong></td>
+                    <td>Real OS thread (Platform Thread)</td>
+                    <td>JVM-managed lightweight thread</td>
+                </tr>
+                <tr>
+                    <td><strong>Physical Resource?</strong></td>
+                    <td>✅ Yes - actual OS resource</td>
+                    <td>❌ No - just data in JVM memory</td>
+                </tr>
+                <tr>
+                    <td><strong>Memory Cost</strong></td>
+                    <td>1-2 MB per thread</td>
+                    <td>Few KB per thread</td>
+                </tr>
+                <tr>
+                    <td><strong>How Many?</strong></td>
+                    <td>Few (often = CPU cores)</td>
+                    <td>Millions!</td>
+                </tr>
+                <tr>
+                    <td><strong>Who Creates?</strong></td>
+                    <td>Operating System</td>
+                    <td>Java Virtual Machine</td>
+                </tr>
+                <tr>
+                    <td><strong>Can Execute Code?</strong></td>
+                    <td>✅ Yes - runs on CPU</td>
+                    <td>❌ No - needs carrier thread</td>
+                </tr>
+                <tr>
+                    <td><strong>When Waiting?</strong></td>
+                    <td>Blocks (wastes resources)</td>
+                    <td>Unmounts (frees carrier thread)</td>
+                </tr>
+                <tr>
+                    <td><strong>Pooling?</strong></td>
+                    <td>ForkJoinPool (managed by JVM)</td>
+                    <td>NO pooling - create & destroy!</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- KEY CONCEPTS -->
+        <div class="key-point">
+            <h3>🔑 Key Concepts to Remember:</h3>
+            <ol style="font-size: 1.1em; line-height: 2;">
+                <li><strong>Mounting:</strong> When a virtual thread is loaded onto a carrier thread to execute (package loaded on train)</li>
+                <li><strong>Unmounting:</strong> When a virtual thread is removed from carrier thread because it's waiting (package unloaded to warehouse)</li>
+                <li><strong>Carrier Threads = Workers:</strong> They do the actual CPU work</li>
+                <li><strong>Virtual Threads = Tasks:</strong> They represent what work needs to be done</li>
+                <li><strong>1 Carrier : Many Virtual:</strong> One carrier thread can run many virtual threads (but only ONE at a time)</li>
+            </ol>
+        </div>
+
+        <!-- CODE EXAMPLE -->
+        <h2 style="color: #6366f1;">💻 In the Code</h2>
+        <div class="example-box">
+// When you write this:
+Thread.ofVirtual().start(() -> {
+    System.out.println("Hello from: " + Thread.currentThread());
+    Thread.sleep(1000);  // Virtual thread BLOCKS here
+    System.out.println("Still running!");
+});
+
+/* What happens behind the scenes:
+ * 
+ * 1. JVM creates a VIRTUAL THREAD (cheap, fast)
+ * 2. JVM picks a CARRIER THREAD from its pool
+ * 3. Virtual thread is MOUNTED on carrier thread
+ * 4. Code runs: prints first message
+ * 5. Thread.sleep(1000) - Virtual thread UNMOUNTS
+ *    → Carrier thread is FREE to run other virtual threads!
+ * 6. After 1 second, virtual thread REMOUNTS on a carrier
+ * 7. Code continues: prints second message
+ * 8. Virtual thread completes and is destroyed
+ */
+
+// Output might be:
+// Hello from: VirtualThread[#21]/runnable@ForkJoinPool-1-worker-1
+//                  ^virtual thread      ^carrier thread
+        </div>
+
+        <!-- REAL WORLD ANALOGY -->
+        <div style="background: #f0fdf4; padding: 30px; border-radius: 15px; margin: 30px 0; border: 3px solid #10b981;">
+            <h2 style="color: #10b981;">🌍 Real World Analogy</h2>
+            <div style="font-size: 1.2em; line-height: 1.8;">
+                <p><strong>Imagine a restaurant kitchen:</strong></p>
+                
+                <p>🧑‍🍳 <strong>Carrier Threads = Chefs</strong></p>
+                <ul>
+                    <li>You have 4 chefs (expensive to hire!)</li>
+                    <li>They're the only ones who can actually COOK</li>
+                </ul>
+
+                <p>📋 <strong>Virtual Threads = Food Orders</strong></p>
+                <ul>
+                    <li>You have 1000 orders (cheap pieces of paper!)</li>
+                    <li>Each order needs a chef to prepare it</li>
+                    <li>When an order is waiting (oven timer), the chef moves to another order</li>
+                    <li>When food is ready, a chef comes back to finish that order</li>
+                </ul>
+
+                <div style="background: white; padding: 20px; border-radius: 10px; margin-top: 20px; text-align: center;">
+                    <strong style="font-size: 1.2em; color: #10b981;">4 chefs can handle 1000 orders efficiently because they don't stand idle!</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- FINAL SUMMARY -->
+        <div class="big-idea">
+            <div style="font-size: 1.5em; margin-bottom: 20px;">🎯 SUMMARY</div>
+            <div style="font-size: 1.1em; text-align: left; max-width: 800px; margin: 0 auto;">
+                <p>✅ <strong>CARRIER THREAD</strong> = The real worker (OS thread) that executes code on CPU</p>
+                <p>✅ <strong>VIRTUAL THREAD</strong> = The task that needs to be executed</p>
+                <p>✅ Virtual threads "ride" on carrier threads</p>
+                <p>✅ When virtual thread waits, it gets off → carrier thread helps others</p>
+                <p>✅ This is why you can have millions of virtual threads with just a few carrier threads!</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
