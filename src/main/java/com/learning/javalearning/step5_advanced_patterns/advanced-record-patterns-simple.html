@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Record Patterns - Simple Explained</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 2.8em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: white;
+            font-size: 1.4em;
+            margin-bottom: 40px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 45px;
+            margin-bottom: 35px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 35px;
+            font-size: 2.2em;
+            border-bottom: 4px solid #667eea;
+            padding-bottom: 15px;
+        }
+
+        /* STORY BOX */
+        .story-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 35px;
+            border-radius: 15px;
+            margin: 25px 0;
+            font-size: 1.15em;
+            line-height: 1.9;
+        }
+
+        .story-box h3 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .story-box .emoji {
+            font-size: 1.5em;
+        }
+
+        /* SIMPLE VISUAL */
+        .simple-visual {
+            background: #f8f9fa;
+            padding: 35px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .box-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .big-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            font-size: 1.3em;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            min-width: 250px;
+            text-align: center;
+        }
+
+        .small-box {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin: 15px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.2);
+        }
+
+        .arrow {
+            font-size: 3em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .result-box {
+            background: #28a745;
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.2);
+        }
+
+        /* CODE COMPARISON */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 35px;
+            margin: 30px 0;
+        }
+
+        .column {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border: 4px solid;
+        }
+
+        .column.bad {
+            border-color: #dc3545;
+        }
+
+        .column.good {
+            border-color: #28a745;
+        }
+
+        .column h3 {
+            margin-bottom: 20px;
+            font-size: 1.6em;
+        }
+
+        .column.bad h3 {
+            color: #dc3545;
+        }
+
+        .column.good h3 {
+            color: #28a745;
+        }
+
+        .code {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 25px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.05em;
+            line-height: 1.8;
+            overflow-x: auto;
+        }
+
+        .keyword {
+            color: #ff79c6;
+            font-weight: bold;
+        }
+
+        .type {
+            color: #8be9fd;
+        }
+
+        .string {
+            color: #f1fa8c;
+        }
+
+        .comment {
+            color: #6272a4;
+            font-style: italic;
+        }
+
+        .highlight {
+            background: #ffeb3b;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #2d2d2d;
+            font-weight: bold;
+        }
+
+        .number {
+            color: #bd93f9;
+        }
+
+        /* EXAMPLE CARDS */
+        .example-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-left: 6px solid #667eea;
+        }
+
+        .example-card h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .example-card .scenario {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #0066cc;
+            font-size: 1.1em;
+        }
+
+        .example-card .scenario strong {
+            color: #0066cc;
+        }
+
+        /* STEP BY STEP */
+        .steps {
+            margin: 30px 0;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 25px;
+            margin: 25px 0;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5em;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .step-content p {
+            font-size: 1.1em;
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+
+        /* HIGHLIGHT BOX */
+        .highlight-box {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            font-size: 1.2em;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .highlight-box strong {
+            font-size: 1.3em;
+        }
+
+        /* INFO BOXES */
+        .info-box {
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border-left: 6px solid;
+            font-size: 1.1em;
+            line-height: 1.7;
+        }
+
+        .info-box.blue {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+
+        .info-box.yellow {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .info-box.green {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .info-box h4 {
+            margin-bottom: 12px;
+            font-size: 1.3em;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+            
+            .box-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Advanced Record Patterns</h1>
+        <p class="subtitle">Explained with Everyday Examples!</p>
+
+        <!-- FEATURE 1: NESTED PATTERNS -->
+        <div class="section">
+            <h2>📦 Feature 1: Nested Patterns</h2>
+
+            <div class="story-box">
+                <h3>🛒 Real Life Story: Online Shopping</h3>
+                <p class="emoji">🛍️</p>
+                <p>
+                    Imagine you ordered a product online. The delivery contains:
+                    <br>• A <strong>Box</strong> (the order)
+                    <br>• Inside that box is a <strong>Product</strong>
+                    <br>• That product has a <strong>name</strong> and <strong>price</strong>
+                </p>
+                <p style="margin-top: 20px;">
+                    <strong>OLD WAY:</strong> Open the box → Take out product → Read name → Read price (4 steps!)
+                    <br><strong>NEW WAY:</strong> X-ray vision! See everything instantly! 🔍
+                </p>
+            </div>
+
+            <!-- VISUAL REPRESENTATION -->
+            <div class="simple-visual">
+                <h3 style="color: #667eea; text-align: center; margin-bottom: 30px; font-size: 1.8em;">
+                    How It Looks:
+                </h3>
+
+                <div class="box-container">
+                    <div class="big-box">
+                        📦 Order
+                        <div class="small-box">
+                            🎁 Product
+                            <div style="margin-top: 15px; font-size: 0.9em;">
+                                Name: "Laptop"<br>
+                                Price: ₹50,000
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="arrow">➜</div>
+
+                    <div style="text-align: center;">
+                        <div style="background: #fff3cd; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                            <strong style="color: #856404; font-size: 1.2em;">ONE Pattern Match:</strong>
+                            <div class="code" style="margin-top: 15px; font-size: 0.95em;">
+Order(Product(name, price))
+                            </div>
+                        </div>
+                        <div class="arrow" style="margin: 15px 0;">⬇️</div>
+                        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                            <div class="result-box">name = "Laptop"</div>
+                            <div class="result-box">price = ₹50,000</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CODE COMPARISON -->
+            <h3 style="color: #667eea; margin: 40px 0 25px 0; font-size: 1.8em;">Code Comparison:</h3>
+            <div class="two-column">
+                <div class="column bad">
+                    <h3>❌ OLD WAY (Multiple Steps)</h3>
+                    <div class="code">
+<span class="keyword">record</span> <span class="type">Product</span>(<span class="type">String</span> name, <span class="keyword">int</span> price) {}
+<span class="keyword">record</span> <span class="type">Order</span>(<span class="type">Product</span> product) {}
+
+<span class="comment">// Step 1: Check if it's an Order</span>
+<span class="keyword">if</span> (obj <span class="keyword">instanceof</span> <span class="type">Order</span> order) {
+    
+    <span class="comment">// Step 2: Get the product</span>
+    <span class="type">Product</span> p = order.product();
+    
+    <span class="comment">// Step 3: Get name</span>
+    <span class="type">String</span> name = p.name();
+    
+    <span class="comment">// Step 4: Get price</span>
+    <span class="keyword">int</span> price = p.price();
+    
+    <span class="comment">// Finally use them!</span>
+    System.out.println(name + <span class="string">": ₹"</span> + price);
+}
+
+<span class="comment">// 😰 Too many steps!</span>
+                    </div>
+                </div>
+
+                <div class="column good">
+                    <h3>✅ NEW WAY (One Step!)</h3>
+                    <div class="code">
+<span class="keyword">record</span> <span class="type">Product</span>(<span class="type">String</span> name, <span class="keyword">int</span> price) {}
+<span class="keyword">record</span> <span class="type">Order</span>(<span class="type">Product</span> product) {}
+
+<span class="comment">// ONE step extracts EVERYTHING! 🎯</span>
+<span class="keyword">if</span> (obj <span class="keyword">instanceof</span> 
+    <span class="type">Order</span>(<span class="type">Product</span>(<span class="type">String</span> <span class="highlight">name</span>, <span class="keyword">int</span> <span class="highlight">price</span>))) {
+    
+    <span class="comment">// name and price ready to use!</span>
+    System.out.println(name + <span class="string">": ₹"</span> + price);
+}
+
+<span class="comment">// ✨ SO CLEAN!</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>🎯 Another Example: Student Report Card</h3>
+                <div class="scenario">
+                    <strong>Scenario:</strong> You have a student report card that contains their subject and grade
+                </div>
+                <div class="code">
+<span class="keyword">record</span> <span class="type">Subject</span>(<span class="type">String</span> name, <span class="keyword">int</span> marks) {}
+<span class="keyword">record</span> <span class="type">ReportCard</span>(<span class="type">String</span> studentName, <span class="type">Subject</span> subject) {}
+
+<span class="type">ReportCard</span> card = <span class="keyword">new</span> <span class="type">ReportCard</span>(
+    <span class="string">"Mahesh"</span>, 
+    <span class="keyword">new</span> <span class="type">Subject</span>(<span class="string">"Math"</span>, <span class="number">95</span>)
+);
+
+<span class="comment">// Extract student name, subject name, and marks in ONE line! 🚀</span>
+<span class="keyword">if</span> (card <span class="keyword">instanceof</span> 
+    <span class="type">ReportCard</span>(<span class="type">String</span> student, <span class="type">Subject</span>(<span class="type">String</span> subName, <span class="keyword">int</span> marks))) {
+    
+    System.out.println(student + <span class="string">" scored "</span> + marks + <span class="string">" in "</span> + subName);
+    <span class="comment">// Output: Mahesh scored 95 in Math</span>
+}
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>💡 Key Point:</strong> One pattern can "see through" multiple layers and extract all values at once!
+            </div>
+        </div>
+
+        <!-- FEATURE 2: GUARDED PATTERNS -->
+        <div class="section">
+            <h2>🛡️ Feature 2: Guarded Patterns (Pattern + Condition)</h2>
+
+            <div class="story-box">
+                <h3>📧 Real Life Story: Email Filter</h3>
+                <p class="emoji">📬</p>
+                <p>
+                    Your email app sorts emails into folders:
+                    <br>• <strong>Urgent:</strong> If sender is "Boss" AND subject contains "urgent"
+                    <br>• <strong>Important:</strong> If sender is "Boss" (but not urgent)
+                    <br>• <strong>Regular:</strong> Everything else
+                </p>
+                <p style="margin-top: 20px;">
+                    <strong>OLD WAY:</strong> Check if email → Check sender → Check subject → Check condition (nested if-else!)
+                    <br><strong>NEW WAY:</strong> Check pattern AND condition together using <code>when</code>! 🎯
+                </p>
+            </div>
+
+            <!-- VISUAL REPRESENTATION -->
+            <div class="simple-visual">
+                <h3 style="color: #667eea; text-align: center; margin-bottom: 30px; font-size: 1.8em;">
+                    How It Works:
+                </h3>
+
+                <div class="steps">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Email Arrives</h4>
+                            <div class="code">
+Email(<span class="string">"Boss"</span>, <span class="string">"Urgent: Meeting"</span>)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-item" style="background: #fff3cd;">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Pattern Match with Condition</h4>
+                            <div class="code">
+<span class="keyword">case</span> Email(<span class="type">String</span> sender, <span class="type">String</span> subject) 
+    <span class="keyword">when</span> sender.equals(<span class="string">"Boss"</span>) &amp;&amp; subject.contains(<span class="string">"urgent"</span>)
+                            </div>
+                            <p style="margin-top: 15px; color: #856404;"><strong>Check:</strong> Is sender "Boss"? ✅ YES | Does subject contain "urgent"? ✅ YES</p>
+                        </div>
+                    </div>
+
+                    <div class="step-item" style="background: #d4edda;">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Result</h4>
+                            <div class="result-box" style="margin-top: 10px;">
+                                ✅ MATCH! → Move to Urgent folder
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CODE COMPARISON -->
+            <h3 style="color: #667eea; margin: 40px 0 25px 0; font-size: 1.8em;">Code Comparison:</h3>
+            <div class="two-column">
+                <div class="column bad">
+                    <h3>❌ OLD WAY (Nested If-Else)</h3>
+                    <div class="code">
+<span class="keyword">record</span> <span class="type">Email</span>(<span class="type">String</span> sender, <span class="type">String</span> subject) {}
+
+<span class="type">String</span> folder = <span class="string">""</span>;
+
+<span class="keyword">if</span> (obj <span class="keyword">instanceof</span> <span class="type">Email</span> e) {
+    <span class="keyword">if</span> (e.sender().equals(<span class="string">"Boss"</span>)) {
+        <span class="keyword">if</span> (e.subject().contains(<span class="string">"urgent"</span>)) {
+            folder = <span class="string">"Urgent"</span>;
+        } <span class="keyword">else</span> {
+            folder = <span class="string">"Important"</span>;
+        }
+    } <span class="keyword">else</span> {
+        folder = <span class="string">"Regular"</span>;
+    }
+}
+
+<span class="comment">// 😰 Nested if-else nightmare!</span>
+                    </div>
+                </div>
+
+                <div class="column good">
+                    <h3>✅ NEW WAY (Guarded Patterns)</h3>
+                    <div class="code">
+<span class="keyword">record</span> <span class="type">Email</span>(<span class="type">String</span> sender, <span class="type">String</span> subject) {}
+
+<span class="type">String</span> folder = <span class="keyword">switch</span> (obj) {
+    <span class="comment">// Pattern + Condition together!</span>
+    <span class="keyword">case</span> <span class="type">Email</span>(<span class="type">String</span> s, <span class="type">String</span> sub) 
+        <span class="keyword">when</span> s.equals(<span class="string">"Boss"</span>) &amp;&amp; sub.contains(<span class="string">"urgent"</span>)
+            -&gt; <span class="string">"Urgent"</span>;
+    
+    <span class="keyword">case</span> <span class="type">Email</span>(<span class="type">String</span> s, <span class="type">String</span> sub) 
+        <span class="keyword">when</span> s.equals(<span class="string">"Boss"</span>)
+            -&gt; <span class="string">"Important"</span>;
+    
+    <span class="keyword">default</span> -&gt; <span class="string">"Regular"</span>;
+};
+
+<span class="comment">// ✨ Clean and readable!</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>🎯 Another Example: Movie Ticket Pricing</h3>
+                <div class="scenario">
+                    <strong>Scenario:</strong> Ticket prices based on age: Kids get discount, seniors get special price
+                </div>
+                <div class="code">
+<span class="keyword">record</span> <span class="type">Customer</span>(<span class="type">String</span> name, <span class="keyword">int</span> age) {}
+
+<span class="type">String</span> getTicketPrice(<span class="type">Customer</span> customer) {
+    <span class="keyword">return switch</span> (customer) {
+        <span class="comment">// Kids under 12: ₹100</span>
+        <span class="keyword">case</span> <span class="type">Customer</span>(<span class="type">String</span> name, <span class="keyword">int</span> age) 
+            <span class="keyword">when</span> age &lt; <span class="number">12</span> 
+                -&gt; name + <span class="string">": ₹100 (Kid price)"</span>;
+        
+        <span class="comment">// Seniors 60+: ₹150</span>
+        <span class="keyword">case</span> <span class="type">Customer</span>(<span class="type">String</span> name, <span class="keyword">int</span> age) 
+            <span class="keyword">when</span> age &gt;= <span class="number">60</span> 
+                -&gt; name + <span class="string">": ₹150 (Senior price)"</span>;
+        
+        <span class="comment">// Adults: ₹250</span>
+        <span class="keyword">case</span> <span class="type">Customer</span>(<span class="type">String</span> name, <span class="keyword">int</span> age) 
+            -&gt; name + <span class="string">": ₹250 (Adult price)"</span>;
+    };
+}
+
+<span class="comment">// Examples:</span>
+<span class="comment">// Customer("Aarav", 8)  → "Aarav: ₹100 (Kid price)"</span>
+<span class="comment">// Customer("Mahesh", 25) → "Mahesh: ₹250 (Adult price)"</span>
+<span class="comment">// Customer("Grandpa", 65) → "Grandpa: ₹150 (Senior price)"</span>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>💡 Key Point:</strong> Use <code>when</code> to add conditions. Pattern matches ONLY if structure AND condition are both true!
+            </div>
+        </div>
+
+        <!-- FEATURE 3: UNDERSCORE PATTERN -->
+        <div class="section">
+            <h2>🙈 Feature 3: Underscore Pattern (_) - Ignore What You Don't Need</h2>
+
+            <div class="story-box">
+                <h3>📱 Real Life Story: Contact List</h3>
+                <p class="emoji">📇</p>
+                <p>
+                    Your phone contact has:
+                    <br>• Name: "Mahesh"
+                    <br>• Phone: "9876543210"
+                    <br>• Email: "mahesh@example.com"
+                    <br>• Address: "Mumbai"
+                </p>
+                <p style="margin-top: 20px;">
+                    <strong>Problem:</strong> You only want to display the name. You don't care about phone, email, or address!
+                    <br><strong>Solution:</strong> Use <code>_</code> (underscore) to say "I know this exists, but I'm ignoring it" 🙈
+                </p>
+            </div>
+
+            <!-- VISUAL REPRESENTATION -->
+            <div class="simple-visual">
+                <h3 style="color: #667eea; text-align: center; margin-bottom: 30px; font-size: 1.8em;">
+                    What Does <code>_</code> Mean?
+                </h3>
+
+                <div class="box-container">
+                    <div class="big-box">
+                        Contact
+                        <div style="margin-top: 20px; font-size: 0.9em;">
+                            <div style="margin: 10px 0;">✅ Name: "Mahesh"</div>
+                            <div style="margin: 10px 0; opacity: 0.5;">❌ Phone: _ (don't care)</div>
+                            <div style="margin: 10px 0; opacity: 0.5;">❌ Email: _ (don't care)</div>
+                            <div style="margin: 10px 0; opacity: 0.5;">❌ Address: _ (don't care)</div>
+                        </div>
+                    </div>
+
+                    <div class="arrow">➜</div>
+
+                    <div>
+                        <div class="code" style="margin-bottom: 20px;">
+Contact(<span class="type">String</span> name, <span class="type">String</span> <span class="highlight">_</span>, <span class="type">String</span> <span class="highlight">_</span>, <span class="type">String</span> <span class="highlight">_</span>)
+                        </div>
+                        <div class="arrow" style="margin: 15px 0;">⬇️</div>
+                        <div class="result-box">
+                            Only get: name = "Mahesh"
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CODE COMPARISON -->
+            <h3 style="color: #667eea; margin: 40px 0 25px 0; font-size: 1.8em;">Code Comparison:</h3>
+            <div class="two-column">
+                <div class="column bad">
+                    <h3>❌ Without Underscore (Warnings!)</h3>
+                    <div class="code">
+<span class="keyword">record</span> <span class="type">Contact</span>(
+    <span class="type">String</span> name, 
+    <span class="type">String</span> phone, 
+    <span class="type">String</span> email, 
+    <span class="type">String</span> address
+) {}
+
+<span class="keyword">case</span> <span class="type">Contact</span>(<span class="type">String</span> name, <span class="type">String</span> phone, 
+              <span class="type">String</span> email, <span class="type">String</span> address) 
+    -&gt; <span class="string">"Name: "</span> + name;
+
+<span class="comment">// ⚠️ Compiler warnings:</span>
+<span class="comment">// "phone is never used"</span>
+<span class="comment">// "email is never used"</span>
+<span class="comment">// "address is never used"</span>
+<span class="comment">// 😰 Confusing! Did you forget?</span>
+                    </div>
+                </div>
+
+                <div class="column good">
+                    <h3>✅ With Underscore (Clean!)</h3>
+                    <div class="code">
+<span class="keyword">record</span> <span class="type">Contact</span>(
+    <span class="type">String</span> name, 
+    <span class="type">String</span> phone, 
+    <span class="type">String</span> email, 
+    <span class="type">String</span> address
+) {}
+
+<span class="keyword">case</span> <span class="type">Contact</span>(<span class="type">String</span> name, <span class="type">String</span> <span class="highlight">_</span>, 
+              <span class="type">String</span> <span class="highlight">_</span>, <span class="type">String</span> <span class="highlight">_</span>) 
+    -&gt; <span class="string">"Name: "</span> + name;
+
+<span class="comment">// ✅ No warnings!</span>
+<span class="comment">// Clear intent: "I'm intentionally</span>
+<span class="comment">// ignoring phone, email, address"</span>
+<span class="comment">// ✨ Clean and intentional!</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>🎯 Another Example: Social Media Post</h3>
+                <div class="scenario">
+                    <strong>Scenario:</strong> Show only author name from a post, ignore likes, comments, and timestamp
+                </div>
+                <div class="code">
+<span class="keyword">record</span> <span class="type">Post</span>(
+    <span class="type">String</span> author, 
+    <span class="type">String</span> content, 
+    <span class="keyword">int</span> likes, 
+    <span class="keyword">int</span> comments, 
+    <span class="type">String</span> timestamp
+) {}
+
+<span class="type">String</span> showPost(<span class="type">Post</span> post) {
+    <span class="keyword">return switch</span> (post) {
+        <span class="comment">// Only care about author and content</span>
+        <span class="keyword">case</span> <span class="type">Post</span>(<span class="type">String</span> author, <span class="type">String</span> content, 
+                  <span class="keyword">int</span> <span class="highlight">_</span>, <span class="keyword">int</span> <span class="highlight">_</span>, <span class="type">String</span> <span class="highlight">_</span>) 
+            -&gt; author + <span class="string">": "</span> + content;
+    };
+}
+
+<span class="comment">// Example:</span>
+<span class="comment">// Post("Mahesh", "Learning Java!", 50, 10, "2PM")</span>
+<span class="comment">// Output: "Mahesh: Learning Java!"</span>
+<span class="comment">// (Ignored likes=50, comments=10, timestamp="2PM")</span>
+                </div>
+            </div>
+
+            <div class="info-box yellow">
+                <h4>💡 When to Use Underscore?</h4>
+                <p>
+                    <strong>Use <code>_</code> when:</strong>
+                    <br>• You know a field exists but don't need it
+                    <br>• You want to avoid "unused variable" warnings
+                    <br>• You want to make it clear you're intentionally ignoring something
+                    <br><br>
+                    <strong>Think of <code>_</code> as saying:</strong> "Yeah, I know this is here, but I don't care!" 🙈
+                </p>
+            </div>
+
+            <div class="highlight-box">
+                <strong>💡 Key Point:</strong> <code>_</code> = "I acknowledge this exists, but I'm NOT going to use it!"
+            </div>
+        </div>
+
+        <!-- COMBINING ALL THREE -->
+        <div class="section">
+            <h2>🎨 Combining All Three: Real Example</h2>
+
+            <div class="example-card">
+                <h3>🍕 Complete Example: Food Delivery App</h3>
+                <div class="scenario">
+                    <strong>Scenario:</strong> A food delivery app that needs to:
+                    <br>• Check order details (nested: Order contains Restaurant contains Address)
+                    <br>• Apply delivery charges based on distance (guarded pattern)
+                    <br>• Ignore some fields we don't need (underscore)
+                </div>
+
+                <div class="code">
+<span class="comment">// Define our data structure</span>
+<span class="keyword">record</span> <span class="type">Address</span>(<span class="type">String</span> city, <span class="keyword">int</span> pincode) {}
+<span class="keyword">record</span> <span class="type">Restaurant</span>(<span class="type">String</span> name, <span class="type">Address</span> address) {}
+<span class="keyword">record</span> <span class="type">Order</span>(<span class="type">String</span> orderId, <span class="type">Restaurant</span> restaurant, <span class="keyword">int</span> distanceKm) {}
+
+<span class="comment">// Calculate delivery charge</span>
+<span class="type">String</span> calculateCharge(<span class="type">Order</span> order) {
+    <span class="keyword">return switch</span> (order) {
+        <span class="comment">// Near: &lt;5km = Free delivery!</span>
+        <span class="comment">// Nested: Order → Restaurant → Address → city</span>
+        <span class="comment">// Guarded: when distance &lt; 5</span>
+        <span class="comment">// Underscore: Ignore pincode</span>
+        <span class="keyword">case</span> <span class="type">Order</span>(
+            <span class="type">String</span> id,
+            <span class="type">Restaurant</span>(<span class="type">String</span> restName, <span class="type">Address</span>(<span class="type">String</span> city, <span class="keyword">int</span> <span class="highlight">_</span>)),
+            <span class="keyword">int</span> dist
+        ) <span class="keyword">when</span> dist &lt; <span class="number">5</span> 
+            -&gt; restName + <span class="string">" in "</span> + city + <span class="string">": FREE delivery! 🎉"</span>;
+        
+        <span class="comment">// Medium: 5-10km = ₹40</span>
+        <span class="keyword">case</span> <span class="type">Order</span>(
+            <span class="type">String</span> id,
+            <span class="type">Restaurant</span>(<span class="type">String</span> restName, <span class="type">Address</span> <span class="highlight">_</span>),
+            <span class="keyword">int</span> dist
+        ) <span class="keyword">when</span> dist &lt;= <span class="number">10</span> 
+            -&gt; restName + <span class="string">": ₹40 delivery charge"</span>;
+        
+        <span class="comment">// Far: &gt;10km = ₹80</span>
+        <span class="keyword">case</span> <span class="type">Order</span>(<span class="type">String</span> <span class="highlight">_</span>, <span class="type">Restaurant</span>(<span class="type">String</span> restName, <span class="type">Address</span> <span class="highlight">_</span>), <span class="keyword">int</span> <span class="highlight">_</span>) 
+            -&gt; restName + <span class="string">": ₹80 delivery charge"</span>;
+    };
+}
+
+<span class="comment">// Test it!</span>
+<span class="type">Order</span> order1 = <span class="keyword">new</span> <span class="type">Order</span>(
+    <span class="string">"ORD123"</span>,
+    <span class="keyword">new</span> <span class="type">Restaurant</span>(<span class="string">"Pizza Hut"</span>, <span class="keyword">new</span> <span class="type">Address</span>(<span class="string">"Mumbai"</span>, <span class="number">400001</span>)),
+    <span class="number">3</span>  <span class="comment">// 3 km away</span>
+);
+
+System.out.println(calculateCharge(order1));
+<span class="comment">// Output: Pizza Hut in Mumbai: FREE delivery! 🎉</span>
+                </div>
+
+                <div class="info-box green" style="margin-top: 30px;">
+                    <h4>✨ What Happened Here?</h4>
+                    <p>
+                        <strong>1. Nested Pattern:</strong> We extracted city from Order → Restaurant → Address in ONE pattern!
+                        <br><br>
+                        <strong>2. Guarded Pattern:</strong> We added <code>when dist &lt; 5</code> to check distance
+                        <br><br>
+                        <strong>3. Underscore:</strong> We ignored orderId and pincode using <code>_</code> because we don't need them
+                        <br><br>
+                        <strong>Result:</strong> Clean, readable code that does everything in one pattern match! 🎯
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h2 style="color: white; border-color: white;">🎯 Quick Summary</h2>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-top: 30px;">
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px;">
+                    <h3 style="font-size: 1.6em; margin-bottom: 15px;">📦 Nested Patterns</h3>
+                    <p style="font-size: 1.1em; line-height: 1.7;">
+                        Extract values from nested records in ONE pattern match. 
+                        Like X-ray vision - see through multiple layers at once!
+                    </p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px;">
+                    <h3 style="font-size: 1.6em; margin-bottom: 15px;">🛡️ Guarded Patterns</h3>
+                    <p style="font-size: 1.1em; line-height: 1.7;">
+                        Add conditions using <code>when</code> keyword. 
+                        Pattern matches ONLY if both structure AND condition are true!
+                    </p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px;">
+                    <h3 style="font-size: 1.6em; margin-bottom: 15px;">🙈 Underscore Pattern</h3>
+                    <p style="font-size: 1.1em; line-height: 1.7;">
+                        Use <code>_</code> to ignore values you don't need. 
+                        No warnings, clean code, clear intent!
+                    </p>
+                </div>
+            </div>
+
+            <div style="margin-top: 40px; text-align: center; font-size: 1.5em; padding: 25px; background: rgba(255,255,255,0.2); border-radius: 12px;">
+                <strong>Bottom Line:</strong> Write less code, make it more readable, and handle complex data structures easily! 🚀
+            </div>
+        </div>
+    </div>
+</body>
+</html>

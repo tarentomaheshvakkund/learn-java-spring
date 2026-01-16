@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Design Module 9: Configuration Management Made Simple</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #8e44ad;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #8e44ad;
+            margin-top: 30px;
+        }
+
+        .analogy {
+            background-color: #f5eef8;
+            padding: 15px;
+            border-left: 5px solid #9b59b6;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .tech-concept {
+            background-color: #eaf2f8;
+            padding: 15px;
+            border-left: 5px solid #3498db;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        code {
+            background-color: #eee;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .mermaid {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        li:before {
+            content: "🔹";
+            position: absolute;
+            left: 0;
+        }
+    </style>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+
+<body>
+
+    <h1>Module 9: Configuration (The Chameleon)</h1>
+
+    <div class="analogy">
+        <h3>🦎 The Chameleon Analogy</h3>
+        <p>Imagine a Chameleon.</p>
+        <ul>
+            <li>In a <strong>Forest</strong> (Dev), it turns Green to blend in.</li>
+            <li>In a <strong>Desert</strong> (Prod), it turns Brown.</li>
+        </ul>
+        <p>It is the <strong>same animal</strong>, but it behaves differently based on its <strong>Environment</strong>.
+        </p>
+        <p>Your App is the Chameleon. It shouldn't change its DNA (Code) just to change its Color (Config).</p>
+    </div>
+
+    <h2>1. The Problem: Hardcoding</h2>
+    <p>If you write <code>String dbUrl = "localhost:3306"</code> in your Java code, you cannot deploy to Production.</p>
+    <p>Production has a different Database URL. Changing the code requires re-compiling and re-testing. That is
+        <strong>Bad System Design</strong>.
+    </p>
+
+    <h2>2. The Solution: Profiles</h2>
+    <div class="tech-concept">
+        <p><strong>Spring Profiles</strong> allow us to keep external config files. The App loads the correct one at
+            startup.</p>
+        <ul>
+            <li><strong>application-dev.properties</strong>: Used for local testing (H2 Database).</li>
+            <li><strong>application-prod.properties</strong>: Used for real users (MySQL Database).</li>
+        </ul>
+    </div>
+
+    <h2>3. Visualizing the Switch</h2>
+    <p>We use the flag <code>--spring.profiles.active</code> to tell the App where it "lives" right now.</p>
+
+    <div class="mermaid">
+        graph TD
+        App[("☕ My App (JAR)")]
+
+        subgraph Environments
+        Dev[Dev Environment]
+        Prod[Prod Environment]
+        end
+
+        App -- "Active: DEV" --> DevConfig["📄 application-dev.properties <br /> (H2 DB)"]
+        App -- "Active: PROD" --> ProdConfig["📄 application-prod.properties <br /> (MySQL)"]
+
+        DevConfig --> RunDev[Run with Debug Logs]
+        ProdConfig --> RunProd[Run with Security & Speed]
+
+        style App fill:#3498db,color:white
+        style DevConfig fill:#2ecc71,color:white
+        style ProdConfig fill:#e74c3c,color:white
+    </div>
+
+    <h2>4. How to Start the Chameleon?</h2>
+    <div class="tech-concept">
+        <p>You can tell the app which color (Profile) to use in 4 ways:</p>
+        <table border="1" style="border-collapse: collapse; width: 100%; text-align: left;">
+            <tr style="background-color: #3498db; color: white;">
+                <th style="padding: 10px;">Method</th>
+                <th style="padding: 10px;">Command</th>
+                <th style="padding: 10px;">Usage</th>
+            </tr>
+            <tr>
+                <td style="padding: 10px;"><strong>1. Command Line</strong></td>
+                <td style="padding: 10px;"><code>java -jar app.jar --spring.profiles.active=prod</code></td>
+                <td style="padding: 10px;">CI/CD Pipelines</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px;"><strong>2. Environment Var</strong></td>
+                <td style="padding: 10px;"><code>export SPRING_PROFILES_ACTIVE=prod</code></td>
+                <td style="padding: 10px;">Docker / Kubernetes</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px;"><strong>3. JVM Option</strong></td>
+                <td style="padding: 10px;"><code>-Dspring.profiles.active=prod</code></td>
+                <td style="padding: 10px;">Old Scripts</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px;"><strong>4. Properties</strong></td>
+                <td style="padding: 10px;"><code>spring.profiles.active=dev</code> in file</td>
+                <td style="padding: 10px;">Local / Default</td>
+            </tr>
+        </table>
+        <p><em>Note: Method 1 (Command Line) is stronger than Method 4.</em></p>
+    </div>
+
+    <h2>5. 12-Factor App Principle</h2>
+    <p>This follows the famous <strong>12-Factor App</strong> rule for modern cloud software:</p>
+    <blockquote>"Store config in the environment."</blockquote>
+    <p>This ensures that the exact same code (JAR file) can run anywhere, from your laptop to the largest server in the
+        world.</p>
+
+</body>
+
+</html>

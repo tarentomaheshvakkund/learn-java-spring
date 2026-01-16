@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Design Module 10: Circuit Breaker Made Simple</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            color: #c0392b;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #e74c3c;
+            margin-top: 30px;
+        }
+
+        .analogy {
+            background-color: #fadbd8;
+            padding: 15px;
+            border-left: 5px solid #c0392b;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .tech-concept {
+            background-color: #eaf2f8;
+            padding: 15px;
+            border-left: 5px solid #3498db;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        code {
+            background-color: #eee;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .mermaid {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        li:before {
+            content: "⚡";
+            position: absolute;
+            left: 0;
+        }
+    </style>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+
+<body>
+
+    <h1>Module 10: Circuit Breaker (The Safety Fuse)</h1>
+
+    <div class="analogy">
+        <h3>🏠 The Electrical Fuse Analogy</h3>
+        <p>Imagine your house has a fuse box.</p>
+        <ul>
+            <li>If one appliance (Toaster) malfunctions and draws too much power, the <strong>Fuse Blows</strong>
+                (Circuit Opens).</li>
+            <li>This cuts off power to the Toaster immediately.</li>
+            <li><strong>Why?</strong> To prevent the whole house from burning down ("Cascading Failure").</li>
+        </ul>
+        <p>In System Design, we do the same. If a Service is failing, we "Cut the Line" to save the rest of the system.
+        </p>
+    </div>
+
+    <h2>1. The Problem: Cascading Failure</h2>
+    <p>Service A calls Service B. Service B is slow/down.</p>
+    <p><strong>Result:</strong> Service A waits forever. Threads pile up. Service A crashes. All users suffer.</p>
+
+    <h2>2. The Solution: Three States</h2>
+    <div class="tech-concept">
+        <p>The Circuit Breaker is a State Machine that monitors failures.</p>
+        <ol>
+            <li><strong>CLOSED (🟢 Normal)</strong>: Checks flows freely.
+                <br><em>If failures < 50%, stay here.</em>
+            </li>
+            <br>
+            <li><strong>OPEN (🔴 Broken)</strong>: The Fuse has blown.
+                <br><em>All calls fail immediately (Fast Fallback). We don't even try to call the bad service.</em>
+                <br><em>Wait for X seconds (Cool down period).</em>
+            </li>
+            <br>
+            <li><strong>HALF-OPEN (🟡 Testing)</strong>: After the wait time.
+                <br><em>Allow a few "Test Calls".</em>
+                <br><em>If Success -> Go back to CLOSED (🟢).</em>
+                <br><em>If Fail -> Go back to OPEN (🔴).</em>
+            </li>
+        </ol>
+    </div>
+
+    <h2>3. Important Configuration Settings</h2>
+    <p>How does the Circuit know when to open? We configure it with numbers.</p>
+    <table border="1" style="border-collapse: collapse; width: 100%; text-align: left;">
+        <tr style="background-color: #3498db; color: white;">
+            <th style="padding: 10px;">Setting</th>
+            <th style="padding: 10px;">Value</th>
+            <th style="padding: 10px;">Meaning</th>
+        </tr>
+        <tr>
+            <td style="padding: 10px;"><strong>Sliding Window</strong></td>
+            <td style="padding: 10px;">Count-based (5)</td>
+            <td style="padding: 10px;">"Look at the last 5 calls."</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px;"><strong>Failure Threshold</strong></td>
+            <td style="padding: 10px;">50%</td>
+            <td style="padding: 10px;">"If 3 out of 5 fail, Trip the Circuit."</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px;"><strong>Wait Duration</strong></td>
+            <td style="padding: 10px;">10000ms (10s)</td>
+            <td style="padding: 10px;">"How long to stay OPEN before testing (Half-Open)."</td>
+        </tr>
+    </table>
+
+    <h2>4. Circuit Breaker vs. Retry</h2>
+    <div class="analogy" style="background-color: #f9e79f; border-left-color: #f1c40f;">
+        <h3>🔄 Retry vs. ⚡ Circuit Breaker</h3>
+        <p><strong>Retry:</strong> "It failed? Try again immediately!" (Good for momentary blips).</p>
+        <p><strong>Circuit Breaker:</strong> "It failed 5 times? Stop trying! Let it recover." (Good for persistent
+            outages).</p>
+        <p><em>Using them together is powerful, but dangerous if not tuned correctly.</em></p>
+    </div>
+
+    <h2>5. Visualizing the State Machine</h2>
+    <div class="mermaid">
+        stateDiagram-v2
+        [*] --> CLOSED
+
+        CLOSED --> OPEN : Failures > Threshold (50%)
+        note right of OPEN : Requests Blocked immediately. \nWait 10s.
+
+        OPEN --> HALF_OPEN : After Wait Duration
+
+        HALF_OPEN --> CLOSED : Test Calls Success
+        HALF_OPEN --> OPEN : Test Calls Fail
+
+        state CLOSED {
+        [*] --> NormalOperation
+        NormalOperation --> [*]
+        }
+        state OPEN {
+        [*] --> FallbackLogic
+        }
+        style CLOSED fill:#2ecc71,color:white
+        style OPEN fill:#e74c3c,color:white
+        style HALF_OPEN fill:#f1c40f,stroke:#f39c12
+    </div>
+
+    <h2>4. How it Runs in Code</h2>
+    <p>We use the <code>@CircuitBreaker</code> annotation.</p>
+    <pre><code>@CircuitBreaker(name = "payment", fallbackMethod = "fallback")
+public String pay() {
+   // Call External Service
+}
+
+public String fallback(Exception e) {
+   return "System Busy, try later";
+}</code></pre>
+    <p>If the circuit is <strong>OPEN</strong>, Java executes the <code>fallback</code> method instantly.</p>
+
+</body>
+
+</html>

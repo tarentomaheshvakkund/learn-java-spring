@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event-Driven Architecture Explained Simply</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+        }
+        
+        .analogy-section {
+            background: #f8f9ff;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .analogy-title {
+            font-size: 1.8em;
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .emoji {
+            font-size: 1.5em;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .comparison-box {
+            padding: 25px;
+            border-radius: 15px;
+            position: relative;
+        }
+        
+        .old-way {
+            background: #ffe5e5;
+            border: 3px solid #ff6b6b;
+        }
+        
+        .new-way {
+            background: #e5ffe5;
+            border: 3px solid #51cf66;
+        }
+        
+        .comparison-box h3 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .old-way h3 {
+            color: #ff6b6b;
+        }
+        
+        .new-way h3 {
+            color: #51cf66;
+        }
+        
+        .problem {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .solution {
+            background: #d4edda;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #28a745;
+        }
+        
+        .flow-diagram {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .step:hover {
+            transform: translateX(10px);
+            background: #eef2ff;
+        }
+        
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5em;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            flex-grow: 1;
+        }
+        
+        .step-title {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+        
+        .step-description {
+            color: #666;
+        }
+        
+        .arrow {
+            text-align: center;
+            font-size: 2em;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .highlight {
+            background: #ffd93d;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .key-point {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #4caf50;
+        }
+        
+        .interactive-demo {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .demo-button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        
+        .demo-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .event-flow {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .flow-box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            min-width: 150px;
+            margin: 10px;
+        }
+        
+        .flow-box-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        
+        .flow-arrow {
+            font-size: 2em;
+            color: #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Event-Driven Architecture<br>Explained Simply</h1>
+        
+        <!-- Restaurant Analogy -->
+        <div class="analogy-section">
+            <div class="analogy-title">
+                <span class="emoji">🍽️</span>
+                <span>Think of it Like a Restaurant Kitchen</span>
+            </div>
+            
+            <div class="comparison">
+                <div class="comparison-box old-way">
+                    <h3>❌ OLD WAY (Without Events)</h3>
+                    <p><strong>Chef does EVERYTHING:</strong></p>
+                    <ul style="margin: 15px 0 15px 20px;">
+                        <li>Cook the food 👨‍🍳</li>
+                        <li>Ring the bell 🔔</li>
+                        <li>Call the waiter 📞</li>
+                        <li>Update the receipt 🧾</li>
+                        <li>Check inventory 📦</li>
+                    </ul>
+                    <div class="problem">
+                        <strong>Problem:</strong> If chef needs to do something new (like text customer), we must change the chef's job description!
+                    </div>
+                </div>
+                
+                <div class="comparison-box new-way">
+                    <h3>✅ NEW WAY (With Events)</h3>
+                    <p><strong>Chef does ONE thing:</strong></p>
+                    <ul style="margin: 15px 0 15px 20px;">
+                        <li>Cook the food 👨‍🍳</li>
+                        <li>Ring the bell 🔔 <span class="highlight">(Event!)</span></li>
+                    </ul>
+                    <p><strong>Others listen for bell:</strong></p>
+                    <ul style="margin: 15px 0 15px 20px;">
+                        <li>Waiter serves food 👨‍💼</li>
+                        <li>Manager updates receipt 📊</li>
+                        <li>Inventory updates automatically 📦</li>
+                    </ul>
+                    <div class="solution">
+                        <strong>Benefit:</strong> Add new listeners (SMS service, loyalty program) WITHOUT changing chef's work!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Your Code Example -->
+        <div class="analogy-section">
+            <div class="analogy-title">
+                <span class="emoji">💻</span>
+                <span>In Your User Creation Code</span>
+            </div>
+            
+            <div class="comparison">
+                <div class="comparison-box old-way">
+                    <h3>❌ MODULE 1 (Tightly Coupled)</h3>
+                    <div class="code-block" style="text-align: left; font-size: 0.9em;">
+createUser(data) {<br>
+&nbsp;&nbsp;// Save user to database<br>
+&nbsp;&nbsp;user = saveToDatabase(data);<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// Send email directly<br>
+&nbsp;&nbsp;<span class="highlight">emailService.sendWelcome(user);</span><br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// Want to add SMS?<br>
+&nbsp;&nbsp;// Must EDIT this code!<br>
+&nbsp;&nbsp;<span class="highlight">smsService.sendWelcome(user);</span><br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;return user;<br>
+}
+                    </div>
+                    <div class="problem">
+                        Every new feature requires changing UserService code!
+                    </div>
+                </div>
+                
+                <div class="comparison-box new-way">
+                    <h3>✅ MODULE 2 (Event-Driven)</h3>
+                    <div class="code-block" style="text-align: left; font-size: 0.9em;">
+createUser(data) {<br>
+&nbsp;&nbsp;// Save user to database<br>
+&nbsp;&nbsp;user = saveToDatabase(data);<br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// Ring the bell! 🔔<br>
+&nbsp;&nbsp;<span class="highlight">publishEvent("UserCreated", user);</span><br>
+&nbsp;&nbsp;<br>
+&nbsp;&nbsp;// Done! Someone else handles rest<br>
+&nbsp;&nbsp;return user;<br>
+}
+                    </div>
+                    <div class="solution">
+                        UserService never changes! Just add new listeners for new features.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step by Step Flow -->
+        <div class="flow-diagram">
+            <h2 style="color: #667eea; margin-bottom: 30px; text-align: center;">📋 Step-by-Step: What Happens?</h2>
+            
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="step-title">Client Sends Request</div>
+                    <div class="step-description">User clicks "Sign Up" → POST /api/v2/users</div>
+                </div>
+            </div>
+            
+            <div class="arrow">⬇️</div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="step-title">UserService: Core Work</div>
+                    <div class="step-description">Check if username exists → Save user to database → Get user ID back</div>
+                </div>
+            </div>
+            
+            <div class="arrow">⬇️</div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="step-title">🔔 Ring the Bell! (Publish Event)</div>
+                    <div class="step-description">UserService says: "Hey! A new user was created!" <span class="highlight">(This is the event)</span></div>
+                </div>
+            </div>
+            
+            <div class="arrow">⬇️</div>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <div class="step-title">📢 Event Bus Broadcasts</div>
+                    <div class="step-description">Spring's Event Bus tells EVERYONE who's listening: "UserCreatedEvent happened!"</div>
+                </div>
+            </div>
+            
+            <div class="arrow">⬇️</div>
+            
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <div class="step-title">👂 Listeners React</div>
+                    <div class="step-description">
+                        WelcomeEmailListener hears it → Sends email<br>
+                        <small style="color: #999;">(You can add more listeners: SMS, Analytics, Logging... without touching UserService!)</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">⬇️</div>
+            
+            <div class="step">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <div class="step-title">✅ Return Response</div>
+                    <div class="step-description">UserService returns "201 Created" to client. Everything else happens in background!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Event Flow -->
+        <div class="analogy-section">
+            <div class="analogy-title">
+                <span class="emoji">🎪</span>
+                <span>The Event Bus = Town Announcer</span>
+            </div>
+            
+            <div class="event-flow">
+                <div class="flow-box">
+                    <div class="flow-box-icon">👨‍💻</div>
+                    <strong>UserService</strong>
+                    <p style="margin-top: 10px; color: #666;">Publishes Event</p>
+                </div>
+                
+                <div class="flow-arrow">➡️</div>
+                
+                <div class="flow-box" style="background: #667eea; color: white;">
+                    <div class="flow-box-icon">📢</div>
+                    <strong>Event Bus</strong>
+                    <p style="margin-top: 10px;">"User Created!"</p>
+                </div>
+                
+                <div class="flow-arrow">➡️</div>
+                
+                <div class="flow-box">
+                    <div class="flow-box-icon">📧</div>
+                    <strong>Email Listener</strong>
+                    <p style="margin-top: 10px; color: #666;">Sends Welcome Email</p>
+                </div>
+                
+                <div class="flow-arrow" style="display: block; margin: 20px 0;">⬇️</div>
+                
+                <div class="flow-box" style="border: 2px dashed #999;">
+                    <div class="flow-box-icon">📱</div>
+                    <strong>SMS Listener</strong>
+                    <p style="margin-top: 10px; color: #999;">Future: Send SMS<br>(Just add, don't modify!)</p>
+                </div>
+                
+                <div class="flow-box" style="border: 2px dashed #999;">
+                    <div class="flow-box-icon">📊</div>
+                    <strong>Analytics Listener</strong>
+                    <p style="margin-top: 10px; color: #999;">Future: Log Stats<br>(Just add, don't modify!)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Concepts -->
+        <div class="key-point">
+            <h3 style="margin-bottom: 15px;">🎯 Key Concepts in Plain English</h3>
+            
+            <p><strong>1. Event:</strong> A message that says "something happened"<br>
+            <small style="color: #666;">Example: UserCreatedEvent = "A new user just signed up!"</small></p>
+            
+            <p style="margin-top: 15px;"><strong>2. Publisher:</strong> Who sends the event<br>
+            <small style="color: #666;">Example: UserService publishes the event</small></p>
+            
+            <p style="margin-top: 15px;"><strong>3. Event Bus:</strong> The messenger/announcer<br>
+            <small style="color: #666;">Example: Spring's ApplicationEventPublisher</small></p>
+            
+            <p style="margin-top: 15px;"><strong>4. Listener:</strong> Who reacts to the event<br>
+            <small style="color: #666;">Example: WelcomeEmailListener (marked with @EventListener)</small></p>
+        </div>
+
+        <!-- Benefits -->
+        <div class="analogy-section">
+            <div class="analogy-title">
+                <span class="emoji">🌟</span>
+                <span>Why Is This Better?</span>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <div style="font-size: 2em; margin-bottom: 10px;">🔓</div>
+                    <strong>Open/Closed Principle</strong>
+                    <p style="margin-top: 10px; color: #666;">Open for extension (add listeners), closed for modification (don't change UserService)</p>
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <div style="font-size: 2em; margin-bottom: 10px;">🎯</div>
+                    <strong>Single Responsibility</strong>
+                    <p style="margin-top: 10px; color: #666;">UserService only creates users. Email logic lives elsewhere.</p>
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <div style="font-size: 2em; margin-bottom: 10px;">🧩</div>
+                    <strong>Easy to Extend</strong>
+                    <p style="margin-top: 10px; color: #666;">Want SMS notifications? Just create SmsListener. No code changes needed!</p>
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <div style="font-size: 2em; margin-bottom: 10px;">🧪</div>
+                    <strong>Easier Testing</strong>
+                    <p style="margin-top: 10px; color: #666;">Test UserService without worrying about emails. Test EmailListener separately.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- What You See in Logs -->
+        <div class="analogy-section">
+            <div class="analogy-title">
+                <span class="emoji">🔍</span>
+                <span>What You'll See in Logs</span>
+            </div>
+            
+            <div class="code-block" style="text-align: left;">
+                <span style="color: #68d391;">✓</span> User saved to database: ID = 1<br>
+                <span style="color: #68d391;">✓</span> [Module 2] EVENT RECEIVED: User Created<br>
+                <span style="color: #68d391;">✓</span> Sending Welcome Email to: john@example.com<br>
+                <span style="color: #68d391;">✓</span> Response sent: 201 Created
+            </div>
+            
+            <p style="margin-top: 20px;">This proves: <span class="highlight">Event was published → Listener reacted → Email sent!</span></p>
+        </div>
+
+        <!-- Interactive Demo -->
+        <div class="interactive-demo">
+            <h2 style="margin-bottom: 20px;">🎮 Try It Yourself</h2>
+            <p style="margin-bottom: 20px;">Send a POST request to: <code style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px;">/api/v2/users</code></p>
+            <p>Watch your console logs - you'll see the event system in action! 🎉</p>
+        </div>
+
+    </div>
+</body>
+</html>

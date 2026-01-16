@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 12: Aspect Oriented Programming (AOP)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f6f8;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #2c3e50;
+        }
+
+        h1 {
+            text-align: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        code {
+            background-color: #f8f8f8;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: #c7254e;
+        }
+
+        pre {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border-left: 5px solid #3498db;
+        }
+
+        .concept {
+            background-color: #e8f6f3;
+            border-left: 5px solid #1abc9c;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .analogy {
+            background-color: #fff8e1;
+            border-left: 5px solid #f1c40f;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Module 12: Aspect Oriented Programming (AOP)</h1>
+
+        <h2>1. The Problem: "Spaghetti Code"</h2>
+        <p>Imagine you have a <code>UserService</code>, <code>OrderService</code>, and <code>PaymentService</code>. You
+            want to <strong>log how long every method takes to execute</strong> for performance monitoring. </p>
+
+        <p>Without AOP, you would have to write this code in <strong>every single method</strong>:</p>
+
+        <pre><code>public void processOrder() {
+    long start = System.currentTimeMillis(); // ❌ Clutter
+    
+    // ... Actual Business Logic ...
+    
+    long end = System.currentTimeMillis();   // ❌ Clutter
+    System.out.println("Execution Time: " + (end - start));
+}</code></pre>
+
+        <p>This is called a <strong>Cross-Cutting Concern</strong> because it "cuts across" multiple distinct modules.
+            It leads to code duplication and makes your business logic hard to read.</p>
+
+        <h2>2. The Solution: AOP</h2>
+        <p><strong>Aspect Oriented Programming (AOP)</strong> allows you to modularize this behavior. You write the
+            logging logic <strong>once</strong> (in an Aspect) and "apply" it to any method you want using a simple
+            Annotation.</p>
+
+        <div class="analogy">
+            <h3>💡 Real World Analogy</h3>
+            <p>Think of it like a <strong>Security Guard</strong> at a building entrance.</p>
+            <ul>
+                <li>The employees (Business Logic) just want to go to their desks and work.</li>
+                <li>They don't want to stop and write their entry time in a logbook themselves.</li>
+                <li>The Security Guard (Aspect) intercepts them at the door, logs the time, and then lets them proceed.
+                </li>
+            </ul>
+        </div>
+
+        <h2>3. Key Terminology</h2>
+        <ul>
+            <li><strong>Aspect</strong>: The class containing the cross-cutting logic (e.g.,
+                <code>LoggingAspect</code>).</li>
+            <li><strong>Advice</strong>: The action taken by the aspect (e.g., "Log the time").
+                <ul>
+                    <li><code>@Before</code>: Run before the method.</li>
+                    <li><code>@After</code>: Run after the method.</li>
+                    <li><code>@Around</code>: Run around the method (before AND after). This is what we used.</li>
+                </ul>
+            </li>
+            <li><strong>Pointcut</strong>: A predicate that matches <em>where</em> the advice should run (e.g., "Any
+                method annotated with @LogExecutionTime").</li>
+            <li><strong>JoinPoint</strong>: The specific point in the execution (e.g., "The execution of
+                <code>OrderService.placeOrder()</code>").</li>
+        </ul>
+
+        <h2>4. Our Implementation</h2>
+
+        <h3>Step 1: The Annotation</h3>
+        <p>We created a marker annotation <code>@LogExecutionTime</code>. It does nothing by itself; it's just a flag.
+        </p>
+        <pre><code>@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface LogExecutionTime {}</code></pre>
+
+        <h3>Step 2: The Aspect</h3>
+        <p>We implemented the logic primarily using the <code>@Around</code> advice.</p>
+        <pre><code>@Around("@annotation(LogExecutionTime)")
+public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
+    long start = System.currentTimeMillis();
+    
+    Object proceed = joinPoint.proceed(); // ▶️ Execute the actual method
+    
+    long duration = System.currentTimeMillis() - start;
+    logger.info(..., duration);
+    return proceed;
+}</code></pre>
+
+        <h3>Step 3: Usage</h3>
+        <p>We simply applied the annotation to our Service.</p>
+        <pre><code>@LogExecutionTime
+public String placeOrder(...) { ... }</code></pre>
+
+        <h2>5. Benefits</h2>
+        <div class="concept">
+            <ul>
+                <li><strong>Separation of Concerns</strong>: Business logic contains ONLY business logic.</li>
+                <li><strong>DRY (Don't Repeat Yourself)</strong>: Write the logging logic once, use everywhere.</li>
+                <li><strong>Maintainability</strong>: Want to change the log format? Change it in one file, not 50.</li>
+            </ul>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

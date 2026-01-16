@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How JWT Actually Works - Step by Step</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+        }
+        
+        .phase {
+            background: #ecf0f1;
+            padding: 40px;
+            border-radius: 20px;
+            margin: 40px 0;
+            border-left: 8px solid #3498db;
+        }
+        
+        .phase-title {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .step-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .step-number {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .step-title {
+            font-size: 1.8em;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        
+        .data-flow {
+            background: #34495e;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            overflow-x: auto;
+        }
+        
+        .data-label {
+            color: #3498db;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .json-box {
+            background: #2c3e50;
+            color: #2ecc71;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            overflow-x: auto;
+            border: 2px solid #3498db;
+        }
+        
+        .key-concept {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .important {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .success {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .arrow-down {
+            text-align: center;
+            font-size: 3em;
+            color: #3498db;
+            margin: 20px 0;
+        }
+        
+        .split-view {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 25px 0;
+        }
+        
+        .client-side {
+            background: #e3f2fd;
+            padding: 25px;
+            border-radius: 15px;
+            border: 3px solid #2196f3;
+        }
+        
+        .server-side {
+            background: #f3e5f5;
+            padding: 25px;
+            border-radius: 15px;
+            border: 3px solid #9c27b0;
+        }
+        
+        .side-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .token-visual {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .token-part {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+        
+        .header-part {
+            background: #ffcdd2;
+            border-left: 5px solid #f44336;
+        }
+        
+        .payload-part {
+            background: #fff9c4;
+            border-left: 5px solid #ffc107;
+        }
+        
+        .signature-part {
+            background: #c8e6c9;
+            border-left: 5px solid #4caf50;
+        }
+        
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 968px) {
+            .split-view {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 How JWT Actually Works<br>Step-by-Step with Real Examples</h1>
+        
+        <!-- PHASE 1: LOGIN -->
+        <div class="phase">
+            <div class="phase-title">PHASE 1: Login & Getting Your JWT</div>
+            
+            <!-- Step 1 -->
+            <div class="step-container">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <div class="step-title">You Send Your Credentials</div>
+                </div>
+                
+                <div class="split-view">
+                    <div class="client-side">
+                        <div class="side-title">👤 CLIENT (Your Browser)</div>
+                        <p style="margin-bottom: 15px;">You fill in the login form and click "Login"</p>
+                        <div class="data-flow">
+POST /api/auth/login HTTP/1.1<br>
+Host: myapp.com<br>
+Content-Type: application/json<br>
+<br>
+{<br>
+&nbsp;&nbsp;"username": "john",<br>
+&nbsp;&nbsp;"password": "secret123"<br>
+}
+                        </div>
+                    </div>
+                    
+                    <div class="server-side">
+                        <div class="side-title">🖥️ SERVER</div>
+                        <p style="margin-bottom: 15px;">Server receives your login request</p>
+                        <div class="data-flow">
+Received Request:<br>
+- Username: john<br>
+- Password: secret123<br>
+<br>
+Status: Processing...
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow-down">⬇️</div>
+            
+            <!-- Step 2 -->
+            <div class="step-container">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Server Validates Your Credentials</div>
+                </div>
+                
+                <div class="server-side" style="width: 100%;">
+                    <div class="side-title">🖥️ SERVER - Database Check</div>
+                    
+                    <div class="data-flow">
+<span style="color: #3498db;">// Server runs this query</span><br>
+SELECT * FROM users WHERE username = 'john';
+                    </div>
+                    
+                    <div class="json-box">
+<span style="color: #3498db;">// Database returns:</span><br>
+{<br>
+&nbsp;&nbsp;"id": 123,<br>
+&nbsp;&nbsp;"username": "john",<br>
+&nbsp;&nbsp;"password_hash": "$2a$10$abc...xyz",<br>
+&nbsp;&nbsp;"email": "john@example.com",<br>
+&nbsp;&nbsp;"role": "user"<br>
+}
+                    </div>
+                    
+                    <div class="success">
+                        <strong>✅ Validation Steps:</strong><br><br>
+                        1️⃣ User exists? <strong>YES</strong> ✓<br>
+                        2️⃣ Password matches hash? <strong>YES</strong> ✓<br>
+                        3️⃣ Account active? <strong>YES</strong> ✓<br><br>
+                        <strong style="color: #28a745;">✅ CREDENTIALS VALID - Proceed to create JWT</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow-down">⬇️</div>
+            
+            <!-- Step 3 -->
+            <div class="step-container">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Server Creates JWT - The Three Parts</div>
+                </div>
+                
+                <div class="server-side" style="width: 100%;">
+                    <div class="side-title">🖥️ SERVER - Building the JWT</div>
+                    
+                    <div class="key-concept">
+                        <strong>The server creates 3 parts:</strong><br>
+                        HEADER + PAYLOAD + SIGNATURE
+                    </div>
+                    
+                    <!-- Part 1: Header -->
+                    <div style="margin: 30px 0;">
+                        <h3 style="color: #f44336; margin-bottom: 15px;">PART 1: HEADER (Algorithm Info)</h3>
+                        
+                        <div class="json-box">
+<span style="color: #3498db;">// 1. Server creates header JSON:</span><br>
+{<br>
+&nbsp;&nbsp;"alg": "HS256",<br>
+&nbsp;&nbsp;"typ": "JWT"<br>
+}
+                        </div>
+                        
+                        <div class="data-flow">
+<span style="color: #3498db;">// 2. Server Base64-encodes it:</span><br>
+Base64URLEncode(header) = <span class="highlight">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9</span>
+                        </div>
+                        
+                        <div class="key-concept">
+                            <strong>What this says:</strong> "This is a JWT token using HMAC-SHA256 algorithm"
+                        </div>
+                    </div>
+                    
+                    <!-- Part 2: Payload -->
+                    <div style="margin: 30px 0;">
+                        <h3 style="color: #ffc107; margin-bottom: 15px;">PART 2: PAYLOAD (Your Data)</h3>
+                        
+                        <div class="json-box">
+<span style="color: #3498db;">// 1. Server creates payload with your info:</span><br>
+{<br>
+&nbsp;&nbsp;"sub": "john",<br>
+&nbsp;&nbsp;"userId": 123,<br>
+&nbsp;&nbsp;"role": "user",<br>
+&nbsp;&nbsp;"iat": 1705334400,<br>
+&nbsp;&nbsp;"exp": 1705420800<br>
+}
+                        </div>
+                        
+                        <div class="key-concept">
+                            <strong>What this means:</strong><br>
+                            • <strong>sub:</strong> Subject (username) = "john"<br>
+                            • <strong>userId:</strong> Your ID in database = 123<br>
+                            • <strong>role:</strong> Your role = "user"<br>
+                            • <strong>iat:</strong> Issued at = Jan 15, 2024 10:00 AM<br>
+                            • <strong>exp:</strong> Expires = Jan 16, 2024 10:00 AM (24 hours)
+                        </div>
+                        
+                        <div class="data-flow">
+<span style="color: #3498db;">// 2. Server Base64-encodes it:</span><br>
+Base64URLEncode(payload) = <span class="highlight">eyJzdWIiOiJqb2huIiwidXNlcklkIjoxMjMsInJvbGUiOiJ1c2VyIn0</span>
+                        </div>
+                        
+                        <div class="important">
+                            <strong>⚠️ IMPORTANT:</strong> Base64 is NOT encryption!<br>
+                            Anyone can decode this and read it!<br>
+                            <strong>NEVER put passwords or secrets here!</strong>
+                        </div>
+                    </div>
+                    
+                    <!-- Part 3: Signature -->
+                    <div style="margin: 30px 0;">
+                        <h3 style="color: #4caf50; margin-bottom: 15px;">PART 3: SIGNATURE (Security)</h3>
+                        
+                        <div class="json-box">
+<span style="color: #3498db;">// Server's SECRET KEY (only server knows this!):</span><br>
+SECRET_KEY = "my-super-secret-key-12345"
+                        </div>
+                        
+                        <div class="data-flow">
+<span style="color: #3498db;">// Server creates signature:</span><br>
+<br>
+data = header + "." + payload<br>
+data = "eyJhbGci...J9.eyJzdWI...In0"<br>
+<br>
+signature = HMACSHA256(data, SECRET_KEY)<br>
+signature = <span class="highlight">SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</span>
+                        </div>
+                        
+                        <div class="success">
+                            <strong>🔐 This is the MAGIC!</strong><br><br>
+                            The signature is created using:<br>
+                            1️⃣ The header + payload (data)<br>
+                            2️⃣ The SECRET_KEY (only server has this!)<br>
+                            3️⃣ HMAC-SHA256 algorithm (one-way hash)<br><br>
+                            <strong>Result:</strong> A unique signature that ONLY this server can create!
+                        </div>
+                    </div>
+                    
+                    <!-- Final JWT -->
+                    <div style="margin: 30px 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 15px;">FINAL JWT TOKEN</h3>
+                        
+                        <div class="token-visual">
+                            <p style="margin-bottom: 15px; font-weight: bold;">Server combines all 3 parts with dots:</p>
+                            
+                            <div class="token-part header-part">
+                                <strong>HEADER:</strong><br>
+                                eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+                            </div>
+                            
+                            <div style="text-align: center; font-size: 2em; color: #2c3e50;">.</div>
+                            
+                            <div class="token-part payload-part">
+                                <strong>PAYLOAD:</strong><br>
+                                eyJzdWIiOiJqb2huIiwidXNlcklkIjoxMjMsInJvbGUiOiJ1c2VyIn0
+                            </div>
+                            
+                            <div style="text-align: center; font-size: 2em; color: #2c3e50;">.</div>
+                            
+                            <div class="token-part signature-part">
+                                <strong>SIGNATURE:</strong><br>
+                                SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow-down">⬇️</div>
+            
+            <!-- Step 4 -->
+            <div class="step-container">
+                <div class="step-header">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Server Sends JWT Back to You</div>
+                </div>
+                
+                <div class="split-view">
+                    <div class="server-side">
+                        <div class="side-title">🖥️ SERVER</div>
+                        <p style="margin-bottom: 15px;">Server sends response with JWT</p>
+                        <div class="data-flow">
+HTTP/1.1 200 OK<br>
+Content-Type: application/json<br>
+<br>
+{<br>
+&nbsp;&nbsp;"token": "eyJhbGci...xyz"<br>
+}
+                        </div>
+                    </div>
+                    
+                    <div class="client-side">
+                        <div class="side-title">👤 CLIENT</div>
+                        <p style="margin-bottom: 15px;">Your browser receives the token</p>
+                        <div class="data-flow">
+Received JWT Token!<br>
+<br>
+Storing in localStorage...
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="success" style="margin-top: 20px;">
+                    <strong>✅ LOGIN COMPLETE!</strong><br><br>
+                    You now have a JWT token that proves you're logged in as "john"!<br>
+                    You'll send this token with every request from now on.
+                </div>
+            </div>
+        </div>
+        
+        <!-- PHASE 2: USING THE JWT -->
+        <div class="phase" style="border-left-color: #9c27b0;">
+            <div class="phase-title">PHASE 2: Using Your JWT to Access Protected Pages</div>
+            
+            <!-- Step 5 -->
+            <div class="step-container">
+                <div class="step-header">
+                    <div class="step-number">5</div>
+                    <div class="step-title">You Send Request with JWT</div>
+                </div>
+                
+                <div class="split-view">
+                    <div class="client-side">
+                        <div class="side-title">👤 CLIENT</div>
+                        <p style="margin-bottom: 15px;">You want to access your profile page</p>
+                        <div class="data-flow">
+GET /api/users/me HTTP/1.1<br>
+Host: myapp.com<br>
+<span class="highlight">Authorization: Bearer eyJhbGci...xyz</span>
+                        </div>
+                        <div class="key-concept">
+                            <strong>Key Point:</strong> You include the JWT in the "Authorization" header with "Bearer" prefix
+                        </div>
+                    </div>
+                    
+                    <div class="server-side">
+                        <div class="side-title">🖥️ SERVER</div>
+                        <p style="margin-bottom: 15px;">Server receives your request</p>
+                        <div class="data-flow">
+Incoming Request:<br>
+URL: /api/users/me<br>
+<br>
+JWT Token detected in header!<br>
+Processing...
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow-down">⬇️</div>
+            
+            <!-- Step 6 -->
+            <div class="step-container">
+                <div class="step-header">
+                    <div class="step-number">6</div>
+                    <div class="step-title">Server Validates the JWT (The Critical Part!)</div>
+                </div>
+                
+                <div class="server-side" style="width: 100%;">
+                    <div class="side-title">🖥️ SERVER - JWT Validation Process</div>
+                    
+                    <div style="margin: 20px 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 15px;">Validation Step 1: Split the Token</h3>
+                        <div class="data-flow">
+<span style="color: #3498db;">// Server splits JWT by dots:</span><br>
+token = "eyJhbGci...J9.eyJzdWI...In0.SflKxw...w5c"<br>
+<br>
+parts = token.split(".")<br>
+<br>
+header = parts[0]<br>
+payload = parts[1]<br>
+receivedSignature = parts[2]
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 20px 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 15px;">Validation Step 2: Re-create the Signature</h3>
+                        <div class="data-flow">
+<span style="color: #3498db;">// Server recreates signature using its SECRET_KEY:</span><br>
+<br>
+data = header + "." + payload<br>
+expectedSignature = HMACSHA256(data, SECRET_KEY)<br>
+<br>
+<span style="color: #3498db;">// This gives us what the signature SHOULD be</span>
+                        </div>
+                        
+                        <div class="key-concept" style="margin-top: 15px;">
+                            <strong>🎯 The Critical Check:</strong><br><br>
+                            Server uses the SAME process it used to create the original signature:<br>
+                            1. Takes header + payload<br>
+                            2. Applies HMAC-SHA256 with SECRET_KEY<br>
+                            3. Gets a signature<br><br>
+                            If nobody tampered with the token, this new signature will MATCH the original!
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 20px 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 15px;">Validation Step 3: Compare Signatures</h3>
+                        <div class="json-box">
+<span style="color: #3498db;">// Server compares:</span><br>
+<br>
+receivedSignature = "SflKxw...w5c"<br>
+expectedSignature = "SflKxw...w5c"<br>
+<br>
+if (receivedSignature === expectedSignature) {<br>
+&nbsp;&nbsp;// ✅ VALID! Nobody tampered with it!<br>
+} else {<br>
+&nbsp;&nbsp;// ❌ INVALID! Someone changed the token!<br>
+}
+                        </div>
+                        
+                        <div class="success" style="margin-top: 15px;">
+                            <strong>✅ SIGNATURES MATCH!</strong><br><br>
+                            This proves:<br>
+                            1️⃣ Token was created by OUR server (only we have SECRET_KEY)<br>
+                            2️⃣ Nobody changed the payload (signature would break)<br>
+                            3️⃣ Token is authentic and trustworthy
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 20px 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 15px;">Validation Step 4: Check Expiration</h3>
+                        <div class="json-box">
+<span style="color: #3498db;">// Server decodes payload and checks expiration:</span><br>
+<br>
+payload = Base64URLDecode(parts[1])<br>
+<br>
+{<br>
+&nbsp;&nbsp;"exp": 1705420800  <span style="color: #3498db;">// Expires: Jan 16, 2024 10:00 AM</span><br>
+}<br>
+<br>
+currentTime = 1705334400  <span style="color: #3498db;">// Current: Jan 15, 2024 10:00 AM</span><br>
+<br>
+if (currentTime < exp) {<br>
+&nbsp;&nbsp;// ✅ Token is still valid!<br>
+} else {<br>
+&nbsp;&nbsp;// ❌ Token expired!<br>
+}
+                        </div>
+                        
+                        <div class="success" style="margin-top: 15px;">
+                            <strong>✅ TOKEN NOT EXPIRED!</strong><br>
+                            Token is still within its validity period.
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 20px 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 15px;">Validation Step 5: Extract User Info</h3>
+                        <div class="json-box">
+<span style="color: #3498db;">// Server extracts user information from payload:</span><br>
+<br>
+{<br>
+&nbsp;&nbsp;"sub": "john",<br>
+&nbsp;&nbsp;"userId": 123,<br>
+&nbsp;&nbsp;"role": "user"<br>
+}<br>
+<br>
+<span style="color: #3498db;">// Now server knows:</span><br>
+- This request is from user: "john"<br>
+- User ID: 123<br>
+- User role: "user"
+                        </div>
+                        
+                        <div class="success" style="margin-top: 15px;">
+                            <strong>✅ ALL VALIDATIONS PASSED!</strong><br><br>
+                            Server can now process the request safely, knowing exactly who you are!
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow-down">⬇️</div>
+            
+            <!-- Step 7 -->
+            <div class="step-container">
+                <div class="step-header">
+                    <div class="step-number">7</div>
+                    <div class="step-title">Server Processes Your Request</div>
+                </div>
+                
+                <div class="split-view">
+                    <div class="server-side">
+                        <div class="side-title">🖥️ SERVER</div>
+                        <div class="data-flow">
+<span style="color: #3498db;">// Server runs your request:</span><br>
+<br>
+User authenticated as: john<br>
+User ID: 123<br>
+<br>
+SELECT * FROM users<br>
+WHERE id = 123;<br>
+<br>
+Fetching profile data...
+                        </div>
+                    </div>
+                    
+                    <div class="client-side">
+                        <div class="side-title">👤 CLIENT</div>
+                        <div class="data-flow">
+HTTP/1.1 200 OK<br>
+<br>
+{<br>
+&nbsp;&nbsp;"id": 123,<br>
+&nbsp;&nbsp;"username": "john",<br>
+&nbsp;&nbsp;"email": "john@ex.com"<br>
+}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="success" style="margin-top: 20px;">
+                    <strong>✅ REQUEST SUCCESSFUL!</strong><br><br>
+                    You got your profile data!<br>
+                    Server never had to check the database for login - just validated the JWT!
+                </div>
+            </div>
+        </div>
+        
+        <!-- WHAT IF HACKER TRIES -->
+        <div class="phase" style="border-left-color: #dc3545; background: #ffebee;">
+            <div class="phase-title" style="color: #dc3545;">What If a Hacker Tries to Tamper?</div>
+            
+            <div class="step-container">
+                <div class="step-header">
+                    <div class="step-number">😈</div>
+                    <div class="step-title">Hacker's Attack Attempt</div>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h3 style="color: #dc3545; margin-bottom: 15px;">Hacker Intercepts Your JWT</h3>
+                    <div class="data-flow">
+<span style="color: #dc3545;">// Hacker captures your token:</span><br>
+token = "eyJhbGci...J9.eyJzdWI...In0.SflKxw...w5c"
+                    </div>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h3 style="color: #dc3545; margin-bottom: 15px;">Hacker Decodes and Changes Payload</h3>
+                    <div class="json-box">
+<span style="color: #dc3545;">// Hacker decodes payload (easy - just Base64!):</span><br>
+{<br>
+&nbsp;&nbsp;"sub": "john",<br>
+&nbsp;&nbsp;"userId": 123,<br>
+&nbsp;&nbsp;"role": "user"  <span style="color: #dc3545;">← Hacker changes this!</span><br>
+}<br>
+<br>
+<span style="color: #dc3545;">// Hacker changes to:</span><br>
+{<br>
+&nbsp;&nbsp;"sub": "john",<br>
+&nbsp;&nbsp;"userId": 123,<br>
+&nbsp;&nbsp;"role": <span class="highlight">"admin"</span>  <span style="color: #dc3545;">← Now john is admin!</span><br>
+}
+                    </div>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h3 style="color: #dc3545; margin-bottom: 15px;">Hacker Tries to Use Modified Token</h3>
+                    <div class="data-flow">
+<span style="color: #dc3545;">// Hacker creates new token with modified payload:</span><br>
+<br>
+header = "eyJhbGci...J9"  <span style="color: #3498db;">← Same</span><br>
+payload = "eyJzdWI...ImFkbWluIn0"  <span style="color: #dc3545;">← CHANGED!</span><br>
+signature = "SflKxw...w5c"  <span style="color: #dc3545;">← Old signature!</span><br>
+<br>
+newToken = header + "." + payload + "." + signature
+                    </div>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h3 style="color: #28a745; margin-bottom: 15px;">Server Detects the Tampering!</h3>
+                    <div class="json-box">
+<span style="color: #3498db;">// Server validates:</span><br>
+<br>
+receivedSignature = "SflKxw...w5c"<br>
+<br>
+<span style="color: #3498db;">// Server recalculates signature with NEW payload:</span><br>
+data = header + "." + newPayload<br>
+expectedSignature = HMACSHA256(data, SECRET_KEY)<br>
+expectedSignature = "abc123...xyz"  <span style="color: #dc3545;">← DIFFERENT!</span><br>
+<br>
+if ("SflKxw...w5c" === "abc123...xyz") {<br>
+&nbsp;&nbsp;// ✅ Valid<br>
+} else {<br>
+&nbsp;&nbsp;// ❌ INVALID! Signatures don't match!<br>
+&nbsp;&nbsp;throw new Error("Token tampered!");<br>
+}
+                    </div>
+                    
+                    <div class="important" style="margin-top: 15px;">
+                        <strong>❌ ATTACK FAILED!</strong><br><br>
+                        <strong>Why it failed:</strong><br>
+                        1️⃣ Hacker changed the payload<br>
+                        2️⃣ Old signature doesn't match new payload<br>
+                        3️⃣ Hacker can't create new valid signature without SECRET_KEY<br>
+                        4️⃣ Server detects mismatch → Rejects token<br><br>
+                        <strong style="color: #dc3545;">Request BLOCKED! 🚫</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SUMMARY -->
+        <div class="phase" style="border-left-color: #28a745; background: #d4edda;">
+            <div class="phase-title" style="color: #28a745;">📚 Complete Summary</div>
+            
+            <div class="success">
+                <h2 style="margin-bottom: 20px;">How JWT Works in Simple Steps:</h2>
+                
+                <div style="font-size: 1.2em; line-height: 2;">
+                    <strong>1️⃣ LOGIN:</strong><br>
+                    • You send username + password<br>
+                    • Server checks database<br>
+                    • Server creates JWT: header + payload + signature<br>
+                    • Signature = HMAC(header+payload, SECRET_KEY)<br>
+                    • Server sends JWT back to you<br><br>
+                    
+                    <strong>2️⃣ STORE:</strong><br>
+                    • You save JWT (localStorage/memory)<br><br>
+                    
+                    <strong>3️⃣ USE:</strong><br>
+                    • Every request: Include JWT in Authorization header<br>
+                    • Server receives request with JWT<br><br>
+                    
+                    <strong>4️⃣ VALIDATE:</strong><br>
+                    • Server splits JWT into parts<br>
+                    • Server recreates signature: HMAC(header+payload, SECRET_KEY)<br>
+                    • Compares: received signature === expected signature?<br>
+                    • Checks expiration<br>
+                    • If all good → Extract username from payload<br>
+                    • Process request!<br><br>
+                    
+                    <strong>5️⃣ SECURITY:</strong><br>
+                    • Anyone can READ payload (Base64, not encrypted)<br>
+                    • But only server can CREATE valid signature (has SECRET_KEY)<br>
+                    • Any tampering breaks signature → Server rejects it<br>
+                </div>
+            </div>
+            
+            <div class="key-concept" style="margin-top: 30px;">
+                <h2 style="margin-bottom: 15px;">🎯 The Core Principle:</h2>
+                <div style="font-size: 1.3em;">
+                    JWT doesn't hide your data (anyone can decode it).<br>
+                    JWT proves AUTHENTICITY (only server can create valid signature).<br><br>
+                    <strong>It's like a diploma:</strong><br>
+                    Everyone can read it, but only the university can issue a real one!
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>

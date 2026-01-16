@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Templates - Java 21</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 2.8em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: white;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+        }
+
+        .preview-badge {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #ffc107;
+            color: #333;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+        
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 45px;
+            margin-bottom: 35px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 35px;
+            font-size: 2.2em;
+            border-bottom: 4px solid #667eea;
+            padding-bottom: 15px;
+        }
+
+        /* STORY BOX */
+        .story-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 35px;
+            border-radius: 15px;
+            margin: 25px 0;
+            font-size: 1.15em;
+            line-height: 1.9;
+        }
+
+        .story-box h3 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        /* THE PROBLEM SECTION */
+        .problem-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+        }
+
+        .problem-section h3 {
+            color: #dc3545;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .messy-code {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 25px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.05em;
+            line-height: 1.8;
+            margin: 15px 0;
+            border: 3px solid #dc3545;
+        }
+
+        .clean-code {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 25px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.05em;
+            line-height: 1.8;
+            margin: 15px 0;
+            border: 3px solid #28a745;
+        }
+
+        .keyword {
+            color: #ff79c6;
+            font-weight: bold;
+        }
+
+        .type {
+            color: #8be9fd;
+        }
+
+        .string {
+            color: #f1fa8c;
+        }
+
+        .comment {
+            color: #6272a4;
+            font-style: italic;
+        }
+
+        .highlight {
+            background: #ffeb3b;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #2d2d2d;
+            font-weight: bold;
+        }
+
+        .number {
+            color: #bd93f9;
+        }
+
+        .ugly-marker {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .nice-marker {
+            color: #51cf66;
+            font-weight: bold;
+        }
+
+        /* COMPARISON TABLE */
+        .comparison-table {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            margin: 25px 0;
+        }
+
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th {
+            background: #667eea;
+            color: white;
+            padding: 18px;
+            text-align: left;
+            font-size: 1.2em;
+        }
+
+        .comparison-table td {
+            padding: 18px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 1.05em;
+        }
+
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .method-name {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        /* VISUAL DEMO */
+        .visual-demo {
+            background: #f8f9fa;
+            padding: 35px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .demo-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 25px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .variable-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.2);
+        }
+
+        .template-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 3px solid #28a745;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+        }
+
+        .result-box {
+            background: #28a745;
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.2);
+        }
+
+        .arrow {
+            font-size: 2.5em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        /* THREE COLUMN COMPARISON */
+        .three-column {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .method-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border-top: 5px solid;
+        }
+
+        .method-card.old {
+            border-color: #dc3545;
+        }
+
+        .method-card.medium {
+            border-color: #ffc107;
+        }
+
+        .method-card.new {
+            border-color: #28a745;
+        }
+
+        .method-card h4 {
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .method-card.old h4 {
+            color: #dc3545;
+        }
+
+        .method-card.medium h4 {
+            color: #856404;
+        }
+
+        .method-card.new h4 {
+            color: #28a745;
+        }
+
+        .pain-level {
+            font-size: 1.5em;
+            margin: 15px 0;
+        }
+
+        /* EXAMPLE CARDS */
+        .example-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-left: 6px solid #667eea;
+        }
+
+        .example-card h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .scenario {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #0066cc;
+            font-size: 1.1em;
+        }
+
+        /* INFO BOXES */
+        .info-box {
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border-left: 6px solid;
+            font-size: 1.1em;
+            line-height: 1.7;
+        }
+
+        .info-box.blue {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+
+        .info-box.yellow {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .info-box.green {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .info-box h4 {
+            margin-bottom: 12px;
+            font-size: 1.3em;
+        }
+
+        /* HIGHLIGHT BOX */
+        .highlight-box {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            font-size: 1.2em;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        /* COMPARISON SECTION */
+        .side-by-side {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .code-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 4px solid;
+        }
+
+        .code-panel.before {
+            border-color: #dc3545;
+        }
+
+        .code-panel.after {
+            border-color: #28a745;
+        }
+
+        .code-panel h3 {
+            margin-bottom: 20px;
+            font-size: 1.6em;
+        }
+
+        .code-panel.before h3 {
+            color: #dc3545;
+        }
+
+        .code-panel.after h3 {
+            color: #28a745;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1000px) {
+            .three-column {
+                grid-template-columns: 1fr;
+            }
+
+            .side-by-side {
+                grid-template-columns: 1fr;
+            }
+
+            .demo-flow {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 String Templates</h1>
+        <p class="subtitle">The Easiest Way to Build Strings in Java!</p>
+        
+        <div class="preview-badge">
+            <span class="badge">⚠️ Preview Feature - Use --enable-preview</span>
+        </div>
+
+        <!-- THE PROBLEM -->
+        <div class="section">
+            <h2>😰 The Old Problem: Building Strings is PAINFUL!</h2>
+
+            <div class="story-box">
+                <h3>💬 Real Life: Sending a WhatsApp Message</h3>
+                <p>
+                    Imagine you want to send a message to your friend:
+                    <br><strong>"Hey Mahesh, your order #12345 of ₹2500 will arrive tomorrow!"</strong>
+                </p>
+                <p style="margin-top: 20px;">
+                    In old Java, you had to painfully piece this together using:
+                    <br>• <strong>Method 1:</strong> Concatenation with + (messy!)
+                    <br>• <strong>Method 2:</strong> String.format() (confusing placeholders!)
+                    <br>• <strong>Method 3:</strong> StringBuilder (too verbose!)
+                </p>
+            </div>
+
+            <div class="problem-section">
+                <h3>❌ The Three Old (Painful) Ways</h3>
+
+                <div class="three-column">
+                    <div class="method-card old">
+                        <h4>1️⃣ Concatenation</h4>
+                        <div class="messy-code">
+<span class="type">String</span> name = <span class="string">"Mahesh"</span>;
+<span class="keyword">int</span> orderId = <span class="number">12345</span>;
+<span class="keyword">int</span> amount = <span class="number">2500</span>;
+
+<span class="type">String</span> msg = <span class="string">"Hey "</span> <span class="ugly-marker">+</span> name <span class="ugly-marker">+</span> 
+          <span class="string">", your order #"</span> <span class="ugly-marker">+</span> 
+          orderId <span class="ugly-marker">+</span> <span class="string">" of ₹"</span> <span class="ugly-marker">+</span> 
+          amount <span class="ugly-marker">+</span> 
+          <span class="string">" will arrive tomorrow!"</span>;
+
+<span class="comment">// 😱 So many + signs!</span>
+<span class="comment">// Easy to forget spaces!</span>
+                        </div>
+                        <div class="pain-level">😫😫😫 Pain Level: HIGH</div>
+                    </div>
+
+                    <div class="method-card medium">
+                        <h4>2️⃣ String.format()</h4>
+                        <div class="messy-code">
+<span class="type">String</span> name = <span class="string">"Mahesh"</span>;
+<span class="keyword">int</span> orderId = <span class="number">12345</span>;
+<span class="keyword">int</span> amount = <span class="number">2500</span>;
+
+<span class="type">String</span> msg = <span class="type">String</span>.format(
+    <span class="string">"Hey %s, your order #%d of ₹%d will arrive tomorrow!"</span>,
+    name, orderId, amount
+);
+
+<span class="comment">// 🤔 What's %s? What's %d?</span>
+<span class="comment">// Hard to read!</span>
+<span class="comment">// Order of variables matters!</span>
+                        </div>
+                        <div class="pain-level">😕😕 Pain Level: MEDIUM</div>
+                    </div>
+
+                    <div class="method-card new">
+                        <h4>3️⃣ String Template ✨</h4>
+                        <div class="clean-code">
+<span class="type">String</span> name = <span class="string">"Mahesh"</span>;
+<span class="keyword">int</span> orderId = <span class="number">12345</span>;
+<span class="keyword">int</span> amount = <span class="number">2500</span>;
+
+<span class="type">String</span> msg = <span class="highlight">STR</span>.<span class="string">"Hey <span class="highlight">\{name}</span>, your order #<span class="highlight">\{orderId}</span> of ₹<span class="highlight">\{amount}</span> will arrive tomorrow!"</span>;
+
+<span class="comment">// 😍 SO CLEAN!</span>
+<span class="comment">// Variables right where you need them!</span>
+<span class="comment">// Easy to read and understand!</span>
+                        </div>
+                        <div class="pain-level" style="color: #28a745;">😊😊😊 Pain Level: ZERO!</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>💡 Key Point:</strong> String Templates put variables EXACTLY where they appear in the text! 
+                No more counting placeholders or adding + signs!
+            </div>
+        </div>
+
+        <!-- HOW IT WORKS -->
+        <div class="section">
+            <h2>🔧 How String Templates Work</h2>
+
+            <div class="visual-demo">
+                <h3 style="color: #667eea; text-align: center; margin-bottom: 30px; font-size: 1.8em;">
+                    Visual Flow:
+                </h3>
+
+                <div class="demo-flow">
+                    <div class="variable-box">
+                        name = "Mahesh"<br>
+                        age = 25
+                    </div>
+
+                    <div class="arrow">→</div>
+
+                    <div class="template-box">
+                        STR."Hello, <span class="highlight">\{name}</span>!<br>
+                        You are <span class="highlight">\{age}</span> years old."
+                    </div>
+
+                    <div class="arrow">→</div>
+
+                    <div class="result-box">
+                        "Hello, Mahesh!<br>
+                        You are 25 years old."
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px; font-size: 1.2em; color: #495057;">
+                    <strong>Magic Happening:</strong> Java replaces <code>\{name}</code> with "Mahesh" and <code>\{age}</code> with 25!
+                </div>
+            </div>
+
+            <div class="info-box blue">
+                <h4>📖 The Syntax</h4>
+                <p>
+                    <strong>Format:</strong> <code>STR."Your text \{variable} more text"</code>
+                    <br><br>
+                    <strong>Breaking it down:</strong>
+                    <br>• <code>STR</code> = The String Template Processor (does the magic!)
+                    <br>• <code>.</code> = Connects STR to your template
+                    <br>• <code>"..."</code> = Your string with placeholders
+                    <br>• <code>\{variable}</code> = Insert variable value here!
+                </p>
+            </div>
+        </div>
+
+        <!-- EXPRESSIONS -->
+        <div class="section">
+            <h2>🧮 You Can Use Expressions Too!</h2>
+
+            <div class="story-box">
+                <h3>🎂 Real Life: Birthday Reminder</h3>
+                <p>
+                    You want to tell someone their age next year. Instead of calculating separately, 
+                    you can do the math RIGHT INSIDE the template!
+                </p>
+            </div>
+
+            <div class="example-card">
+                <h3>Example 1: Math Inside Templates</h3>
+                <div class="clean-code">
+<span class="keyword">int</span> age = <span class="number">25</span>;
+
+<span class="comment">// You can do calculations inside \{} !</span>
+<span class="type">String</span> msg1 = <span class="highlight">STR</span>.<span class="string">"You are <span class="highlight">\{age}</span> years old"</span>;
+<span class="type">String</span> msg2 = <span class="highlight">STR</span>.<span class="string">"Next year you'll be <span class="highlight">\{age + 1}</span>"</span>;
+<span class="type">String</span> msg3 = <span class="highlight">STR</span>.<span class="string">"10 years ago you were <span class="highlight">\{age - 10}</span>"</span>;
+
+<span class="comment">// Output:</span>
+<span class="comment">// You are 25 years old</span>
+<span class="comment">// Next year you'll be 26</span>
+<span class="comment">// 10 years ago you were 15</span>
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>Example 2: Method Calls Inside Templates</h3>
+                <div class="clean-code">
+<span class="type">String</span> name = <span class="string">"mahesh"</span>;
+
+<span class="comment">// Call methods directly inside \{} !</span>
+<span class="type">String</span> greeting = <span class="highlight">STR</span>.<span class="string">"Hello, <span class="highlight">\{name.toUpperCase()}</span>!"</span>;
+<span class="comment">// Output: Hello, MAHESH!</span>
+
+<span class="keyword">int</span> price = <span class="number">1250</span>;
+<span class="type">String</span> bill = <span class="highlight">STR</span>.<span class="string">"Total: ₹<span class="highlight">\{String.format(<span class="string">"%.2f"</span>, price / 100.0)}</span>"</span>;
+<span class="comment">// Output: Total: ₹12.50</span>
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>Example 3: Conditions Inside Templates</h3>
+                <div class="clean-code">
+<span class="keyword">int</span> age = <span class="number">17</span>;
+
+<span class="comment">// Use ternary operator for conditions!</span>
+<span class="type">String</span> status = <span class="highlight">STR</span>.<span class="string">"You are <span class="highlight">\{age >= 18 ? <span class="string">"an adult"</span> : <span class="string">"a minor"</span>}</span>"</span>;
+<span class="comment">// Output: You are a minor</span>
+
+<span class="keyword">boolean</span> isWeekend = <span class="keyword">true</span>;
+<span class="type">String</span> plan = <span class="highlight">STR</span>.<span class="string">"Today is <span class="highlight">\{isWeekend ? <span class="string">"party time!"</span> : <span class="string">"work day"</span>}</span>"</span>;
+<span class="comment">// Output: Today is party time!</span>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>💡 Power Move:</strong> You can put ANY Java expression inside \{ }! 
+                Math, method calls, conditions - anything!
+            </div>
+        </div>
+
+        <!-- MULTI-LINE TEMPLATES -->
+        <div class="section">
+            <h2>📄 Multi-Line Templates (Text Blocks)</h2>
+
+            <div class="story-box">
+                <h3>📧 Real Life: Sending an Email</h3>
+                <p>
+                    You need to send a professional email with multiple lines. 
+                    String Templates work PERFECTLY with text blocks (those triple quotes <code>"""</code>)!
+                </p>
+            </div>
+
+            <div class="side-by-side">
+                <div class="code-panel before">
+                    <h3>❌ Old Way (Painful!)</h3>
+                    <div class="messy-code">
+<span class="type">String</span> name = <span class="string">"Mahesh"</span>;
+<span class="keyword">int</span> orderId = <span class="number">12345</span>;
+
+<span class="type">String</span> email = 
+    <span class="string">"Dear "</span> + name + <span class="string">",\n"</span> +
+    <span class="string">"\n"</span> +
+    <span class="string">"Your order #"</span> + orderId + <span class="string">" has been confirmed.\n"</span> +
+    <span class="string">"Expected delivery: Tomorrow\n"</span> +
+    <span class="string">"\n"</span> +
+    <span class="string">"Thank you for shopping with us!\n"</span> +
+    <span class="string">"\n"</span> +
+    <span class="string">"Best regards,\n"</span> +
+    <span class="string">"The Team"</span>;
+
+<span class="comment">// 😱 All those + and \n !</span>
+                    </div>
+                </div>
+
+                <div class="code-panel after">
+                    <h3>✅ New Way (Beautiful!)</h3>
+                    <div class="clean-code">
+<span class="type">String</span> name = <span class="string">"Mahesh"</span>;
+<span class="keyword">int</span> orderId = <span class="number">12345</span>;
+
+<span class="type">String</span> email = <span class="highlight">STR</span>.<span class="string">"""
+    Dear <span class="highlight">\{name}</span>,
+    
+    Your order #<span class="highlight">\{orderId}</span> has been confirmed.
+    Expected delivery: Tomorrow
+    
+    Thank you for shopping with us!
+    
+    Best regards,
+    The Team
+    """</span>;
+
+<span class="comment">// 😍 Clean and readable!</span>
+<span class="comment">// Looks exactly like the email!</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>🎯 Real Example: JSON Generation</h3>
+                <div class="scenario">
+                    <strong>Scenario:</strong> You need to create JSON for an API request
+                </div>
+                <div class="clean-code">
+<span class="type">String</span> name = <span class="string">"Mahesh"</span>;
+<span class="keyword">int</span> age = <span class="number">25</span>;
+<span class="type">String</span> city = <span class="string">"Mumbai"</span>;
+<span class="keyword">boolean</span> isActive = <span class="keyword">true</span>;
+
+<span class="comment">// Generate JSON easily!</span>
+<span class="type">String</span> json = <span class="highlight">STR</span>.<span class="string">"""
+    {
+        "name": "<span class="highlight">\{name}</span>",
+        "age": <span class="highlight">\{age}</span>,
+        "city": "<span class="highlight">\{city}</span>",
+        "active": <span class="highlight">\{isActive}</span>,
+        "adult": <span class="highlight">\{age >= 18}</span>
+    }
+    """</span>;
+
+<span class="comment">// Output:</span>
+<span class="comment">// {</span>
+<span class="comment">//     "name": "Mahesh",</span>
+<span class="comment">//     "age": 25,</span>
+<span class="comment">//     "city": "Mumbai",</span>
+<span class="comment">//     "active": true,</span>
+<span class="comment">//     "adult": true</span>
+<span class="comment">// }</span>
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>🎯 Another Example: HTML Generation</h3>
+                <div class="clean-code">
+<span class="type">String</span> title = <span class="string">"Welcome"</span>;
+<span class="type">String</span> username = <span class="string">"Mahesh"</span>;
+<span class="keyword">int</span> notifications = <span class="number">5</span>;
+
+<span class="type">String</span> html = <span class="highlight">STR</span>.<span class="string">"""
+    &lt;html&gt;
+        &lt;head&gt;
+            &lt;title&gt;<span class="highlight">\{title}</span>&lt;/title&gt;
+        &lt;/head&gt;
+        &lt;body&gt;
+            &lt;h1&gt;Hello, <span class="highlight">\{username}</span>!&lt;/h1&gt;
+            &lt;p&gt;You have <span class="highlight">\{notifications}</span> new notifications.&lt;/p&gt;
+        &lt;/body&gt;
+    &lt;/html&gt;
+    """</span>;
+
+<span class="comment">// Perfect for generating HTML dynamically!</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPARISON WITH OTHER LANGUAGES -->
+        <div class="section">
+            <h2>🌍 Comparison with Other Languages</h2>
+
+            <div class="info-box green">
+                <h4>💡 Good News!</h4>
+                <p>
+                    If you know JavaScript or Python, you already understand String Templates! 
+                    Java finally has the same clean syntax!
+                </p>
+            </div>
+
+            <div class="comparison-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Language</th>
+                            <th>Syntax</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>JavaScript</strong></td>
+                            <td><code>`${variable}`</code></td>
+                            <td><code>`Hello, ${name}!`</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Python</strong></td>
+                            <td><code>f"{variable}"</code></td>
+                            <td><code>f"Hello, {name}!"</code></td>
+                        </tr>
+                        <tr style="background: #d4edda;">
+                            <td><strong>Java 21</strong></td>
+                            <td><code>STR."\{variable}"</code></td>
+                            <td><code>STR."Hello, \{name}!"</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- REAL WORLD EXAMPLES -->
+        <div class="section">
+            <h2>💼 Real-World Examples</h2>
+
+            <div class="example-card">
+                <h3>🧾 Example 1: Shopping Receipt</h3>
+                <div class="clean-code">
+<span class="type">String</span> customerName = <span class="string">"Mahesh"</span>;
+<span class="type">String</span> item = <span class="string">"Laptop"</span>;
+<span class="keyword">int</span> quantity = <span class="number">1</span>;
+<span class="keyword">double</span> price = <span class="number">50000</span>;
+<span class="keyword">double</span> tax = price * <span class="number">0.18</span>;
+<span class="keyword">double</span> total = price + tax;
+
+<span class="type">String</span> receipt = <span class="highlight">STR</span>.<span class="string">"""
+    ===============================
+           INVOICE
+    ===============================
+    Customer: <span class="highlight">\{customerName}</span>
+    
+    Item: <span class="highlight">\{item}</span>
+    Quantity: <span class="highlight">\{quantity}</span>
+    Price: ₹<span class="highlight">\{price}</span>
+    Tax (18%): ₹<span class="highlight">\{String.format(<span class="string">"%.2f"</span>, tax)}</span>
+    -------------------------------
+    Total: ₹<span class="highlight">\{String.format(<span class="string">"%.2f"</span>, total)}</span>
+    ===============================
+    """</span>;
+
+System.out.println(receipt);
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>📱 Example 2: SMS Notification</h3>
+                <div class="clean-code">
+<span class="type">String</span> bankName = <span class="string">"HDFC Bank"</span>;
+<span class="keyword">double</span> amount = <span class="number">5000</span>;
+<span class="type">String</span> merchant = <span class="string">"Amazon"</span>;
+<span class="keyword">double</span> balance = <span class="number">45000</span>;
+<span class="type">String</span> time = <span class="string">"2:30 PM"</span>;
+
+<span class="type">String</span> sms = <span class="highlight">STR</span>.<span class="string">"""
+    <span class="highlight">\{bankName}</span>: 
+    Your account has been debited by ₹<span class="highlight">\{amount}</span> 
+    at <span class="highlight">\{merchant}</span> on <span class="highlight">\{time}</span>. 
+    Available balance: ₹<span class="highlight">\{balance}</span>
+    """</span>;
+
+<span class="comment">// Perfect for SMS/notification templates!</span>
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>📊 Example 3: Database Query</h3>
+                <div class="clean-code">
+<span class="type">String</span> tableName = <span class="string">"users"</span>;
+<span class="type">String</span> username = <span class="string">"mahesh"</span>;
+<span class="keyword">int</span> minAge = <span class="number">18</span>;
+<span class="type">String</span> city = <span class="string">"Mumbai"</span>;
+
+<span class="comment">// Generate SQL queries dynamically!</span>
+<span class="type">String</span> query = <span class="highlight">STR</span>.<span class="string">"""
+    SELECT * FROM <span class="highlight">\{tableName}</span>
+    WHERE username = '<span class="highlight">\{username}</span>'
+      AND age >= <span class="highlight">\{minAge}</span>
+      AND city = '<span class="highlight">\{city}</span>'
+    ORDER BY created_at DESC
+    LIMIT 10
+    """</span>;
+
+<span class="comment">// Output: Clean, readable SQL!</span>
+<span class="comment">// ⚠️ Note: For production, use PreparedStatements for security!</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOW TO USE -->
+        <div class="section">
+            <h2>🚀 How to Use String Templates</h2>
+
+            <div class="info-box yellow">
+                <h4>⚠️ Important: Preview Feature!</h4>
+                <p>
+                    String Templates are a <strong>PREVIEW</strong> feature in Java 21. 
+                    This means you need to enable it with a special flag!
+                </p>
+            </div>
+
+            <div class="example-card">
+                <h3>Step 1: Compile Your Code</h3>
+                <div class="clean-code">
+<span class="comment"># Add --enable-preview flag</span>
+javac --enable-preview --source <span class="number">21</span> YourFile.java
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>Step 2: Run Your Code</h3>
+                <div class="clean-code">
+<span class="comment"># Also use --enable-preview when running</span>
+java --enable-preview YourFile
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>Complete Example File</h3>
+                <div class="clean-code">
+<span class="comment">// StringTemplateExample.java</span>
+<span class="keyword">public class</span> <span class="type">StringTemplateExample</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="type">String</span> name = <span class="string">"Mahesh"</span>;
+        <span class="keyword">int</span> age = <span class="number">25</span>;
+        
+        <span class="comment">// Use String Template!</span>
+        <span class="type">String</span> message = <span class="highlight">STR</span>.<span class="string">"Hello, <span class="highlight">\{name}</span>! You are <span class="highlight">\{age}</span> years old."</span>;
+        
+        System.out.println(message);
+        <span class="comment">// Output: Hello, Mahesh! You are 25 years old.</span>
+    }
+}
+
+<span class="comment">// Compile:</span>
+<span class="comment">// javac --enable-preview --source 21 StringTemplateExample.java</span>
+
+<span class="comment">// Run:</span>
+<span class="comment">// java --enable-preview StringTemplateExample</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h2 style="color: white; border-color: white;">🎯 Quick Summary</h2>
+
+            <div style="font-size: 1.15em; line-height: 1.9; margin-top: 25px;">
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="font-size: 1.8em; margin-bottom: 15px;">✨ What Are String Templates?</h3>
+                    <p>A clean way to insert variables and expressions directly into strings - no more messy concatenation or confusing placeholders!</p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="font-size: 1.8em; margin-bottom: 15px;">📝 The Syntax</h3>
+                    <p><code style="font-size: 1.2em; background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 8px;">STR."text \{variable} more text"</code></p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="font-size: 1.8em; margin-bottom: 15px;">💪 What You Can Put Inside \{ }</h3>
+                    <p>
+                        • Variables: <code>\{name}</code>
+                        <br>• Math: <code>\{age + 1}</code>
+                        <br>• Methods: <code>\{name.toUpperCase()}</code>
+                        <br>• Conditions: <code>\{age >= 18 ? "adult" : "minor"}</code>
+                        <br>• ANY Java expression!
+                    </p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="font-size: 1.8em; margin-bottom: 15px;">⚠️ Remember</h3>
+                    <p>
+                        • Preview feature - use <code>--enable-preview</code>
+                        <br>• Works with text blocks (multi-line)
+                        <br>• Similar to JavaScript template literals and Python f-strings
+                    </p>
+                </div>
+
+                <div style="margin-top: 40px; text-align: center; font-size: 1.5em; padding: 25px; background: rgba(255,255,255,0.2); border-radius: 12px;">
+                    <strong>Bottom Line:</strong> String Templates make Java strings as easy as JavaScript and Python! 🎉
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

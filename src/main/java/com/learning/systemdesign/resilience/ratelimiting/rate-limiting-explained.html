@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 13: Rate Limiting Explained</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f6f8;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #2c3e50;
+        }
+
+        h1 {
+            text-align: center;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 10px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        code {
+            background-color: #f8f8f8;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: #c7254e;
+        }
+
+        pre {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border-left: 5px solid #e74c3c;
+        }
+
+        .analogy {
+            background-color: #fff8e1;
+            border-left: 5px solid #f1c40f;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .status-code {
+            background-color: #fde8e8;
+            border: 1px solid #e74c3c;
+            color: #c0392b;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Module 13: API Rate Limiting</h1>
+
+        <h2>1. The Problem</h2>
+        <p>Imagine your API is a popular restaurant. If one customer orders 1,000 dishes at once, the kitchen gets
+            overwhelmed, and other customers can't get served.</p>
+        <p>In tech terms:</p>
+        <ul>
+            <li><strong>DDoS Attacks</strong>: Hackers flooding your server to crash it.</li>
+            <li><strong>Resource Hogging</strong>: One script accidentally calling your API in a tight loop.</li>
+            <li><strong>Cost Control</strong>: Preventing cloud bills from skyrocketing.</li>
+        </ul>
+
+        <h2>2. The Solution: Rate Limiting</h2>
+        <div class="analogy">
+            <h3>💡 The Club Bouncer Analogy</h3>
+            <p>Think of the <strong>Rate Limiter</strong> as a bouncer at a club.</p>
+            <ul>
+                <li>Original Policy: "I only let in 5 people every minute."</li>
+                <li>First 5 people? "Come on in!" (200 OK)</li>
+                <li>6th person? "Wait until the next minute starts." (429 Too Many Requests)</li>
+            </ul>
+        </div>
+
+        <h2>3. How We Implemented It</h2>
+        <p>We used <strong>Resilience4j</strong>. It uses the "Token Bucket" algorithm.</p>
+
+        <h3>Configuration (application.properties)</h3>
+        <pre><code># The Rules:
+resilience4j.ratelimiter.instances.basic.limit-for-period=5
+resilience4j.ratelimiter.instances.basic.limit-refresh-period=60s</code></pre>
+        <p>This means: "Give users 5 tokens. Refill the bucket with 5 fresh tokens every 60 seconds."</p>
+
+        <h3>The Code</h3>
+        <pre><code>@GetMapping
+@RateLimiter(name = "basic", fallbackMethod = "fallback")
+public ResponseEntity&lt;String&gt; limitedEndpoint() {
+    return ResponseEntity.ok("Success!");
+}</code></pre>
+
+        <h2>4. What Happens When You Get Blocked?</h2>
+        <p>If you exceed the limit, the server throws a <code>RequestNotPermitted</code> exception.</p>
+        <p>Usually, this translates to the HTTP Status Code:</p>
+        <div class="status-code">429: Too Many Requests</div>
+
+        <p>In our implementation, we caught this exception in the <code>fallbackMethod</code> to send a friendly
+            message.</p>
+
+    </div>
+
+</body>
+
+</html>

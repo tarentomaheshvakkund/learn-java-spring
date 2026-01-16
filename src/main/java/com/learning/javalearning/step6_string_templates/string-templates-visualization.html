@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java 21: String Templates - Visual Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            padding: 20px;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .preview-badge {
+            display: inline-block;
+            background: #ffc107;
+            color: #212529;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.5em;
+            font-weight: bold;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .section h2 {
+            color: #ff6b6b;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #ff6b6b;
+            padding-bottom: 10px;
+        }
+
+        /* TIMELINE/EVOLUTION */
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            margin: 40px 0;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, #dc3545, #ffc107, #28a745);
+        }
+
+        .timeline-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+        }
+
+        .timeline-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+        }
+
+        .timeline-item:nth-child(1) .timeline-dot {
+            background: #dc3545;
+        }
+
+        .timeline-item:nth-child(2) .timeline-dot {
+            background: #ffc107;
+        }
+
+        .timeline-item:nth-child(3) .timeline-dot {
+            background: #28a745;
+        }
+
+        .timeline-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 100%;
+            max-width: 280px;
+        }
+
+        .timeline-card h4 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .timeline-card code {
+            display: block;
+            background: #2d2d2d;
+            color: #f1fa8c;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        /* CODE BOXES */
+        .code-box {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            line-height: 1.8;
+            overflow-x: auto;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .code-box h4 {
+            font-family: 'Segoe UI', sans-serif;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+            color: #50fa7b;
+        }
+
+        .code-box .keyword {
+            color: #ff79c6;
+        }
+
+        .code-box .string {
+            color: #f1fa8c;
+        }
+
+        .code-box .comment {
+            color: #6272a4;
+        }
+
+        .code-box .type {
+            color: #8be9fd;
+        }
+
+        .code-box .processor {
+            color: #50fa7b;
+            font-weight: bold;
+        }
+
+        .code-box .interpolation {
+            color: #ffb86c;
+            font-weight: bold;
+        }
+
+        /* STR PROCESSOR BREAKDOWN */
+        .str-breakdown {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 30px 0;
+            align-items: center;
+        }
+
+        .str-part {
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.3em;
+            text-align: center;
+        }
+
+        .str-part.processor {
+            background: linear-gradient(135deg, #50fa7b 0%, #28a745 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .str-part.dot {
+            background: #6c757d;
+            color: white;
+        }
+
+        .str-part.quote {
+            background: #f1fa8c;
+            color: #212529;
+        }
+
+        .str-part.text {
+            background: #2d2d2d;
+            color: #f8f8f2;
+        }
+
+        .str-part.interpolation {
+            background: linear-gradient(135deg, #ffb86c 0%, #ff6b6b 100%);
+            color: white;
+        }
+
+        /* WARNING BOX */
+        .warning-box {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+            border-left: 5px solid #ffc107;
+            padding: 20px 25px;
+            border-radius: 0 15px 15px 0;
+            margin: 20px 0;
+        }
+
+        .warning-box h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .warning-box p {
+            color: #856404;
+        }
+
+        /* COMPARISON GRID */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .comparison-card {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-card .header {
+            padding: 15px 20px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .comparison-card.bad .header {
+            background: #dc3545;
+        }
+
+        .comparison-card.ok .header {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .comparison-card.good .header {
+            background: #28a745;
+        }
+
+        .comparison-card .body {
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .comparison-card code {
+            display: block;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            white-space: pre-wrap;
+        }
+
+        /* BENEFITS */
+        .benefits {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .benefit-card {
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .benefit-card h4 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .benefit-card p {
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        /* MULTI-LINE DEMO */
+        .multiline-demo {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .multiline-result {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .multiline-result {
+                grid-template-columns: 1fr;
+            }
+
+            .timeline {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .timeline::before {
+                display: none;
+            }
+        }
+
+        .output-box {
+            background: #0d1117;
+            border: 2px solid #30363d;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            color: #c9d1d9;
+        }
+
+        .output-box h5 {
+            color: #58a6ff;
+            margin-bottom: 15px;
+            font-size: 1em;
+        }
+
+        /* RUN COMMAND */
+        .run-command {
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .run-command h4 {
+            color: #50fa7b;
+            margin-bottom: 10px;
+        }
+
+        .run-command code {
+            display: block;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>✨ Java 21: String Templates <span class="preview-badge">PREVIEW</span></h1>
+
+        <!-- SECTION 1: EVOLUTION -->
+        <div class="section">
+            <h2>📈 Evolution of String Formatting</h2>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <h4>❌ Concatenation</h4>
+                        <p>Messy with many variables</p>
+                        <code>"Hello, " + name + "!"</code>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <h4>⚠️ String.format()</h4>
+                        <p>Better but verbose</p>
+                        <code>String.format("Hello, %s!", name)</code>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <h4>✅ String Templates</h4>
+                        <p>Clean and expressive!</p>
+                        <code>STR."Hello, \{name}!"</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: STR PROCESSOR -->
+        <div class="section">
+            <h2>🔧 The STR Processor</h2>
+
+            <p style="font-size: 1.1em; margin-bottom: 25px; color: #495057;">
+                String Templates use a <strong>template processor</strong> to interpolate values.
+                <code>STR</code> is the built-in processor for simple string interpolation.
+            </p>
+
+            <div class="str-breakdown">
+                <div class="str-part processor">STR</div>
+                <div class="str-part dot">.</div>
+                <div class="str-part quote">"</div>
+                <div class="str-part text">Hello, </div>
+                <div class="str-part interpolation">\{name}</div>
+                <div class="str-part text">!</div>
+                <div class="str-part quote">"</div>
+            </div>
+
+            <div style="text-align: center; margin: 20px 0;">
+                <p style="color: #6c757d; font-size: 1.1em;">
+                    <span style="color: #28a745; font-weight: bold;">STR</span> = Template Processor &nbsp;|&nbsp;
+                    <span style="color: #ffb86c; font-weight: bold;">\{...}</span> = Expression to embed
+                </p>
+            </div>
+
+            <div class="code-box">
+                <h4>Basic Usage</h4>
+                <pre><span class="type">String</span> name = <span class="string">"Alice"</span>;
+<span class="type">int</span> age = <span class="string">25</span>;
+<span class="type">double</span> balance = <span class="string">1234.56</span>;
+
+<span class="comment">// Simple interpolation</span>
+<span class="type">String</span> greeting = <span class="processor">STR</span>.<span class="string">"Hello, </span><span class="interpolation">\{name}</span><span class="string">!"</span>;
+
+<span class="comment">// Multiple values</span>
+<span class="type">String</span> info = <span class="processor">STR</span>.<span class="string">"</span><span class="interpolation">\{name}</span><span class="string"> is </span><span class="interpolation">\{age}</span><span class="string"> years old. Balance: $</span><span class="interpolation">\{balance}</span><span class="string">"</span>;
+
+<span class="comment">// Expressions work too!</span>
+<span class="type">String</span> future = <span class="processor">STR</span>.<span class="string">"Next year you'll be </span><span class="interpolation">\{age + 1}</span><span class="string">"</span>;</pre>
+            </div>
+        </div>
+
+        <!-- SECTION 3: COMPARISON -->
+        <div class="section">
+            <h2>⚖️ Side-by-Side Comparison</h2>
+
+            <div class="comparison-grid">
+                <div class="comparison-card bad">
+                    <div class="header">❌ Concatenation</div>
+                    <div class="body">
+                        <code>String msg = "User " + name + 
+    " (age " + age + ") has " +
+    "balance: $" + balance;</code>
+                        <p style="margin-top: 15px; color: #dc3545;">
+                            😵 Hard to read<br>
+                            🐛 Easy to miss quotes/spaces<br>
+                            ❌ Gets worse with more variables
+                        </p>
+                    </div>
+                </div>
+
+                <div class="comparison-card ok">
+                    <div class="header">⚠️ String.format()</div>
+                    <div class="body">
+                        <code>String msg = String.format(
+    "User %s (age %d) has " +
+    "balance: $%.2f",
+    name, age, balance);</code>
+                        <p style="margin-top: 15px; color: #856404;">
+                            📝 Format specifiers to remember<br>
+                            🔢 Must match order of args<br>
+                            ⚠️ Runtime errors if wrong
+                        </p>
+                    </div>
+                </div>
+
+                <div class="comparison-card good">
+                    <div class="header">✅ String Template</div>
+                    <div class="body">
+                        <code>String msg = STR."User \{name} " +
+    "(age \{age}) has " +
+    "balance: $\{balance}";</code>
+                        <p style="margin-top: 15px; color: #28a745;">
+                            ✨ Clear and readable<br>
+                            🎯 Values inline where used<br>
+                            ✅ Compile-time safety
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: MULTI-LINE -->
+        <div class="section">
+            <h2>📄 Multi-line Templates</h2>
+
+            <p style="font-size: 1.1em; margin-bottom: 20px; color: #495057;">
+                Combine String Templates with Text Blocks for beautiful multi-line strings!
+            </p>
+
+            <div class="multiline-demo">
+                <div class="multiline-result">
+                    <div>
+                        <h4 style="color: #50fa7b; margin-bottom: 15px;">📝 Template Code</h4>
+                        <div class="code-box" style="margin: 0;">
+                            <pre><span class="type">String</span> name = <span class="string">"Mahesh"</span>;
+<span class="type">int</span> age = <span class="string">30</span>;
+
+<span class="type">String</span> json = <span class="processor">STR</span>.<span class="string">"""
+    {
+        "name": "</span><span class="interpolation">\{name}</span><span class="string">",
+        "age": </span><span class="interpolation">\{age}</span><span class="string">,
+        "adult": </span><span class="interpolation">\{age >= 18}</span><span class="string">,
+        "category": "</span><span class="interpolation">\{age < 30 ? "young" : "experienced"}</span><span class="string">"
+    }
+    """</span>;</pre>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 style="color: #58a6ff; margin-bottom: 15px;">📤 Output</h4>
+                        <div class="output-box">
+                            <pre>{
+    "name": "Mahesh",
+    "age": 30,
+    "adult": true,
+    "category": "experienced"
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- WARNING BOX -->
+        <div class="section">
+            <h2>⚠️ Preview Feature Notice</h2>
+
+            <div class="warning-box">
+                <h4>🔬 This is a Preview Feature (JEP 430)</h4>
+                <p style="margin-bottom: 15px;">
+                    String Templates are a preview feature in Java 21. The syntax and behavior
+                    may change in future releases before becoming a permanent feature.
+                </p>
+                <p>
+                    <strong>Note:</strong> As of Java 23, String Templates were withdrawn for redesign.
+                    Check the latest Java documentation for current status.
+                </p>
+            </div>
+
+            <div class="run-command">
+                <h4>🚀 Running with Preview Features</h4>
+                <code>
+# Compile<br>
+javac --enable-preview --source 21 YourFile.java<br><br>
+# Run<br>
+java --enable-preview YourFile
+                </code>
+            </div>
+        </div>
+
+        <!-- BENEFITS -->
+        <div class="section">
+            <h2>🎯 Why String Templates?</h2>
+
+            <div class="benefits">
+                <div class="benefit-card">
+                    <div class="icon">📖</div>
+                    <h4>Readable</h4>
+                    <p>Values appear exactly where they're used in the string. No more counting arguments!</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="icon">🔒</div>
+                    <h4>Type Safe</h4>
+                    <p>Compiler validates expressions at compile time. No runtime format errors!</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="icon">🧮</div>
+                    <h4>Expressions</h4>
+                    <p>Embed any Java expression: method calls, arithmetic, ternary operators!</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="icon">🔌</div>
+                    <h4>Extensible</h4>
+                    <p>Custom processors can add validation, SQL injection prevention, and more!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h2 style="color: white; border-bottom-color: rgba(255,255,255,0.3);">🎓 Java 21 Learning Complete!</h2>
+            <p style="font-size: 1.1em; line-height: 1.6; margin-bottom: 20px;">
+                You've now learned the major Java 21 features:
+            </p>
+            <ul style="font-size: 1.1em; line-height: 2; list-style: none;">
+                <li>✅ Step 1: Records, Sealed Classes, Text Blocks</li>
+                <li>✅ Step 2: Pattern Matching for instanceof</li>
+                <li>✅ Step 3: Virtual Threads</li>
+                <li>✅ Step 4: Sequenced Collections</li>
+                <li>✅ Step 5: Advanced Record Patterns</li>
+                <li>✅ Step 6: String Templates (Preview)</li>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>

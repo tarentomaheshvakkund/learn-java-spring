@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java 21: Structured Concurrency & Scoped Values - Visual Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            padding: 20px;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .preview-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.4em;
+            font-weight: bold;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .section h2 {
+            color: #302b63;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #302b63;
+            padding-bottom: 10px;
+        }
+
+        /* CONCURRENCY DIAGRAM */
+        .concurrency-diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+            padding: 30px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 15px;
+        }
+
+        .scope-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .scope-header {
+            color: white;
+            font-weight: bold;
+            font-size: 1.2em;
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .tasks-container {
+            display: flex;
+            justify-content: space-around;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .task-box {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            color: white;
+            flex: 1;
+            transition: all 0.3s ease;
+        }
+
+        .task-box:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .task-box .icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .task-box.success {
+            border: 2px solid #28a745;
+        }
+
+        .task-box.failed {
+            border: 2px solid #dc3545;
+            background: rgba(220, 53, 69, 0.3);
+        }
+
+        .task-box.cancelled {
+            border: 2px dashed #6c757d;
+            opacity: 0.5;
+        }
+
+        .result-box {
+            background: rgba(40, 167, 69, 0.3);
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+        }
+
+        .result-box.error {
+            background: rgba(220, 53, 69, 0.3);
+            border-color: #dc3545;
+        }
+
+        /* STRATEGY CARDS */
+        .strategy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .strategy-card {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .strategy-card .header {
+            padding: 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+
+        .strategy-card.failure .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .strategy-card.success .header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .strategy-card .body {
+            padding: 25px;
+            background: #f8f9fa;
+        }
+
+        .strategy-card .use-case {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .strategy-card .behavior {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .behavior-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        /* SCOPED VALUES */
+        .scope-visualization {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .scope-layer {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 5px 0;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .scope-layer.outer {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+        }
+
+        .scope-layer.inner {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            margin: 15px;
+        }
+
+        .scope-layer .value {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* COMPARISON TABLE */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #302b63 0%, #24243e 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .bad {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .good {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        /* CODE BLOCKS */
+        .code-box {
+            background: #1a1a2e;
+            color: #f8f8f2;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            line-height: 1.7;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .code-box h4 {
+            font-family: 'Segoe UI', sans-serif;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+            color: #50fa7b;
+        }
+
+        .code-box .keyword {
+            color: #ff79c6;
+        }
+
+        .code-box .method {
+            color: #50fa7b;
+        }
+
+        .code-box .string {
+            color: #f1fa8c;
+        }
+
+        .code-box .comment {
+            color: #6272a4;
+        }
+
+        .code-box .type {
+            color: #8be9fd;
+        }
+
+        .code-box .scope {
+            color: #bd93f9;
+            font-weight: bold;
+        }
+
+        /* BENEFITS */
+        .benefits {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .benefit-card {
+            background: linear-gradient(135deg, #302b63 0%, #24243e 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .benefit-card .icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .benefit-card h4 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .benefit-card p {
+            font-size: 0.9em;
+            line-height: 1.4;
+            opacity: 0.9;
+        }
+
+        /* FLOW DIAGRAM */
+        .flow-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .flow-step {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .flow-arrow {
+            font-size: 2em;
+            color: #302b63;
+        }
+
+        @media (max-width: 768px) {
+            .tasks-container {
+                flex-direction: column;
+            }
+
+            .flow-container {
+                flex-direction: column;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔄 Java 21: Structured Concurrency <span class="preview-badge">PREVIEW</span></h1>
+
+        <!-- SECTION 1: THE PROBLEM -->
+        <div class="section">
+            <h2>🤔 The Problem with Traditional Concurrency</h2>
+
+            <p style="font-size: 1.1em; margin-bottom: 25px; color: #495057;">
+                With `ExecutorService`, if one task fails, others keep running wastefully!
+            </p>
+
+            <div class="concurrency-diagram">
+                <div class="scope-box" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                    <div class="scope-header">❌ Traditional ExecutorService</div>
+                    <div class="tasks-container">
+                        <div class="task-box failed">
+                            <div class="icon">💥</div>
+                            <div>fetchUser()</div>
+                            <div style="font-size: 0.8em; margin-top: 5px;">FAILED</div>
+                        </div>
+                        <div class="task-box" style="border: 2px solid #ffc107;">
+                            <div class="icon">⏳</div>
+                            <div>fetchOrders()</div>
+                            <div style="font-size: 0.8em; margin-top: 5px;">STILL RUNNING!</div>
+                        </div>
+                        <div class="task-box" style="border: 2px solid #ffc107;">
+                            <div class="icon">⏳</div>
+                            <div>fetchReco()</div>
+                            <div style="font-size: 0.8em; margin-top: 5px;">WASTING CPU!</div>
+                        </div>
+                    </div>
+                    <div class="result-box error">
+                        😱 User fails, but others keep running pointlessly!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: STRUCTURED CONCURRENCY -->
+        <div class="section">
+            <h2>✨ Structured Concurrency Solution</h2>
+
+            <p style="font-size: 1.1em; margin-bottom: 25px; color: #495057;">
+                Tasks are treated as a <strong>single unit</strong>. If one fails, ALL are cancelled!
+            </p>
+
+            <div class="concurrency-diagram">
+                <div class="scope-box">
+                    <div class="scope-header">✅ StructuredTaskScope.ShutdownOnFailure</div>
+                    <div class="tasks-container">
+                        <div class="task-box failed">
+                            <div class="icon">💥</div>
+                            <div>fetchUser()</div>
+                            <div style="font-size: 0.8em; margin-top: 5px;">FAILED</div>
+                        </div>
+                        <div class="task-box cancelled">
+                            <div class="icon">🚫</div>
+                            <div>fetchOrders()</div>
+                            <div style="font-size: 0.8em; margin-top: 5px;">CANCELLED</div>
+                        </div>
+                        <div class="task-box cancelled">
+                            <div class="icon">🚫</div>
+                            <div>fetchReco()</div>
+                            <div style="font-size: 0.8em; margin-top: 5px;">CANCELLED</div>
+                        </div>
+                    </div>
+                    <div class="result-box error">
+                        ✅ User fails → Others cancelled immediately. No waste!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: STRATEGIES -->
+        <div class="section">
+            <h2>🎯 Two Shutdown Strategies</h2>
+
+            <div class="strategy-grid">
+                <div class="strategy-card failure">
+                    <div class="header">🛡️ ShutdownOnFailure</div>
+                    <div class="body">
+                        <div class="use-case">
+                            <strong>Use Case:</strong> Need ALL results to proceed
+                        </div>
+                        <div class="behavior">
+                            <div class="behavior-item">
+                                <span>✅</span>
+                                <span>ALL succeed → Return all results</span>
+                            </div>
+                            <div class="behavior-item">
+                                <span>❌</span>
+                                <span>ANY fails → Cancel ALL, throw exception</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px; padding: 10px; background: #e9ecef; border-radius: 8px;">
+                            <strong>Example:</strong> Building a user dashboard that needs user info, orders, AND
+                            recommendations
+                        </div>
+                    </div>
+                </div>
+
+                <div class="strategy-card success">
+                    <div class="header">⚡ ShutdownOnSuccess</div>
+                    <div class="body">
+                        <div class="use-case">
+                            <strong>Use Case:</strong> Need FIRST successful result
+                        </div>
+                        <div class="behavior">
+                            <div class="behavior-item">
+                                <span>✅</span>
+                                <span>ANY succeeds → Return it, cancel others</span>
+                            </div>
+                            <div class="behavior-item">
+                                <span>❌</span>
+                                <span>ALL fail → Throw exception</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px; padding: 10px; background: #e9ecef; border-radius: 8px;">
+                            <strong>Example:</strong> Query cache + database, use whichever responds first
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: CODE EXAMPLE -->
+        <div class="section">
+            <h2>💻 Code Example</h2>
+
+            <div class="code-box">
+                <h4>ShutdownOnFailure - All or Nothing</h4>
+                <pre><span class="keyword">try</span> (<span class="keyword">var</span> scope = <span class="keyword">new</span> <span class="type">StructuredTaskScope</span>.<span class="scope">ShutdownOnFailure</span>()) {
+    <span class="comment">// Fork concurrent tasks</span>
+    <span class="type">Subtask</span>&lt;<span class="type">User</span>&gt; userTask = scope.<span class="method">fork</span>(() -> fetchUser());
+    <span class="type">Subtask</span>&lt;<span class="type">Orders</span>&gt; ordersTask = scope.<span class="method">fork</span>(() -> fetchOrders());
+    <span class="type">Subtask</span>&lt;<span class="type">Reco</span>&gt; recoTask = scope.<span class="method">fork</span>(() -> fetchReco());
+
+    scope.<span class="method">join</span>();           <span class="comment">// Wait for all tasks</span>
+    scope.<span class="method">throwIfFailed</span>();  <span class="comment">// Throw if any failed</span>
+
+    <span class="comment">// All succeeded! Build response</span>
+    <span class="keyword">return new</span> <span class="type">Dashboard</span>(
+        userTask.<span class="method">get</span>(),
+        ordersTask.<span class="method">get</span>(),
+        recoTask.<span class="method">get</span>()
+    );
+} <span class="comment">// Scope auto-closes, no cleanup needed!</span></pre>
+            </div>
+        </div>
+
+        <!-- SECTION 5: SCOPED VALUES -->
+        <div class="section">
+            <h2>🔑 Scoped Values: Modern ThreadLocal</h2>
+
+            <p style="font-size: 1.1em; margin-bottom: 25px; color: #495057;">
+                Immutable, inheritable, auto-cleanup context sharing for virtual threads.
+            </p>
+
+            <table class="comparison-table">
+                <tr>
+                    <th>Feature</th>
+                    <th>ThreadLocal</th>
+                    <th>ScopedValue</th>
+                </tr>
+                <tr>
+                    <td>Mutability</td>
+                    <td class="bad">Mutable ❌</td>
+                    <td class="good">Immutable ✅</td>
+                </tr>
+                <tr>
+                    <td>Cleanup</td>
+                    <td class="bad">Manual remove() ❌</td>
+                    <td class="good">Automatic ✅</td>
+                </tr>
+                <tr>
+                    <td>Memory Leaks</td>
+                    <td class="bad">Common problem ❌</td>
+                    <td class="good">Not possible ✅</td>
+                </tr>
+                <tr>
+                    <td>Virtual Threads</td>
+                    <td class="bad">Poor performance ❌</td>
+                    <td class="good">Optimized ✅</td>
+                </tr>
+                <tr>
+                    <td>Child Threads</td>
+                    <td class="bad">Not inherited ❌</td>
+                    <td class="good">Inherited ✅</td>
+                </tr>
+            </table>
+
+            <div class="code-box">
+                <h4>ScopedValue Usage</h4>
+                <pre><span class="keyword">static final</span> <span class="type">ScopedValue</span>&lt;<span class="type">String</span>&gt; CURRENT_USER = <span class="type">ScopedValue</span>.<span class="method">newInstance</span>();
+
+<span class="comment">// Bind value for a scope</span>
+<span class="type">ScopedValue</span>.<span class="method">where</span>(CURRENT_USER, <span class="string">"alice"</span>)
+    .<span class="method">run</span>(() -> {
+        <span class="comment">// Value accessible everywhere in this scope!</span>
+        <span class="type">String</span> user = CURRENT_USER.<span class="method">get</span>();  <span class="comment">// "alice"</span>
+        
+        <span class="comment">// Child virtual threads INHERIT the value!</span>
+        <span class="keyword">try</span> (<span class="keyword">var</span> scope = <span class="keyword">new</span> <span class="type">ShutdownOnFailure</span>()) {
+            scope.<span class="method">fork</span>(() -> {
+                CURRENT_USER.<span class="method">get</span>();  <span class="comment">// Still "alice"! ✅</span>
+            });
+        }
+    });
+
+<span class="comment">// Outside scope: CURRENT_USER.get() throws NoSuchElementException</span></pre>
+            </div>
+        </div>
+
+        <!-- SECTION 6: BENEFITS -->
+        <div class="section">
+            <h2>🎯 Why This Matters</h2>
+
+            <div class="benefits">
+                <div class="benefit-card">
+                    <div class="icon">🧹</div>
+                    <h4>No Orphans</h4>
+                    <p>All tasks complete before parent exits</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="icon">🚫</div>
+                    <h4>Auto Cancel</h4>
+                    <p>Failure cancels all related tasks</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="icon">📊</div>
+                    <h4>Clear Ownership</h4>
+                    <p>Parent owns children, visible in stack traces</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="icon">⚡</div>
+                    <h4>Virtual Thread Ready</h4>
+                    <p>Designed for millions of concurrent tasks</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h2 style="color: white; border-bottom-color: rgba(255,255,255,0.3);">🎓 Key Takeaways</h2>
+            <ul style="font-size: 1.1em; line-height: 2; list-style: none;">
+                <li>✅ <strong>Structured Concurrency</strong> = Tasks as a unit (all-or-nothing)</li>
+                <li>✅ <strong>ShutdownOnFailure</strong> = Need all results, fail fast</li>
+                <li>✅ <strong>ShutdownOnSuccess</strong> = Race for first result</li>
+                <li>✅ <strong>Scoped Values</strong> = Better ThreadLocal for virtual threads</li>
+                <li>✅ Pairs perfectly with <strong>Virtual Threads</strong> from Step 3!</li>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>

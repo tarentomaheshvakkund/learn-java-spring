@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Design Module 8: Observability Made Simple</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #2980b9;
+            margin-top: 30px;
+        }
+
+        .analogy {
+            background-color: #e8f6f3;
+            padding: 15px;
+            border-left: 5px solid #1abc9c;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .tech-concept {
+            background-color: #eaf2f8;
+            padding: 15px;
+            border-left: 5px solid #3498db;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        code {
+            background-color: #eee;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .mermaid {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+        }
+    </style>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+
+<body>
+
+    <h1>Module 8: Observability (The Dashboard)</h1>
+
+    <div class="analogy">
+        <h3>🚗 The Car Dashboard Analogy</h3>
+        <p>Imagine driving a car without a dashboard.</p>
+        <ul>
+            <li>You don't know how fast you are going (**Metrics**).</li>
+            <li>You don't know if you have fuel (**Health**).</li>
+            <li>You don't know if the engine is broken (**Loggers**).</li>
+        </ul>
+        <p><strong>Spring Boot Actuator</strong> is your application's <strong>Dashboard</strong>.</p>
+    </div>
+
+    <h2>1. What is Observability?</h2>
+    <p>When we deploy code to a server (Production), we can't see the code running. We need "Windows" into the
+        application to see if it is healthy.</p>
+    <p>This is called <strong>Observability</strong>.</p>
+
+    <h2>2. The Three Key Indicators</h2>
+    <div class="tech-concept">
+        <p>Actuator gives us 3 main URLs (Endpoints) to check the system:</p>
+        <ol>
+            <li><strong>/actuator/health</strong>: "Are you alive?"
+                <br><em>Example: Kubernetes checks this. If it says "DOWN", it restarts the app.</em>
+            </li>
+            <br>
+            <li><strong>/actuator/metrics</strong>: "How are you performing?"
+                <br><em>Example: CPU Usage, Free Memory, Number of API calls per second.</em>
+            </li>
+            <br>
+            <li><strong>/actuator/info</strong>: "Who are you?"
+                <br><em>Example: Version 1.2.0, Git Commit Hash.</em>
+            </li>
+        </ol>
+    </div>
+
+    <h2>3. Visualizing the Architecture</h2>
+    <p>This is how the system looks. The "Monitor" (like Grafana) pulls data from your App.</p>
+
+    <div class="mermaid">
+        graph LR
+        User((User)) -- Uses App --> App[Spring Boot App]
+
+        subgraph Actuator [The Dashboard]
+        Health["/health <br /> (Heartbeat)"]
+        Metrics["/metrics <br /> (Graphs/Stats)"]
+        Info["/info <br /> (Version)"]
+        end
+
+        App -- updates --> Actuator
+
+        Monitor[Admin / Grafana] -- CHECKS --> Actuator
+
+        style App fill:#3498db,color:white
+        style Actuator fill:#f1c40f,stroke:#f39c12
+        style Monitor fill:#e74c3c,color:white
+    </div>
+
+    <h2>4. Custom Health Check</h2>
+    <p>We created a <code>CustomHealthIndicator</code>. It simulates checking a Database connection.</p>
+    <p>If the DB is <strong>UP</strong>, the whole app is <strong>UP</strong>.</p>
+    <p>If the DB is <strong>DOWN</strong> (we simulated a random 10% failure), the Status becomes <strong>DOWN</strong>.
+    </p>
+
+</body>
+
+</html>
