@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java 21: Advanced Record Patterns - Visual Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            padding: 20px;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .section h2 {
+            color: #11998e;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #11998e;
+            padding-bottom: 10px;
+        }
+
+        /* RECORD TREE VISUALIZATION */
+        .record-tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .record-node {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            margin: 5px;
+        }
+
+        .record-node.root {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            font-size: 1.3em;
+            padding: 20px 40px;
+        }
+
+        .record-node.leaf {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .record-fields {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .field-box {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px 20px;
+            text-align: center;
+        }
+
+        .field-box.extracted {
+            background: #d4edda;
+            border-color: #28a745;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+            }
+        }
+
+        .connector {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .line-down {
+            width: 2px;
+            height: 20px;
+            background: #667eea;
+        }
+
+        .line-horizontal {
+            width: 100px;
+            height: 2px;
+            background: #667eea;
+        }
+
+        /* CODE COMPARISON */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .code-box {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-box h4 {
+            font-family: 'Segoe UI', sans-serif;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+
+        .code-box.old h4 {
+            color: #ff7b7b;
+        }
+
+        .code-box.new h4 {
+            color: #7bff7b;
+        }
+
+        .code-box .keyword {
+            color: #ff79c6;
+        }
+
+        .code-box .method {
+            color: #50fa7b;
+        }
+
+        .code-box .string {
+            color: #f1fa8c;
+        }
+
+        .code-box .comment {
+            color: #6272a4;
+        }
+
+        .code-box .type {
+            color: #8be9fd;
+        }
+
+        .code-box .pattern {
+            color: #ffb86c;
+        }
+
+        .code-box .guard {
+            color: #bd93f9;
+            font-weight: bold;
+        }
+
+        .lines-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+        }
+
+        .lines-badge.bad {
+            background: rgba(255, 100, 100, 0.3);
+        }
+
+        .lines-badge.good {
+            background: rgba(100, 255, 100, 0.3);
+        }
+
+        /* GUARD FLOWCHART */
+        .guard-flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .flow-node {
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: bold;
+            margin: 10px;
+            text-align: center;
+        }
+
+        .flow-node.input {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .flow-node.condition {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            transform: rotate(45deg);
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .flow-node.condition span {
+            transform: rotate(-45deg);
+        }
+
+        .flow-node.output {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+
+        .flow-node.output.secondary {
+            background: #e2e3e5;
+            border-color: #6c757d;
+            color: #383d41;
+        }
+
+        .flow-arrow {
+            font-size: 2em;
+            color: #6c757d;
+        }
+
+        .flow-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* UNDERSCORE PATTERN */
+        .underscore-demo {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a2e 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .pattern-breakdown {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .pattern-part {
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .pattern-part.used {
+            background: #28a745;
+            color: white;
+        }
+
+        .pattern-part.ignored {
+            background: #6c757d;
+            color: white;
+            text-decoration: line-through;
+        }
+
+        .pattern-part.underscore {
+            background: #ffc107;
+            color: #212529;
+            font-weight: bold;
+        }
+
+        /* BENEFITS */
+        .benefits {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .benefit-card {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .benefit-card h4 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .benefit-card p {
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        /* SWITCH EXAMPLE */
+        .switch-example {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .case-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            background: white;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .case-card:hover {
+            transform: translateX(10px);
+            border-color: #11998e;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .case-pattern {
+            font-family: 'Courier New', monospace;
+            background: #e9ecef;
+            padding: 8px 15px;
+            border-radius: 5px;
+            flex-shrink: 0;
+        }
+
+        .case-guard {
+            font-family: 'Courier New', monospace;
+            background: #fff3cd;
+            padding: 8px 15px;
+            border-radius: 5px;
+            color: #856404;
+            font-weight: bold;
+        }
+
+        .case-result {
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎯 Java 21: Advanced Record Patterns (JEP 440)</h1>
+
+        <!-- SECTION 1: NESTED RECORD PATTERNS -->
+        <div class="section">
+            <h2>🪆 1. Nested Record Patterns</h2>
+
+            <p style="font-size: 1.1em; margin-bottom: 25px; color: #495057;">
+                Destructure nested records in a <strong>single expression</strong>!
+                Think of it like unpacking nested boxes in one go.
+            </p>
+
+            <!-- Record Structure Visualization -->
+            <div class="record-tree">
+                <div class="record-node root">Circle(Point center, int radius)</div>
+                <div class="connector">
+                    <div class="line-down" style="height: 30px;"></div>
+                </div>
+                <div style="display: flex; gap: 60px;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <div class="record-node">Point(int x, int y)</div>
+                        <div class="record-fields">
+                            <div class="field-box extracted">x = 5</div>
+                            <div class="field-box extracted">y = 10</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <div class="record-node leaf">int radius</div>
+                        <div class="record-fields">
+                            <div class="field-box extracted">r = 25</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="comparison">
+                <div class="code-box old">
+                    <div class="lines-badge bad">6 lines 😓</div>
+                    <h4>❌ Old Way (Java 11-16)</h4>
+                    <pre><span class="keyword">if</span> (shape <span class="keyword">instanceof</span> <span class="type">Circle</span>) {
+    <span class="type">Circle</span> c = (<span class="type">Circle</span>) shape;
+    <span class="type">Point</span> center = c.center();
+    <span class="type">int</span> x = center.x();
+    <span class="type">int</span> y = center.y();
+    <span class="type">int</span> r = c.radius();
+}</pre>
+                </div>
+
+                <div class="code-box new">
+                    <div class="lines-badge good">1 line! 🚀</div>
+                    <h4>✅ Java 21 Way</h4>
+                    <pre><span class="keyword">if</span> (shape <span class="keyword">instanceof</span> <span class="pattern">Circle(Point(int x, int y), int r)</span>) {
+    <span class="comment">// x, y, r are all available here!</span>
+    System.out.println(<span class="string">"Center: "</span> + x + <span class="string">","</span> + y);
+    System.out.println(<span class="string">"Radius: "</span> + r);
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: GUARDED PATTERNS -->
+        <div class="section">
+            <h2>🛡️ 2. Guarded Patterns with <code>when</code></h2>
+
+            <p style="font-size: 1.1em; margin-bottom: 25px; color: #495057;">
+                Add boolean conditions to patterns using the <code
+                    style="background: #fff3cd; padding: 2px 8px; border-radius: 4px;">when</code> keyword!
+            </p>
+
+            <div class="switch-example">
+                <h4 style="margin-bottom: 20px; color: #495057;">Example: Categorizing People by Age</h4>
+
+                <div class="case-card">
+                    <span class="case-pattern">Person(String name, int age)</span>
+                    <span class="case-guard">when age &lt; 13</span>
+                    <span>→</span>
+                    <span class="case-result">"Child"</span>
+                </div>
+
+                <div class="case-card">
+                    <span class="case-pattern">Person(String name, int age)</span>
+                    <span class="case-guard">when age &lt; 20</span>
+                    <span>→</span>
+                    <span class="case-result">"Teenager"</span>
+                </div>
+
+                <div class="case-card">
+                    <span class="case-pattern">Person(String name, int age)</span>
+                    <span class="case-guard">when age &lt; 60</span>
+                    <span>→</span>
+                    <span class="case-result">"Adult"</span>
+                </div>
+
+                <div class="case-card">
+                    <span class="case-pattern">Person(String name, int age)</span>
+                    <span style="color: #6c757d;">no guard</span>
+                    <span>→</span>
+                    <span class="case-result">"Senior"</span>
+                </div>
+            </div>
+
+            <div class="code-box new" style="margin-top: 20px;">
+                <h4>✅ Complete Code Example</h4>
+                <pre><span class="type">String</span> category = <span class="keyword">switch</span> (person) {
+    <span class="keyword">case</span> <span class="pattern">Person(String name, int age)</span> <span class="guard">when age < 13</span>  -> name + <span class="string">" is a child"</span>;
+    <span class="keyword">case</span> <span class="pattern">Person(String name, int age)</span> <span class="guard">when age < 20</span>  -> name + <span class="string">" is a teenager"</span>;
+    <span class="keyword">case</span> <span class="pattern">Person(String name, int age)</span> <span class="guard">when age < 60</span>  -> name + <span class="string">" is an adult"</span>;
+    <span class="keyword">case</span> <span class="pattern">Person(String name, int age)</span>                  -> name + <span class="string">" is a senior"</span>;
+};</pre>
+            </div>
+        </div>
+
+        <!-- SECTION 3: UNDERSCORE PATTERN -->
+        <div class="section">
+            <h2>🔇 3. Underscore Pattern <code>_</code></h2>
+
+            <p style="font-size: 1.1em; margin-bottom: 25px; color: #495057;">
+                Use <code style="background: #ffc107; padding: 2px 8px; border-radius: 4px;">_</code> when you
+                need to match but <strong>don't care about the value</strong>!
+            </p>
+
+            <div class="underscore-demo">
+                <h4 style="color: white; text-align: center; margin-bottom: 20px;">Pattern Breakdown</h4>
+
+                <div class="pattern-breakdown">
+                    <div class="pattern-part" style="background: #6c757d; color: white;">Person(</div>
+                    <div class="pattern-part used">String name</div>
+                    <div class="pattern-part" style="background: #6c757d; color: white;">,</div>
+                    <div class="pattern-part underscore">int _</div>
+                    <div class="pattern-part" style="background: #6c757d; color: white;">)</div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <p style="color: #adb5bd; font-size: 1.1em;">
+                        ✅ <span style="color: #28a745;">name</span> is used &nbsp;&nbsp;|&nbsp;&nbsp;
+                        ❌ <span style="color: #ffc107;">age</span> is ignored
+                    </p>
+                </div>
+            </div>
+
+            <div class="comparison">
+                <div class="code-box">
+                    <h4 style="color: #ff7b7b;">❌ Without Underscore</h4>
+                    <pre><span class="keyword">case</span> Person(String n, <span class="comment">int unusedAge</span>) -> 
+    n + <span class="string">" (age not needed)"</span>;
+
+<span class="comment">// Warning: 'unusedAge' is never used!</span></pre>
+                </div>
+
+                <div class="code-box">
+                    <h4 style="color: #7bff7b;">✅ With Underscore</h4>
+                    <pre><span class="keyword">case</span> Person(String n, <span class="pattern">int _</span>) -> 
+    n + <span class="string">" (age explicitly ignored)"</span>;
+
+<span class="comment">// Clean! No warnings! Intent is clear!</span></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: SWITCH WITH NESTED PATTERNS -->
+        <div class="section">
+            <h2>🎨 4. Putting It All Together</h2>
+
+            <div class="code-box new">
+                <h4>Complete Example: Shape Description</h4>
+                <pre><span class="type">String</span> desc = <span class="keyword">switch</span> (shape) {
+    <span class="comment">// Destructure Circle with nested Point</span>
+    <span class="keyword">case</span> <span class="pattern">Circle(Point(int x, int y), int r)</span> ->
+        <span class="string">"Circle at ("</span> + x + <span class="string">","</span> + y + <span class="string">") radius "</span> + r;
+
+    <span class="comment">// Destructure Rectangle with TWO nested Points</span>
+    <span class="keyword">case</span> <span class="pattern">Rectangle(Point(int x1, int y1), Point(int x2, int y2))</span> ->
+        <span class="string">"Rectangle from ("</span> + x1 + <span class="string">","</span> + y1 + <span class="string">") to ("</span> + x2 + <span class="string">","</span> + y2 + <span class="string">")"</span>;
+
+    <span class="comment">// Deep nesting: ColoredShape containing a Circle</span>
+    <span class="keyword">case</span> <span class="pattern">ColoredShape(String color, Circle(Point(int x, int y), int r))</span> ->
+        color + <span class="string">" circle at ("</span> + x + <span class="string">","</span> + y + <span class="string">")"</span>;
+
+    <span class="keyword">default</span> -> <span class="string">"Unknown shape"</span>;
+};</pre>
+            </div>
+        </div>
+
+        <!-- SECTION 5: BENEFITS -->
+        <div class="section">
+            <h2>🎯 Why This Matters</h2>
+
+            <div class="benefits">
+                <div class="benefit-card">
+                    <div class="icon">📉</div>
+                    <h4>Less Boilerplate</h4>
+                    <p>Extract all nested values in a single line instead of multiple accessor calls.</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="icon">🔒</div>
+                    <h4>Type Safety</h4>
+                    <p>Compiler verifies patterns match your record structure. No runtime surprises!</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="icon">📖</div>
+                    <h4>Readable Code</h4>
+                    <p>Pattern shows the structure you expect. Self-documenting data extraction!</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="icon">🎛️</div>
+                    <h4>Flexible Guards</h4>
+                    <p>Combine patterns with boolean conditions for precise matching.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEXT STEP TEASER -->
+        <div class="section" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+            <h2 style="color: white; border-bottom-color: rgba(255,255,255,0.3);">🚀 Next: Step 6 - String Templates
+                (Preview)</h2>
+            <p style="font-size: 1.1em; line-height: 1.6;">
+                Say goodbye to messy string concatenation! Learn about Java's new string interpolation with the
+                <code>STR</code> processor.
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

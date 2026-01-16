@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java 21: Sequenced Collections - Visual Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 20px;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .section h2 {
+            color: #1e3c72;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #1e3c72;
+            padding-bottom: 10px;
+        }
+
+        /* INTERFACE HIERARCHY */
+        .hierarchy-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .interface-box {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            margin: 10px;
+        }
+
+        .interface-box.main {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            font-size: 1.4em;
+            padding: 25px 50px;
+        }
+
+        .implementations {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .impl-box {
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .connector-line {
+            width: 2px;
+            height: 30px;
+            background: #1e3c72;
+        }
+
+        /* COMPARISON TABLE */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .old-way {
+            background: #ffebee !important;
+            font-family: 'Courier New', monospace;
+            color: #c62828;
+        }
+
+        .new-way {
+            background: #e8f5e9 !important;
+            font-family: 'Courier New', monospace;
+            color: #2e7d32;
+        }
+
+        /* REVERSED VIEW ANIMATION */
+        .reversed-demo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .list-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .list-item {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.5em;
+            color: white;
+            transition: transform 0.3s ease;
+        }
+
+        .list-item:hover {
+            transform: scale(1.1);
+        }
+
+        .original .list-item:nth-child(1) {
+            background: #e91e63;
+        }
+
+        .original .list-item:nth-child(2) {
+            background: #9c27b0;
+        }
+
+        .original .list-item:nth-child(3) {
+            background: #673ab7;
+        }
+
+        .original .list-item:nth-child(4) {
+            background: #3f51b5;
+        }
+
+        .original .list-item:nth-child(5) {
+            background: #2196f3;
+        }
+
+        .reversed-view .list-item:nth-child(1) {
+            background: #2196f3;
+        }
+
+        .reversed-view .list-item:nth-child(2) {
+            background: #3f51b5;
+        }
+
+        .reversed-view .list-item:nth-child(3) {
+            background: #673ab7;
+        }
+
+        .reversed-view .list-item:nth-child(4) {
+            background: #9c27b0;
+        }
+
+        .reversed-view .list-item:nth-child(5) {
+            background: #e91e63;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .arrow-down {
+            font-size: 3em;
+            color: #1e3c72;
+        }
+
+        .info-badge {
+            background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        /* METHOD CARDS */
+        .method-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .method-card {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .method-card h4 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .method-card .method-name {
+            font-family: 'Courier New', monospace;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+
+        .method-card p {
+            margin-top: 10px;
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+
+        /* BENEFITS */
+        .benefits {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .benefit-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .benefit-card h4 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .benefit-card p {
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        /* CODE BLOCK */
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .code-block .keyword {
+            color: #ff79c6;
+        }
+
+        .code-block .method {
+            color: #50fa7b;
+        }
+
+        .code-block .string {
+            color: #f1fa8c;
+        }
+
+        .code-block .comment {
+            color: #6272a4;
+        }
+
+        .code-block .type {
+            color: #8be9fd;
+        }
+
+        /* PROBLEM STATEMENT */
+        .problem-box {
+            background: #ffebee;
+            border-left: 5px solid #c62828;
+            padding: 20px;
+            border-radius: 0 10px 10px 0;
+            margin: 20px 0;
+        }
+
+        .solution-box {
+            background: #e8f5e9;
+            border-left: 5px solid #2e7d32;
+            padding: 20px;
+            border-radius: 0 10px 10px 0;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .list-container {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📦 Java 21: Sequenced Collections (JEP 431)</h1>
+
+        <!-- SECTION 1: THE PROBLEM -->
+        <div class="section">
+            <h2>🤔 The Problem: Inconsistent API</h2>
+
+            <div class="problem-box">
+                <h3 style="color: #c62828; margin-bottom: 15px;">❌ Before Java 21</h3>
+                <p style="margin-bottom: 15px;">Getting the first/last element was inconsistent across collections:</p>
+
+                <table class="comparison-table">
+                    <tr>
+                        <th>Collection</th>
+                        <th>Get First</th>
+                        <th>Get Last</th>
+                    </tr>
+                    <tr>
+                        <td><strong>List</strong></td>
+                        <td class="old-way">list.get(0)</td>
+                        <td class="old-way">list.get(list.size()-1)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Deque</strong></td>
+                        <td class="old-way">deque.getFirst()</td>
+                        <td class="old-way">deque.getLast()</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SortedSet</strong></td>
+                        <td class="old-way">set.first()</td>
+                        <td class="old-way">set.last()</td>
+                    </tr>
+                    <tr>
+                        <td><strong>LinkedHashSet</strong></td>
+                        <td class="old-way">set.iterator().next()</td>
+                        <td class="old-way">😱 ???</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="solution-box">
+                <h3 style="color: #2e7d32; margin-bottom: 15px;">✅ Java 21 Solution: Unified Interface!</h3>
+                <p>Now ALL ordered collections use the same methods:</p>
+                <div class="code-block">
+                    <span class="comment">// Same for List, Deque, LinkedHashSet, TreeSet...</span>
+                    <span class="type">String</span> first = collection.<span class="method">getFirst</span>();
+                    <span class="type">String</span> last = collection.<span class="method">getLast</span>();
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: NEW INTERFACES -->
+        <div class="section">
+            <h2>🏗️ New Interface Hierarchy</h2>
+
+            <div class="hierarchy-container">
+                <div class="interface-box main">SequencedCollection&lt;E&gt;</div>
+                <div class="connector-line"></div>
+
+                <div style="display: flex; gap: 40px;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <div class="interface-box">SequencedSet&lt;E&gt;</div>
+                        <div class="connector-line"></div>
+                        <div class="implementations">
+                            <div class="impl-box">LinkedHashSet</div>
+                            <div class="impl-box">TreeSet</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <div class="interface-box">List&lt;E&gt;</div>
+                        <div class="connector-line"></div>
+                        <div class="implementations">
+                            <div class="impl-box">ArrayList</div>
+                            <div class="impl-box">LinkedList</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hierarchy-container" style="margin-top: 40px;">
+                <div class="interface-box main">SequencedMap&lt;K,V&gt;</div>
+                <div class="connector-line"></div>
+                <div class="implementations">
+                    <div class="impl-box">LinkedHashMap</div>
+                    <div class="impl-box">TreeMap</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: KEY METHODS -->
+        <div class="section">
+            <h2>🔧 New Methods</h2>
+
+            <div class="method-grid">
+                <div class="method-card">
+                    <h4>📋 SequencedCollection</h4>
+                    <div class="method-name">getFirst()</div>
+                    <div class="method-name">getLast()</div>
+                    <div class="method-name">addFirst(E)</div>
+                    <div class="method-name">addLast(E)</div>
+                    <div class="method-name">removeFirst()</div>
+                    <div class="method-name">removeLast()</div>
+                    <div class="method-name">reversed()</div>
+                </div>
+
+                <div class="method-card">
+                    <h4>🗺️ SequencedMap</h4>
+                    <div class="method-name">firstEntry()</div>
+                    <div class="method-name">lastEntry()</div>
+                    <div class="method-name">putFirst(K, V)</div>
+                    <div class="method-name">putLast(K, V)</div>
+                    <div class="method-name">pollFirstEntry()</div>
+                    <div class="method-name">pollLastEntry()</div>
+                    <div class="method-name">reversed()</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: REVERSED VIEW -->
+        <div class="section">
+            <h2>🔄 Reversed Views (Zero Copy!)</h2>
+
+            <p style="font-size: 1.1em; margin-bottom: 20px; color: #495057;">
+                The <code>reversed()</code> method returns a <strong>VIEW</strong>, not a copy.
+                Changes to the view affect the original!
+            </p>
+
+            <div class="reversed-demo">
+                <div>
+                    <div class="label">📌 Original List</div>
+                    <div class="list-container original">
+                        <div class="list-item">1</div>
+                        <div class="list-item">2</div>
+                        <div class="list-item">3</div>
+                        <div class="list-item">4</div>
+                        <div class="list-item">5</div>
+                    </div>
+                </div>
+
+                <div class="arrow-down">⬇️ list.reversed()</div>
+
+                <div>
+                    <div class="label">👁️ Reversed View (No Copy!)</div>
+                    <div class="list-container reversed-view">
+                        <div class="list-item">5</div>
+                        <div class="list-item">4</div>
+                        <div class="list-item">3</div>
+                        <div class="list-item">2</div>
+                        <div class="list-item">1</div>
+                    </div>
+                </div>
+
+                <div class="info-badge">⚡ Same memory, different perspective!</div>
+            </div>
+
+            <div class="code-block">
+                <span class="type">List</span>&lt;<span class="type">Integer</span>&gt; nums = <span
+                    class="keyword">new</span> ArrayList&lt;&gt;(List.of(<span class="string">1, 2, 3, 4, 5</span>));
+                <span class="type">List</span>&lt;<span class="type">Integer</span>&gt; rev = nums.<span
+                    class="method">reversed</span>(); <span class="comment">// NOT a copy!</span>
+
+                <span class="comment">// Iterate in reverse - simple and elegant</span>
+                <span class="keyword">for</span> (<span class="type">int</span> n : nums.<span
+                    class="method">reversed</span>()) {
+                System.out.print(n + <span class="string">" "</span>); <span class="comment">// 5 4 3 2 1</span>
+                }
+
+                <span class="comment">// Modifying the view affects the original!</span>
+                rev.<span class="method">set</span>(<span class="string">0</span>, <span class="string">100</span>);
+                <span class="comment">// Sets nums[4] to 100</span>
+            </div>
+        </div>
+
+        <!-- SECTION 5: BENEFITS -->
+        <div class="section">
+            <h2>🎯 Why This Matters</h2>
+
+            <div class="benefits">
+                <div class="benefit-card">
+                    <div class="icon">🔗</div>
+                    <h4>Unified API</h4>
+                    <p>Same methods work across all ordered collections. Learn once, use everywhere!</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="icon">⚡</div>
+                    <h4>Zero-Copy Reversal</h4>
+                    <p>reversed() returns a view, not a copy. Memory efficient for large collections!</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="icon">📖</div>
+                    <h4>Readable Code</h4>
+                    <p>getFirst() and getLast() are self-documenting. No more get(size()-1)!</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="icon">🛡️</div>
+                    <h4>Safe Operations</h4>
+                    <p>Throws NoSuchElementException on empty collections instead of IndexOutOfBounds.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEXT STEP TEASER -->
+        <div class="section" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+            <h2 style="color: white; border-bottom-color: rgba(255,255,255,0.3);">🚀 Next: Step 5 - Advanced Record
+                Patterns</h2>
+            <p style="font-size: 1.1em; line-height: 1.6;">
+                Learn how to destructure nested records in a single expression and add guards with the <code>when</code>
+                clause!
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

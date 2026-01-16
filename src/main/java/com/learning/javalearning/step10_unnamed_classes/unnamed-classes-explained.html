@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unnamed Classes & Instance Main - Java 21</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 2.8em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: white;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+        }
+
+        .preview-badge {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #ffc107;
+            color: #333;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+        
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 45px;
+            margin-bottom: 35px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 35px;
+            font-size: 2.2em;
+            border-bottom: 4px solid #667eea;
+            padding-bottom: 15px;
+        }
+
+        /* STORY BOX */
+        .story-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 35px;
+            border-radius: 15px;
+            margin: 25px 0;
+            font-size: 1.15em;
+            line-height: 1.9;
+        }
+
+        .story-box h3 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        /* PROBLEM SECTION */
+        .problem-section {
+            background: #f8d7da;
+            padding: 35px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border-left: 6px solid #dc3545;
+        }
+
+        .problem-section h3 {
+            color: #721c24;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        /* CODE */
+        .code {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 25px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.05em;
+            line-height: 1.8;
+            overflow-x: auto;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .code.bloated {
+            border: 4px solid #dc3545;
+        }
+
+        .code.clean {
+            border: 4px solid #28a745;
+        }
+
+        .boilerplate {
+            color: #6c757d;
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        .actual-code {
+            color: #50fa7b;
+            font-weight: bold;
+        }
+
+        .keyword {
+            color: #ff79c6;
+            font-weight: bold;
+        }
+
+        .type {
+            color: #8be9fd;
+        }
+
+        .string {
+            color: #f1fa8c;
+        }
+
+        .comment {
+            color: #6272a4;
+            font-style: italic;
+        }
+
+        .highlight {
+            background: #ffeb3b;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #2d2d2d;
+            font-weight: bold;
+        }
+
+        /* LINE COUNT */
+        .line-count {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: #dc3545;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .line-count.good {
+            background: #28a745;
+        }
+
+        /* EVOLUTION TIMELINE */
+        .evolution {
+            background: #f8f9fa;
+            padding: 35px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .evolution-step {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin: 30px 0;
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.8em;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        /* COMPARISON TABLE */
+        .comparison-table {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            margin: 25px 0;
+        }
+
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th {
+            background: #667eea;
+            color: white;
+            padding: 18px;
+            text-align: left;
+            font-size: 1.2em;
+        }
+
+        .comparison-table td {
+            padding: 18px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 1.05em;
+        }
+
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .checkmark {
+            color: #28a745;
+            font-size: 1.3em;
+        }
+
+        .crossmark {
+            color: #dc3545;
+            font-size: 1.3em;
+        }
+
+        /* INFO BOXES */
+        .info-box {
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border-left: 6px solid;
+            font-size: 1.1em;
+            line-height: 1.7;
+        }
+
+        .info-box.blue {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+
+        .info-box.yellow {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .info-box.green {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .info-box.red {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        .info-box h4 {
+            margin-bottom: 12px;
+            font-size: 1.3em;
+        }
+
+        /* EXAMPLE CARD */
+        .example-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-left: 6px solid #667eea;
+        }
+
+        .example-card h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        /* HIGHLIGHT BOX */
+        .highlight-box {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            font-size: 1.2em;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        /* SIDE BY SIDE */
+        .side-by-side {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 4px solid;
+        }
+
+        .panel.bad {
+            border-color: #dc3545;
+        }
+
+        .panel.good {
+            border-color: #28a745;
+        }
+
+        .panel h3 {
+            margin-bottom: 20px;
+            font-size: 1.6em;
+        }
+
+        .panel.bad h3 {
+            color: #dc3545;
+        }
+
+        .panel.good h3 {
+            color: #28a745;
+        }
+
+        /* VISUAL SIMPLIFICATION */
+        .simplification-visual {
+            background: #f8f9fa;
+            padding: 35px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .visual-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .flow-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 3px solid;
+            text-align: center;
+            min-width: 250px;
+        }
+
+        .flow-box.complex {
+            border-color: #dc3545;
+        }
+
+        .flow-box.simple {
+            border-color: #28a745;
+        }
+
+        .arrow-big {
+            font-size: 3em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1000px) {
+            .side-by-side {
+                grid-template-columns: 1fr;
+            }
+
+            .visual-flow {
+                flex-direction: column;
+            }
+
+            .evolution-step {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Unnamed Classes & Instance Main</h1>
+        <p class="subtitle">Java Made Simple for Beginners!</p>
+        
+        <div class="preview-badge">
+            <span class="badge">⚠️ Preview Feature - Use --enable-preview</span>
+        </div>
+
+        <!-- THE PROBLEM -->
+        <div class="section">
+            <h2>😰 The Problem: Too Much Boilerplate!</h2>
+
+            <div class="story-box">
+                <h3>🎮 Real Life: Learning to Play Piano</h3>
+                <p>
+                    Imagine you want to learn piano and play a simple note. 
+                    <br><br>
+                    <strong>Traditional Approach:</strong>
+                    <br>1. Read 100-page theory book on music composition
+                    <br>2. Learn about orchestras and symphonies
+                    <br>3. Understand concert hall acoustics
+                    <br>4. Study music history for 6 months
+                    <br>5. FINALLY play one note! 🎹
+                </p>
+                <p style="margin-top: 20px;">
+                    <strong>Better Approach:</strong>
+                    <br>1. Press a key → Hear the sound! 🎵
+                    <br>2. Learn the complex stuff later when you need it!
+                </p>
+                <p style="margin-top: 20px; font-size: 1.3em; color: #ffd700;">
+                    <strong>This is exactly what Java 21 does!</strong> 
+                    Start simple, add complexity later! 🚀
+                </p>
+            </div>
+
+            <div class="problem-section">
+                <h3>❌ Traditional Java: Hello World</h3>
+                <p style="margin-bottom: 20px; font-size: 1.1em;">
+                    To print "Hello, World!", beginners had to write this:
+                </p>
+                <div class="code bloated">
+                    <div class="line-count">5 LINES!</div>
+<span class="boilerplate"><span class="keyword">public class</span> <span class="type">HelloWorld</span> {</span>
+    <span class="boilerplate"><span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {</span>
+        <span class="actual-code">System.out.println(<span class="string">"Hello, World!"</span>);</span>  <span class="comment">// ← This is the ONLY line that matters!</span>
+    <span class="boilerplate">}</span>
+<span class="boilerplate">}</span>
+
+<span class="comment">// 😰 Problems:</span>
+<span class="comment">// - 5 lines of code to print one thing!</span>
+<span class="comment">// - What is "public"? "static"? "void"? "String[]"?</span>
+<span class="comment">// - Beginners spend hours understanding ceremony, not logic!</span>
+                </div>
+            </div>
+
+            <div class="simplification-visual">
+                <h3 style="color: #667eea; text-align: center; margin-bottom: 30px; font-size: 1.8em;">
+                    The Simplification:
+                </h3>
+
+                <div class="visual-flow">
+                    <div class="flow-box complex">
+                        <h4 style="color: #dc3545; margin-bottom: 15px; font-size: 1.4em;">❌ Old Way</h4>
+                        <div style="font-size: 3em; margin: 20px 0;">📚📚📚📚📚</div>
+                        <p style="font-size: 1.1em;">5 lines of boilerplate</p>
+                        <p style="margin-top: 10px; color: #dc3545; font-weight: bold;">Just to print one line!</p>
+                    </div>
+
+                    <div class="arrow-big">→</div>
+
+                    <div class="flow-box simple">
+                        <h4 style="color: #28a745; margin-bottom: 15px; font-size: 1.4em;">✅ New Way</h4>
+                        <div style="font-size: 3em; margin: 20px 0;">📖</div>
+                        <p style="font-size: 1.1em;">1 line of code!</p>
+                        <p style="margin-top: 10px; color: #28a745; font-weight: bold;">Just the logic!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>🎯 The Goal:</strong> Let beginners focus on LOGIC, not ceremony! 
+                Learn the complex stuff later!
+            </div>
+        </div>
+
+        <!-- THE SOLUTION -->
+        <div class="section">
+            <h2>🎉 The Solution: Three Simplifications!</h2>
+
+            <div class="evolution">
+                <h3 style="color: #667eea; text-align: center; margin-bottom: 30px; font-size: 1.8em;">
+                    Progressive Simplification
+                </h3>
+
+                <div class="evolution-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Drop 'public' Modifier</h4>
+                        <p style="margin-bottom: 15px; font-size: 1.1em;">
+                            You don't need to say "public" anymore!
+                        </p>
+                        <div class="code">
+<span class="comment">// Before: Required "public"</span>
+<span class="keyword">public class</span> <span class="type">Hello</span> {
+    <span class="boilerplate"><span class="keyword">public</span></span> <span class="keyword">static void</span> main(<span class="type">String</span>[] args) {
+        System.out.println(<span class="string">"Hello!"</span>);
+    }
+}
+
+<span class="comment">// After: "public" is optional! ✨</span>
+<span class="keyword">class</span> <span class="type">Hello</span> {
+    <span class="keyword">static void</span> main(<span class="type">String</span>[] args) {  <span class="comment">// No "public"!</span>
+        System.out.println(<span class="string">"Hello!"</span>);
+    }
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="evolution-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Drop 'String[] args' Parameter</h4>
+                        <p style="margin-bottom: 15px; font-size: 1.1em;">
+                            If you don't need command-line arguments, skip them!
+                        </p>
+                        <div class="code">
+<span class="comment">// Before: Always needed args</span>
+<span class="keyword">class</span> <span class="type">Hello</span> {
+    <span class="keyword">static void</span> main(<span class="boilerplate"><span class="type">String</span>[] args</span>) {
+        System.out.println(<span class="string">"Hello!"</span>);
+    }
+}
+
+<span class="comment">// After: Skip args if not needed! ✨</span>
+<span class="keyword">class</span> <span class="type">Hello</span> {
+    <span class="keyword">static void</span> main() {  <span class="comment">// No args!</span>
+        System.out.println(<span class="string">"Hello!"</span>);
+    }
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="evolution-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Drop 'static' - Use Instance Main!</h4>
+                        <p style="margin-bottom: 15px; font-size: 1.1em;">
+                            The biggest change - main() can be a normal instance method!
+                        </p>
+                        <div class="code">
+<span class="comment">// Before: Always needed "static"</span>
+<span class="keyword">class</span> <span class="type">Hello</span> {
+    <span class="boilerplate"><span class="keyword">static</span></span> <span class="keyword">void</span> main() {
+        System.out.println(<span class="string">"Hello!"</span>);
+    }
+}
+
+<span class="comment">// After: "static" is optional! ✨</span>
+<span class="keyword">class</span> <span class="type">Hello</span> {
+    <span class="keyword">void</span> main() {  <span class="comment">// No "static"!</span>
+        System.out.println(<span class="string">"Hello!"</span>);
+    }
+}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- UNNAMED CLASSES -->
+        <div class="section">
+            <h2>🚀 The Ultimate Simplification: Unnamed Classes!</h2>
+
+            <div class="story-box">
+                <h3>📝 Real Life: Quick Note vs Formal Letter</h3>
+                <p>
+                    <strong>Formal Letter (Traditional Java):</strong>
+                    <br>• Need company letterhead
+                    <br>• Must have sender address
+                    <br>• Formal greeting and closing
+                    <br>• Signature block
+                    <br>• Just to say "Meeting at 3 PM"!
+                </p>
+                <p style="margin-top: 20px;">
+                    <strong>Quick Note (Unnamed Class):</strong>
+                    <br>• Just write: "Meeting at 3 PM" on a sticky note!
+                    <br>• No formalities needed for simple messages!
+                </p>
+            </div>
+
+            <div class="side-by-side">
+                <div class="panel bad">
+                    <h3>❌ Named Class (Old)</h3>
+                    <div class="code">
+                        <div class="line-count">5 LINES</div>
+<span class="comment">// File: Hello.java</span>
+<span class="boilerplate"><span class="keyword">public class</span> <span class="type">Hello</span> {</span>
+    <span class="boilerplate"><span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {</span>
+        <span class="actual-code">System.out.println(<span class="string">"Hello!"</span>);</span>
+    <span class="boilerplate">}</span>
+<span class="boilerplate">}</span>
+                    </div>
+                </div>
+
+                <div class="panel good">
+                    <h3>✅ Unnamed Class (New)</h3>
+                    <div class="code clean">
+                        <div class="line-count good">3 LINES!</div>
+<span class="comment">// File: Hello.java</span>
+<span class="comment">// No class declaration needed! 🎉</span>
+<span class="keyword">void</span> main() {
+    System.out.println(<span class="string">"Hello!"</span>);
+}
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box green">
+                <h4>✨ What Happened?</h4>
+                <p>
+                    <strong>1. No class declaration needed!</strong> Java creates an invisible class for you.
+                    <br><br>
+                    <strong>2. Just write your main() method!</strong> The simplest possible program.
+                    <br><br>
+                    <strong>3. Perfect for learning!</strong> Focus on logic, not ceremony.
+                </p>
+            </div>
+
+            <div class="example-card">
+                <h3>📖 Complete Example: Greeting</h3>
+                <div class="code clean">
+<span class="comment">// File: Greeter.java</span>
+<span class="comment">// No class declaration! 🎉</span>
+
+<span class="comment">// Helper method (yes, you can have these!)</span>
+<span class="type">String</span> greet(<span class="type">String</span> name) {
+    <span class="keyword">return</span> <span class="string">"Hello, "</span> + name + <span class="string">"!"</span>;
+}
+
+<span class="comment">// Main method</span>
+<span class="keyword">void</span> main() {
+    System.out.println(greet(<span class="string">"Alice"</span>));   <span class="comment">// Hello, Alice!</span>
+    System.out.println(greet(<span class="string">"Mahesh"</span>));  <span class="comment">// Hello, Mahesh!</span>
+}
+
+<span class="comment">// Run: java --enable-preview --source 21 Greeter.java</span>
+<span class="comment">// Output:</span>
+<span class="comment">// Hello, Alice!</span>
+<span class="comment">// Hello, Mahesh!</span>
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>🧮 Another Example: Simple Calculator</h3>
+                <div class="code clean">
+<span class="comment">// File: Calculator.java</span>
+
+<span class="comment">// Helper methods</span>
+<span class="keyword">int</span> add(<span class="keyword">int</span> a, <span class="keyword">int</span> b) {
+    <span class="keyword">return</span> a + b;
+}
+
+<span class="keyword">int</span> multiply(<span class="keyword">int</span> a, <span class="keyword">int</span> b) {
+    <span class="keyword">return</span> a * b;
+}
+
+<span class="comment">// Main method</span>
+<span class="keyword">void</span> main() {
+    System.out.println(<span class="string">"5 + 3 = "</span> + add(<span class="number">5</span>, <span class="number">3</span>));
+    System.out.println(<span class="string">"5 × 3 = "</span> + multiply(<span class="number">5</span>, <span class="number">3</span>));
+}
+
+<span class="comment">// Output:</span>
+<span class="comment">// 5 + 3 = 8</span>
+<span class="comment">// 5 × 3 = 15</span>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>💡 Key Point:</strong> You can have helper methods! Unnamed classes aren't limited to just main()!
+            </div>
+        </div>
+
+        <!-- WHEN TO USE -->
+        <div class="section">
+            <h2>🤔 When Should You Use This?</h2>
+
+            <div class="comparison-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Scenario</th>
+                            <th>Use Unnamed Classes?</th>
+                            <th>Why?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Learning Java</strong></td>
+                            <td><span class="checkmark">✅ YES!</span></td>
+                            <td>Perfect for beginners - focus on logic, not syntax</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Quick Scripts</strong></td>
+                            <td><span class="checkmark">✅ YES!</span></td>
+                            <td>Great for one-off tasks and experiments</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Teaching/Tutorials</strong></td>
+                            <td><span class="checkmark">✅ YES!</span></td>
+                            <td>Students see logic first, learn ceremony later</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Prototyping Ideas</strong></td>
+                            <td><span class="checkmark">✅ YES!</span></td>
+                            <td>Test concepts quickly without boilerplate</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Production Apps</strong></td>
+                            <td><span class="crossmark">❌ NO</span></td>
+                            <td>Need proper structure, packages, organization</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Team Projects</strong></td>
+                            <td><span class="crossmark">❌ NO</span></td>
+                            <td>Traditional classes work better with teams</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Libraries/APIs</strong></td>
+                            <td><span class="crossmark">❌ NO</span></td>
+                            <td>Need proper visibility and access control</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Large Codebases</strong></td>
+                            <td><span class="crossmark">❌ NO</span></td>
+                            <td>Need packages, modules, clear structure</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="side-by-side">
+                <div class="panel good">
+                    <h3>✅ Perfect For:</h3>
+                    <ul style="font-size: 1.1em; line-height: 2; margin-left: 20px;">
+                        <li>📚 Learning Java basics</li>
+                        <li>🧪 Quick experiments</li>
+                        <li>📝 Simple scripts</li>
+                        <li>👨‍🏫 Teaching programming</li>
+                        <li>💡 Testing ideas</li>
+                        <li>🎯 Code interviews (quick demos)</li>
+                    </ul>
+                </div>
+
+                <div class="panel bad">
+                    <h3>❌ Not For:</h3>
+                    <ul style="font-size: 1.1em; line-height: 2; margin-left: 20px;">
+                        <li>🏢 Production applications</li>
+                        <li>👥 Team development</li>
+                        <li>📦 Creating libraries</li>
+                        <li>🔌 Building APIs</li>
+                        <li>📊 Large projects</li>
+                        <li>🏗️ Complex architectures</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="info-box blue">
+                <h4>💡 Think of It Like Training Wheels</h4>
+                <p>
+                    <strong>Training Wheels (Unnamed Classes):</strong> Help you learn to ride
+                    <br><strong>Real Bike (Traditional Classes):</strong> Use when you're ready for the real thing
+                    <br><br>
+                    Start simple, graduate to complex when you're ready!
+                </p>
+            </div>
+        </div>
+
+        <!-- COMPARISON -->
+        <div class="section">
+            <h2>📊 Full Comparison: All Options</h2>
+
+            <div class="example-card">
+                <h3>The Evolution of Hello World</h3>
+                
+                <div style="margin: 20px 0;">
+                    <h4 style="color: #dc3545; margin-bottom: 15px;">Traditional (Pre-Java 21)</h4>
+                    <div class="code bloated">
+                        <div class="line-count">5 LINES</div>
+<span class="keyword">public class</span> <span class="type">HelloWorld</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        System.out.println(<span class="string">"Hello, World!"</span>);
+    }
+}
+                    </div>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <h4 style="color: #667eea; margin-bottom: 15px;">Option 1: Drop 'public'</h4>
+                    <div class="code">
+                        <div class="line-count" style="background: #667eea;">4 LINES</div>
+<span class="keyword">class</span> <span class="type">HelloWorld</span> {
+    <span class="keyword">static void</span> main(<span class="type">String</span>[] args) {
+        System.out.println(<span class="string">"Hello, World!"</span>);
+    }
+}
+                    </div>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <h4 style="color: #667eea; margin-bottom: 15px;">Option 2: Drop 'String[] args'</h4>
+                    <div class="code">
+                        <div class="line-count" style="background: #667eea;">4 LINES</div>
+<span class="keyword">class</span> <span class="type">HelloWorld</span> {
+    <span class="keyword">static void</span> main() {
+        System.out.println(<span class="string">"Hello, World!"</span>);
+    }
+}
+                    </div>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <h4 style="color: #667eea; margin-bottom: 15px;">Option 3: Drop 'static' (Instance Main)</h4>
+                    <div class="code">
+                        <div class="line-count" style="background: #667eea;">4 LINES</div>
+<span class="keyword">class</span> <span class="type">HelloWorld</span> {
+    <span class="keyword">void</span> main() {
+        System.out.println(<span class="string">"Hello, World!"</span>);
+    }
+}
+                    </div>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <h4 style="color: #28a745; margin-bottom: 15px;">Option 4: Unnamed Class (Simplest!)</h4>
+                    <div class="code clean">
+                        <div class="line-count good">3 LINES!</div>
+<span class="comment">// No class declaration needed!</span>
+<span class="keyword">void</span> main() {
+    System.out.println(<span class="string">"Hello, World!"</span>);
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOW TO RUN -->
+        <div class="section">
+            <h2>🚀 How to Run</h2>
+
+            <div class="example-card">
+                <h3>Step-by-Step Guide</h3>
+                
+                <div style="margin: 25px 0;">
+                    <h4 style="color: #667eea; margin-bottom: 15px;">Step 1: Create File</h4>
+                    <p style="margin-bottom: 10px; font-size: 1.1em;">Save your code as <code>Script.java</code></p>
+                    <div class="code clean">
+<span class="comment">// Script.java</span>
+<span class="keyword">void</span> main() {
+    System.out.println(<span class="string">"Hello from unnamed class!"</span>);
+}
+                    </div>
+                </div>
+
+                <div style="margin: 25px 0;">
+                    <h4 style="color: #667eea; margin-bottom: 15px;">Step 2: Run Directly</h4>
+                    <p style="margin-bottom: 10px; font-size: 1.1em;">No need to compile separately!</p>
+                    <div class="code">
+<span class="comment"># Run with preview features enabled</span>
+java --enable-preview --source <span class="number">21</span> Script.java
+
+<span class="comment"># Output:</span>
+<span class="comment"># Hello from unnamed class!</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box yellow">
+                <h4>⚠️ Remember!</h4>
+                <p>
+                    <strong>1. Use <code>--enable-preview</code></strong> flag (it's a preview feature)
+                    <br><br>
+                    <strong>2. Use <code>--source 21</code></strong> to specify Java 21
+                    <br><br>
+                    <strong>3. Run directly</strong> - no need to compile with javac first!
+                </p>
+            </div>
+        </div>
+
+        <!-- REAL EXAMPLES -->
+        <div class="section">
+            <h2>💼 Real-World Examples</h2>
+
+            <div class="example-card">
+                <h3>🎲 Example 1: Dice Roller</h3>
+                <div class="code clean">
+<span class="comment">// File: Dice.java</span>
+
+<span class="keyword">int</span> rollDice() {
+    <span class="keyword">return</span> (<span class="keyword">int</span>) (Math.random() * <span class="number">6</span>) + <span class="number">1</span>;
+}
+
+<span class="keyword">void</span> main() {
+    System.out.println(<span class="string">"🎲 Rolling dice..."</span>);
+    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i++) {
+        System.out.println(<span class="string">"Roll "</span> + (i + <span class="number">1</span>) + <span class="string">": "</span> + rollDice());
+    }
+}
+
+<span class="comment">// Run: java --enable-preview --source 21 Dice.java</span>
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>💰 Example 2: Tip Calculator</h3>
+                <div class="code clean">
+<span class="comment">// File: TipCalculator.java</span>
+
+<span class="keyword">double</span> calculateTip(<span class="keyword">double</span> bill, <span class="keyword">double</span> tipPercent) {
+    <span class="keyword">return</span> bill * tipPercent / <span class="number">100</span>;
+}
+
+<span class="keyword">void</span> main() {
+    <span class="keyword">double</span> bill = <span class="number">500.0</span>;
+    <span class="keyword">double</span> tip = calculateTip(bill, <span class="number">15</span>);
+    <span class="keyword">double</span> total = bill + tip;
+    
+    System.out.println(<span class="string">"Bill: ₹"</span> + bill);
+    System.out.println(<span class="string">"Tip (15%): ₹"</span> + tip);
+    System.out.println(<span class="string">"Total: ₹"</span> + total);
+}
+
+<span class="comment">// Output:</span>
+<span class="comment">// Bill: ₹500.0</span>
+<span class="comment">// Tip (15%): ₹75.0</span>
+<span class="comment">// Total: ₹575.0</span>
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>📅 Example 3: Day of Week</h3>
+                <div class="code clean">
+<span class="comment">// File: DayChecker.java</span>
+
+<span class="type">String</span> getDayMessage(<span class="keyword">int</span> day) {
+    <span class="keyword">return switch</span> (day) {
+        <span class="keyword">case</span> <span class="number">1</span> -&gt; <span class="string">"Monday - New week!"</span>;
+        <span class="keyword">case</span> <span class="number">5</span> -&gt; <span class="string">"Friday - Almost weekend!"</span>;
+        <span class="keyword">case</span> <span class="number">6</span>, <span class="number">7</span> -&gt; <span class="string">"Weekend! 🎉"</span>;
+        <span class="keyword">default</span> -&gt; <span class="string">"Weekday"</span>;
+    };
+}
+
+<span class="keyword">void</span> main() {
+    System.out.println(getDayMessage(<span class="number">1</span>));  <span class="comment">// Monday - New week!</span>
+    System.out.println(getDayMessage(<span class="number">5</span>));  <span class="comment">// Friday - Almost weekend!</span>
+    System.out.println(getDayMessage(<span class="number">6</span>));  <span class="comment">// Weekend! 🎉</span>
+}
+                </div>
+            </div>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h2 style="color: white; border-color: white;">🎯 Quick Summary</h2>
+
+            <div style="font-size: 1.15em; line-height: 1.9; margin-top: 25px;">
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="font-size: 1.8em; margin-bottom: 15px;">📚 What We Learned</h3>
+                    <p>
+                        <strong>1. Drop 'public':</strong> Access modifiers are optional
+                        <br><br>
+                        <strong>2. Drop 'String[] args':</strong> Skip parameters if not needed
+                        <br><br>
+                        <strong>3. Drop 'static':</strong> Instance methods work as main()
+                        <br><br>
+                        <strong>4. Drop 'class':</strong> Unnamed classes let you skip the class declaration entirely!
+                    </p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="font-size: 1.8em; margin-bottom: 15px;">🎯 When to Use</h3>
+                    <p>
+                        <strong>✅ Perfect for:</strong> Learning, quick scripts, teaching, prototyping
+                        <br><br>
+                        <strong>❌ Not for:</strong> Production apps, team projects, libraries, large codebases
+                    </p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="font-size: 1.8em; margin-bottom: 15px;">🚀 The Result</h3>
+                    <p style="font-size: 1.2em;">
+                        From <strong>5 lines of boilerplate</strong> to <strong>just the logic you need</strong>!
+                        <br>Focus on learning programming, not Java syntax! 🎉
+                    </p>
+                </div>
+
+                <div style="margin-top: 40px; text-align: center; font-size: 1.5em; padding: 25px; background: rgba(255,255,255,0.2); border-radius: 12px;">
+                    <strong>Bottom Line:</strong> Java finally has a beginner-friendly mode! 🚀
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

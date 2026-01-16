@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key Encapsulation Mechanism (KEM) - Java 21</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 2.8em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: white;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+        }
+
+        .final-badge {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+        
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 45px;
+            margin-bottom: 35px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 35px;
+            font-size: 2.2em;
+            border-bottom: 4px solid #667eea;
+            padding-bottom: 15px;
+        }
+
+        /* STORY BOX */
+        .story-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 35px;
+            border-radius: 15px;
+            margin: 25px 0;
+            font-size: 1.15em;
+            line-height: 1.9;
+        }
+
+        .story-box h3 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        /* FLOW DIAGRAM */
+        .flow-diagram {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin: 30px 0;
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.8em;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .actor-box {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin: 10px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.2);
+        }
+
+        .actor-box.receiver {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .actor-box.sender {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .key-box {
+            display: inline-block;
+            background: #ffc107;
+            color: #333;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            margin: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .secret-box {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            margin: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .arrow {
+            text-align: center;
+            font-size: 2.5em;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        /* CODE */
+        .code {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 25px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.05em;
+            line-height: 1.8;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .keyword {
+            color: #ff79c6;
+            font-weight: bold;
+        }
+
+        .type {
+            color: #8be9fd;
+        }
+
+        .string {
+            color: #f1fa8c;
+        }
+
+        .comment {
+            color: #6272a4;
+            font-style: italic;
+        }
+
+        .highlight {
+            background: #ffeb3b;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #2d2d2d;
+            font-weight: bold;
+        }
+
+        /* COMPARISON TABLE */
+        .comparison-table {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            margin: 25px 0;
+        }
+
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th {
+            background: #667eea;
+            color: white;
+            padding: 18px;
+            text-align: left;
+            font-size: 1.2em;
+        }
+
+        .comparison-table td {
+            padding: 18px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 1.05em;
+        }
+
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .checkmark {
+            color: #28a745;
+            font-size: 1.3em;
+        }
+
+        /* INFO BOXES */
+        .info-box {
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border-left: 6px solid;
+            font-size: 1.1em;
+            line-height: 1.7;
+        }
+
+        .info-box.blue {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+
+        .info-box.yellow {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .info-box.green {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .info-box h4 {
+            margin-bottom: 12px;
+            font-size: 1.3em;
+        }
+
+        /* EXAMPLE CARD */
+        .example-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-left: 6px solid #667eea;
+        }
+
+        .example-card h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        /* HIGHLIGHT BOX */
+        .highlight-box {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            font-size: 1.2em;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        /* VISUAL COMMUNICATION */
+        .communication-visual {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .comm-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 30px;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .person-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .person-card.alice {
+            border: 4px solid #11998e;
+        }
+
+        .person-card.bob {
+            border: 4px solid #eb3349;
+        }
+
+        .person-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .person-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .transfer-arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .transfer-arrow .arrow-line {
+            font-size: 3em;
+            color: #667eea;
+        }
+
+        .transfer-label {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        /* USE CASE CARDS */
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .use-case-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .use-case-card .icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .use-case-card h4 {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+        }
+
+        .use-case-card p {
+            font-size: 1.05em;
+            line-height: 1.6;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1000px) {
+            .comm-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-step {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Key Encapsulation Mechanism (KEM)</h1>
+        <p class="subtitle">Secure Key Exchange Made Simple!</p>
+        
+        <div class="final-badge">
+            <span class="badge">✅ Final Feature - No Preview Flags Needed!</span>
+        </div>
+
+        <!-- WHAT IS KEM -->
+        <div class="section">
+            <h2>🤔 What is KEM?</h2>
+
+            <div class="story-box">
+                <h3>🔒 Real Life: Secret Mailbox</h3>
+                <p>
+                    Imagine Alice wants to send Bob a secret message, but they've never met before. 
+                    How can they agree on a secret password without anyone else knowing?
+                </p>
+                <p style="margin-top: 20px;">
+                    <strong>Old Method (Meeting in person):</strong>
+                    <br>• Alice and Bob meet at a coffee shop
+                    <br>• They agree on a secret password face-to-face
+                    <br>• Problem: They have to meet physically! 🤝
+                </p>
+                <p style="margin-top: 20px;">
+                    <strong>KEM Method (Magic Mailbox):</strong>
+                    <br>• Bob creates a special mailbox and gives Alice the address (public key)
+                    <br>• Alice puts a secret envelope in Bob's mailbox (encapsulation)
+                    <br>• Bob retrieves the envelope with his special key (decapsulation)
+                    <br>• Both now have the SAME secret, but no one else does! 🎉
+                </p>
+                <p style="margin-top: 20px; font-size: 1.3em; color: #ffd700;">
+                    <strong>This is Key Encapsulation Mechanism!</strong> 
+                    Securely agree on a shared secret without meeting! 🔐
+                </p>
+            </div>
+
+            <div class="info-box blue">
+                <h4>💡 Simple Definition</h4>
+                <p>
+                    <strong>KEM (Key Encapsulation Mechanism)</strong> is a way for two people to agree on a shared secret key 
+                    without directly exchanging it.
+                    <br><br>
+                    <strong>Think of it like:</strong> A magic trick where both parties end up with the same secret password, 
+                    but no one else watching can figure it out!
+                </p>
+            </div>
+
+            <div class="highlight-box">
+                <strong>🎯 The Goal:</strong> Alice and Bob need a shared secret key to encrypt messages, 
+                but they can't send the key directly (someone might intercept it!). KEM solves this! 🚀
+            </div>
+        </div>
+
+        <!-- HOW IT WORKS -->
+        <div class="section">
+            <h2>🔄 How KEM Works: The 3-Step Dance</h2>
+
+            <div class="communication-visual">
+                <h3 style="color: #667eea; text-align: center; margin-bottom: 30px; font-size: 1.8em;">
+                    Alice Wants to Send Bob a Secret Message
+                </h3>
+
+                <!-- STEP 1 -->
+                <div style="margin: 40px 0;">
+                    <h4 style="color: #11998e; text-align: center; margin-bottom: 20px; font-size: 1.5em;">
+                        Step 1: Bob Creates a Mailbox
+                    </h4>
+                    <div class="comm-grid">
+                        <div style="text-align: center; color: #999;">
+                            <div class="person-icon">👩</div>
+                            <div class="person-name" style="color: #999;">Alice (Waiting)</div>
+                        </div>
+
+                        <div class="transfer-arrow">
+                            <div class="arrow-line">⏸️</div>
+                        </div>
+
+                        <div class="person-card bob">
+                            <div class="person-icon">👨</div>
+                            <div class="person-name" style="color: #eb3349;">Bob (Receiver)</div>
+                            <div style="margin: 20px 0; font-size: 1.1em;">
+                                <div style="margin: 10px 0;">🔑 Generates Key Pair:</div>
+                                <div class="key-box">📢 Public Key<br>(Share with Alice)</div>
+                                <div class="key-box" style="background: #dc3545;">🔒 Private Key<br>(Keep Secret!)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <!-- STEP 2 -->
+                <div style="margin: 40px 0;">
+                    <h4 style="color: #eb3349; text-align: center; margin-bottom: 20px; font-size: 1.5em;">
+                        Step 2: Alice Creates the Secret
+                    </h4>
+                    <div class="comm-grid">
+                        <div class="person-card alice">
+                            <div class="person-icon">👩</div>
+                            <div class="person-name" style="color: #11998e;">Alice (Sender)</div>
+                            <div style="margin: 20px 0; font-size: 1.1em;">
+                                <div style="margin: 10px 0;">Uses Bob's 📢 Public Key to:</div>
+                                <div class="secret-box">🎁 Encapsulate<br>Creates Shared Secret!</div>
+                                <div class="key-box">📦 Encapsulation<br>(Safe to send)</div>
+                            </div>
+                        </div>
+
+                        <div class="transfer-arrow">
+                            <div class="arrow-line">→</div>
+                            <div class="transfer-label">Sends 📦</div>
+                        </div>
+
+                        <div style="text-align: center; color: #999;">
+                            <div class="person-icon">👨</div>
+                            <div class="person-name" style="color: #999;">Bob (Waiting)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">⬇️</div>
+
+                <!-- STEP 3 -->
+                <div style="margin: 40px 0;">
+                    <h4 style="color: #28a745; text-align: center; margin-bottom: 20px; font-size: 1.5em;">
+                        Step 3: Bob Retrieves the Secret
+                    </h4>
+                    <div class="comm-grid">
+                        <div style="text-align: center;">
+                            <div class="person-icon">👩</div>
+                            <div class="person-name" style="color: #11998e;">Alice</div>
+                            <div class="secret-box">🎁 Has Shared Secret!</div>
+                        </div>
+
+                        <div class="transfer-arrow">
+                            <div style="font-size: 3em;">✅</div>
+                            <div class="transfer-label" style="background: #28a745;">Same Secret!</div>
+                        </div>
+
+                        <div style="text-align: center;">
+                            <div class="person-icon">👨</div>
+                            <div class="person-name" style="color: #eb3349;">Bob</div>
+                            <div style="margin: 15px 0; font-size: 1.1em;">
+                                Uses 🔒 Private Key to:
+                            </div>
+                            <div class="secret-box">🎁 Decapsulate<br>Gets Same Secret!</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px; padding: 30px; background: #d4edda; border-radius: 12px; text-align: center; border: 3px solid #28a745;">
+                    <h4 style="color: #155724; font-size: 1.6em; margin-bottom: 15px;">🎉 Success!</h4>
+                    <p style="color: #155724; font-size: 1.2em; line-height: 1.7;">
+                        Both Alice and Bob now have the SAME shared secret key!<br>
+                        They can use it to encrypt messages to each other!<br>
+                        But no one watching the communication knows the secret! 🔐
+                    </p>
+                </div>
+            </div>
+
+            <div class="flow-diagram">
+                <h3 style="color: #667eea; text-align: center; margin-bottom: 30px; font-size: 1.8em;">
+                    The Technical Flow
+                </h3>
+
+                <div class="flow-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Bob: Generate Key Pair</h4>
+                        <p style="font-size: 1.1em; margin-bottom: 15px;">
+                            Bob creates two keys: one to share (public), one to keep secret (private)
+                        </p>
+                        <div class="code">
+<span class="comment">// Bob generates a key pair</span>
+<span class="type">KeyPairGenerator</span> kpg = <span class="type">KeyPairGenerator</span>.getInstance(<span class="string">"X25519"</span>);
+<span class="type">KeyPair</span> keyPair = kpg.generateKeyPair();
+
+<span class="type">PublicKey</span> publicKey = keyPair.getPublic();    <span class="comment">// Share this!</span>
+<span class="type">PrivateKey</span> privateKey = keyPair.getPrivate(); <span class="comment">// Keep secret!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Alice: Encapsulate (Create Secret)</h4>
+                        <p style="font-size: 1.1em; margin-bottom: 15px;">
+                            Alice uses Bob's public key to create a shared secret and an encapsulation
+                        </p>
+                        <div class="code">
+<span class="comment">// Alice encapsulates using Bob's public key</span>
+<span class="type">KEM</span> kem = <span class="type">KEM</span>.getInstance(<span class="string">"DHKEM"</span>);
+<span class="type">KEM.Encapsulator</span> encapsulator = kem.newEncapsulator(publicKey);
+
+<span class="comment">// Encapsulate! Creates shared secret + encapsulation</span>
+<span class="type">KEM.Encapsulated</span> result = encapsulator.encapsulate();
+
+<span class="type">SecretKey</span> sharedSecret = result.<span class="highlight">key</span>();          <span class="comment">// Alice's copy of secret</span>
+<span class="keyword">byte</span>[] encapsulation = result.<span class="highlight">encapsulation</span>(); <span class="comment">// Send to Bob</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Bob: Decapsulate (Retrieve Secret)</h4>
+                        <p style="font-size: 1.1em; margin-bottom: 15px;">
+                            Bob uses his private key to extract the same shared secret from the encapsulation
+                        </p>
+                        <div class="code">
+<span class="comment">// Bob decapsulates using his private key</span>
+<span class="type">KEM.Decapsulator</span> decapsulator = kem.newDecapsulator(privateKey);
+
+<span class="comment">// Decapsulate! Extracts the same secret!</span>
+<span class="type">SecretKey</span> sameSecret = decapsulator.<span class="highlight">decapsulate</span>(encapsulation);
+
+<span class="comment">// Verify they're the same!</span>
+<span class="keyword">boolean</span> same = Arrays.equals(
+    sharedSecret.getEncoded(), 
+    sameSecret.getEncoded()
+);
+System.out.println(<span class="string">"Same secret? "</span> + same); <span class="comment">// true! ✅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>🔑 The Magic:</strong> Alice and Bob now have the SAME secret key, 
+                but they never directly sent the key itself! That's the power of KEM! 🎩✨
+            </div>
+        </div>
+
+        <!-- COMPLETE EXAMPLE -->
+        <div class="section">
+            <h2>💻 Complete Code Example</h2>
+
+            <div class="example-card">
+                <h3>🔐 Full KEM Implementation</h3>
+                <div class="code">
+<span class="keyword">import</span> javax.crypto.KEM;
+<span class="keyword">import</span> javax.crypto.SecretKey;
+<span class="keyword">import</span> java.security.*;
+
+<span class="keyword">public class</span> <span class="type">KEMExample</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        
+        <span class="comment">// ============================================</span>
+        <span class="comment">// STEP 1: Bob generates key pair</span>
+        <span class="comment">// ============================================</span>
+        System.out.println(<span class="string">"📦 Bob: Generating key pair..."</span>);
+        <span class="type">KeyPairGenerator</span> kpg = <span class="type">KeyPairGenerator</span>.getInstance(<span class="string">"X25519"</span>);
+        <span class="type">KeyPair</span> bobKeyPair = kpg.generateKeyPair();
+        
+        <span class="type">PublicKey</span> bobPublicKey = bobKeyPair.getPublic();
+        <span class="type">PrivateKey</span> bobPrivateKey = bobKeyPair.getPrivate();
+        System.out.println(<span class="string">"✅ Bob: Keys generated!"</span>);
+        System.out.println(<span class="string">"📢 Bob: Sharing public key with Alice..."</span>);
+        
+        <span class="comment">// ============================================</span>
+        <span class="comment">// STEP 2: Alice encapsulates</span>
+        <span class="comment">// ============================================</span>
+        System.out.println(<span class="string">"\n👩 Alice: Received Bob's public key"</span>);
+        System.out.println(<span class="string">"🎁 Alice: Encapsulating..."</span>);
+        
+        <span class="type">KEM</span> kem = <span class="type">KEM</span>.getInstance(<span class="string">"DHKEM"</span>);
+        <span class="type">KEM.Encapsulator</span> encapsulator = kem.newEncapsulator(bobPublicKey);
+        <span class="type">KEM.Encapsulated</span> result = encapsulator.encapsulate();
+        
+        <span class="type">SecretKey</span> aliceSecret = result.key();
+        <span class="keyword">byte</span>[] encapsulation = result.encapsulation();
+        
+        System.out.println(<span class="string">"✅ Alice: Created shared secret!"</span>);
+        System.out.println(<span class="string">"📦 Alice: Sending encapsulation to Bob..."</span>);
+        
+        <span class="comment">// ============================================</span>
+        <span class="comment">// STEP 3: Bob decapsulates</span>
+        <span class="comment">// ============================================</span>
+        System.out.println(<span class="string">"\n👨 Bob: Received encapsulation from Alice"</span>);
+        System.out.println(<span class="string">"🔓 Bob: Decapsulating..."</span>);
+        
+        <span class="type">KEM.Decapsulator</span> decapsulator = kem.newDecapsulator(bobPrivateKey);
+        <span class="type">SecretKey</span> bobSecret = decapsulator.decapsulate(encapsulation);
+        
+        System.out.println(<span class="string">"✅ Bob: Retrieved shared secret!"</span>);
+        
+        <span class="comment">// ============================================</span>
+        <span class="comment">// VERIFY: Do they have the same secret?</span>
+        <span class="comment">// ============================================</span>
+        <span class="keyword">boolean</span> same = java.util.Arrays.equals(
+            aliceSecret.getEncoded(),
+            bobSecret.getEncoded()
+        );
+        
+        System.out.println(<span class="string">"\n🎉 Result: "</span> + (same ? <span class="string">"SUCCESS!"</span> : <span class="string">"FAILED"</span>));
+        System.out.println(<span class="string">"🔐 Both have the same shared secret: "</span> + same);
+        System.out.println(<span class="string">"\n💬 Alice and Bob can now encrypt messages to each other!"</span>);
+    }
+}
+
+<span class="comment">// Output:</span>
+<span class="comment">// 📦 Bob: Generating key pair...</span>
+<span class="comment">// ✅ Bob: Keys generated!</span>
+<span class="comment">// 📢 Bob: Sharing public key with Alice...</span>
+<span class="comment">// </span>
+<span class="comment">// 👩 Alice: Received Bob's public key</span>
+<span class="comment">// 🎁 Alice: Encapsulating...</span>
+<span class="comment">// ✅ Alice: Created shared secret!</span>
+<span class="comment">// 📦 Alice: Sending encapsulation to Bob...</span>
+<span class="comment">// </span>
+<span class="comment">// 👨 Bob: Received encapsulation from Alice</span>
+<span class="comment">// 🔓 Bob: Decapsulating...</span>
+<span class="comment">// ✅ Bob: Retrieved shared secret!</span>
+<span class="comment">// </span>
+<span class="comment">// 🎉 Result: SUCCESS!</span>
+<span class="comment">// 🔐 Both have the same shared secret: true</span>
+<span class="comment">// 💬 Alice and Bob can now encrypt messages to each other!</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- KEM VS TRADITIONAL -->
+        <div class="section">
+            <h2>⚖️ KEM vs Traditional Key Exchange</h2>
+
+            <div class="comparison-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>Traditional (Diffie-Hellman)</th>
+                            <th>KEM (Modern)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>API Complexity</strong></td>
+                            <td>Complex - many steps</td>
+                            <td><span class="checkmark">✅ Simple - 3 methods!</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Output Type</strong></td>
+                            <td>Raw bytes (need processing)</td>
+                            <td><span class="checkmark">✅ SecretKey (ready to use!)</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Direction</strong></td>
+                            <td>Two-way (both send data)</td>
+                            <td><span class="checkmark">✅ One-way (sender → receiver)</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Post-Quantum Ready</strong></td>
+                            <td>Not ready for quantum computers</td>
+                            <td><span class="checkmark">✅ Quantum-resistant algorithms available!</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Use in Modern Protocols</strong></td>
+                            <td>Being replaced</td>
+                            <td><span class="checkmark">✅ Used in TLS 1.3!</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="info-box green">
+                <h4>✅ Why KEM is Better</h4>
+                <p>
+                    <strong>1. Simpler API:</strong> Just 3 methods - generate, encapsulate, decapsulate
+                    <br><br>
+                    <strong>2. Ready-to-use Output:</strong> Gets a SecretKey you can immediately use with AES
+                    <br><br>
+                    <strong>3. Future-proof:</strong> Supports post-quantum algorithms (safe from quantum computers!)
+                    <br><br>
+                    <strong>4. Modern Standard:</strong> Used in TLS 1.3 and other modern protocols
+                </p>
+            </div>
+        </div>
+
+        <!-- USE CASES -->
+        <div class="section">
+            <h2>💼 Real-World Use Cases</h2>
+
+            <div class="use-cases">
+                <div class="use-case-card">
+                    <div class="icon">🔐</div>
+                    <h4>Secure Key Exchange</h4>
+                    <p>
+                        Exchange encryption keys securely between two parties who have never communicated before.
+                    </p>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">🌐</div>
+                    <h4>TLS 1.3</h4>
+                    <p>
+                        Modern HTTPS uses KEM for establishing secure connections between browsers and servers.
+                    </p>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">📧</div>
+                    <h4>End-to-End Encryption</h4>
+                    <p>
+                        Messaging apps (like Signal) use KEM-like mechanisms to ensure only sender and receiver can read messages.
+                    </p>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">🔮</div>
+                    <h4>Post-Quantum Crypto</h4>
+                    <p>
+                        Prepare for quantum computers! KEM supports quantum-resistant algorithms like Kyber.
+                    </p>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">🔑</div>
+                    <h4>Hybrid Encryption</h4>
+                    <p>
+                        Use KEM to exchange a key, then use that key with AES to encrypt large amounts of data efficiently.
+                    </p>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">☁️</div>
+                    <h4>Cloud Security</h4>
+                    <p>
+                        Secure communication between cloud services without pre-shared secrets.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRACTICAL EXAMPLE -->
+        <div class="section">
+            <h2>🎯 Practical Example: Secure Chat</h2>
+
+            <div class="example-card">
+                <h3>💬 Building a Secure Chat Application</h3>
+                <p style="font-size: 1.1em; margin-bottom: 20px;">
+                    Here's how you'd use KEM in a real chat app:
+                </p>
+                <div class="code">
+<span class="keyword">import</span> javax.crypto.*;
+<span class="keyword">import</span> javax.crypto.spec.GCMParameterSpec;
+<span class="keyword">import</span> java.security.*;
+
+<span class="keyword">public class</span> <span class="type">SecureChat</span> {
+    
+    <span class="comment">// Step 1: Bob sets up to receive messages</span>
+    <span class="keyword">public static</span> <span class="type">KeyPair</span> setupReceiver() <span class="keyword">throws</span> <span class="type">Exception</span> {
+        <span class="type">KeyPairGenerator</span> kpg = <span class="type">KeyPairGenerator</span>.getInstance(<span class="string">"X25519"</span>);
+        <span class="keyword">return</span> kpg.generateKeyPair();
+    }
+    
+    <span class="comment">// Step 2: Alice sends encrypted message to Bob</span>
+    <span class="keyword">public static</span> <span class="type">EncryptedMessage</span> sendMessage(
+        <span class="type">PublicKey</span> bobPublicKey, 
+        <span class="type">String</span> message
+    ) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        
+        <span class="comment">// Use KEM to create shared secret</span>
+        <span class="type">KEM</span> kem = <span class="type">KEM</span>.getInstance(<span class="string">"DHKEM"</span>);
+        <span class="type">KEM.Encapsulator</span> enc = kem.newEncapsulator(bobPublicKey);
+        <span class="type">KEM.Encapsulated</span> result = enc.encapsulate();
+        
+        <span class="type">SecretKey</span> sharedSecret = result.key();
+        <span class="keyword">byte</span>[] encapsulation = result.encapsulation();
+        
+        <span class="comment">// Use shared secret to encrypt message with AES</span>
+        <span class="type">Cipher</span> cipher = <span class="type">Cipher</span>.getInstance(<span class="string">"AES/GCM/NoPadding"</span>);
+        cipher.init(<span class="type">Cipher</span>.ENCRYPT_MODE, sharedSecret);
+        <span class="keyword">byte</span>[] ciphertext = cipher.doFinal(message.getBytes());
+        
+        <span class="comment">// Return both encapsulation and encrypted message</span>
+        <span class="keyword">return new</span> <span class="type">EncryptedMessage</span>(encapsulation, ciphertext, cipher.getIV());
+    }
+    
+    <span class="comment">// Step 3: Bob receives and decrypts message</span>
+    <span class="keyword">public static</span> <span class="type">String</span> receiveMessage(
+        <span class="type">PrivateKey</span> bobPrivateKey,
+        <span class="type">EncryptedMessage</span> encrypted
+    ) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        
+        <span class="comment">// Use KEM to retrieve shared secret</span>
+        <span class="type">KEM</span> kem = <span class="type">KEM</span>.getInstance(<span class="string">"DHKEM"</span>);
+        <span class="type">KEM.Decapsulator</span> dec = kem.newDecapsulator(bobPrivateKey);
+        <span class="type">SecretKey</span> sharedSecret = dec.decapsulate(encrypted.encapsulation);
+        
+        <span class="comment">// Use shared secret to decrypt message</span>
+        <span class="type">Cipher</span> cipher = <span class="type">Cipher</span>.getInstance(<span class="string">"AES/GCM/NoPadding"</span>);
+        <span class="type">GCMParameterSpec</span> spec = <span class="keyword">new</span> <span class="type">GCMParameterSpec</span>(<span class="number">128</span>, encrypted.iv);
+        cipher.init(<span class="type">Cipher</span>.DECRYPT_MODE, sharedSecret, spec);
+        
+        <span class="keyword">byte</span>[] plaintext = cipher.doFinal(encrypted.ciphertext);
+        <span class="keyword">return new</span> <span class="type">String</span>(plaintext);
+    }
+    
+    <span class="comment">// Main: Demo the chat</span>
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        <span class="comment">// Bob sets up</span>
+        <span class="type">KeyPair</span> bobKeys = setupReceiver();
+        System.out.println(<span class="string">"👨 Bob: Ready to receive messages"</span>);
+        
+        <span class="comment">// Alice sends message</span>
+        <span class="type">String</span> message = <span class="string">"Hey Bob, let's meet at 3 PM! 🎉"</span>;
+        <span class="type">EncryptedMessage</span> encrypted = sendMessage(bobKeys.getPublic(), message);
+        System.out.println(<span class="string">"👩 Alice: Sent encrypted message"</span>);
+        
+        <span class="comment">// Bob receives and decrypts</span>
+        <span class="type">String</span> decrypted = receiveMessage(bobKeys.getPrivate(), encrypted);
+        System.out.println(<span class="string">"👨 Bob: Received: "</span> + decrypted);
+    }
+}
+
+<span class="keyword">record</span> <span class="type">EncryptedMessage</span>(<span class="keyword">byte</span>[] encapsulation, <span class="keyword">byte</span>[] ciphertext, <span class="keyword">byte</span>[] iv) {}
+                </div>
+            </div>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h2 style="color: white; border-color: white;">🎯 Quick Summary</h2>
+
+            <div style="font-size: 1.15em; line-height: 1.9; margin-top: 25px;">
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="font-size: 1.8em; margin-bottom: 15px;">🔐 What is KEM?</h3>
+                    <p>
+                        A modern way to securely exchange encryption keys between two parties without directly sending the key itself!
+                    </p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="font-size: 1.8em; margin-bottom: 15px;">🔄 The Process</h3>
+                    <p>
+                        <strong>1. Generate:</strong> Receiver creates key pair (public + private)
+                        <br><br>
+                        <strong>2. Encapsulate:</strong> Sender uses public key to create shared secret
+                        <br><br>
+                        <strong>3. Decapsulate:</strong> Receiver uses private key to retrieve same secret
+                    </p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="font-size: 1.8em; margin-bottom: 15px;">✅ Why It Matters</h3>
+                    <p>
+                        • Simple API (just 3 methods!)
+                        <br>• Quantum-resistant algorithms available
+                        <br>• Used in modern protocols (TLS 1.3)
+                        <br>• Perfect for secure messaging and encryption
+                    </p>
+                </div>
+
+                <div style="margin-top: 40px; text-align: center; font-size: 1.5em; padding: 25px; background: rgba(255,255,255,0.2); border-radius: 12px;">
+                    <strong>Bottom Line:</strong> KEM makes secure key exchange simple and future-proof! 🚀
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

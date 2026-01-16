@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Record Patterns - Java 21</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: white;
+            font-size: 1.3em;
+            margin-bottom: 40px;
+            opacity: 0.95;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 2em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        /* ANALOGY BOX */
+        .analogy-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .analogy-box h3 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .analogy-box p {
+            font-size: 1.15em;
+            line-height: 1.7;
+        }
+
+        /* NESTED DESTRUCTURING VISUAL */
+        .nested-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .record-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin: 10px;
+            font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .record-box.outer {
+            min-width: 400px;
+            text-align: center;
+        }
+
+        .record-box.inner {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            margin-top: 20px;
+            min-width: 250px;
+        }
+
+        .field {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 8px;
+            margin: 5px;
+        }
+
+        .destructure-arrow {
+            font-size: 2.5em;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .extracted-values {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .value-box {
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        /* BEFORE/AFTER COMPARISON */
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .code-box {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            border: 3px solid #e9ecef;
+        }
+
+        .code-box.before {
+            border-color: #ff6b6b;
+        }
+
+        .code-box.after {
+            border-color: #51cf66;
+        }
+
+        .code-box h3 {
+            margin-bottom: 20px;
+            font-size: 1.4em;
+        }
+
+        .code-box.before h3 {
+            color: #ff6b6b;
+        }
+
+        .code-box.after h3 {
+            color: #51cf66;
+        }
+
+        .code-snippet {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+
+        .keyword {
+            color: #ff79c6;
+        }
+
+        .type {
+            color: #8be9fd;
+        }
+
+        .method {
+            color: #50fa7b;
+        }
+
+        .string {
+            color: #f1fa8c;
+        }
+
+        .comment {
+            color: #6272a4;
+            font-style: italic;
+        }
+
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #2d2d2d;
+            font-weight: bold;
+        }
+
+        .number {
+            color: #bd93f9;
+        }
+
+        /* GUARDED PATTERN VISUAL */
+        .guard-visual {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .guard-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .guard-case {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+            gap: 20px;
+        }
+
+        .guard-case.matched {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+
+        .guard-case.not-matched {
+            opacity: 0.5;
+        }
+
+        .pattern-part {
+            flex: 1;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .when-clause {
+            padding: 12px 20px;
+            background: #fff3cd;
+            border-radius: 8px;
+            border: 2px solid #ffc107;
+            font-weight: bold;
+            color: #856404;
+        }
+
+        .result {
+            padding: 12px 20px;
+            background: #d4edda;
+            border-radius: 8px;
+            border: 2px solid #28a745;
+            font-weight: bold;
+            color: #155724;
+        }
+
+        .arrow-right {
+            font-size: 1.5em;
+            color: #667eea;
+        }
+
+        /* UNDERSCORE PATTERN */
+        .underscore-demo {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        .pattern-example {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 3px solid #e9ecef;
+        }
+
+        .pattern-example.good {
+            border-color: #28a745;
+        }
+
+        .pattern-example.bad {
+            border-color: #dc3545;
+        }
+
+        .pattern-example h4 {
+            margin-bottom: 15px;
+        }
+
+        /* FEATURE CARDS */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .feature-card .icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .feature-card h4 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            font-size: 1em;
+            line-height: 1.5;
+            opacity: 0.95;
+        }
+
+        /* EXAMPLE SHOWCASE */
+        .example-showcase {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .example-showcase h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .step-by-step {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .step-content h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        /* INFO BOXES */
+        .info-box {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid;
+        }
+
+        .info-box.tip {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+
+        .info-box.warning {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .info-box.success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .info-box h4 {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .before-after, .comparison-grid, .guard-flow {
+                grid-template-columns: 1fr;
+            }
+            
+            .record-box.outer {
+                min-width: auto;
+            }
+
+            .guard-case {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Advanced Record Patterns</h1>
+        <p class="subtitle">Java 21's Pattern Matching Superpowers!</p>
+
+        <!-- INTRO -->
+        <div class="section">
+            <h2>🚀 What's New?</h2>
+            
+            <div class="analogy-box">
+                <h3>🎁 The Unwrapping Analogy</h3>
+                <p>
+                    Imagine you receive a gift box that contains another gift box, which contains another box, 
+                    and finally a present. <strong>Before Java 21</strong>, you had to unwrap each box one by one, 
+                    line by line. <strong>With Advanced Record Patterns</strong>, it's like having X-ray vision — 
+                    you can see and extract everything in ONE step! 🎉
+                </p>
+            </div>
+
+            <div class="features">
+                <div class="feature-card">
+                    <div class="icon">📦</div>
+                    <h4>Nested Patterns</h4>
+                    <p>Destructure nested records in a single expression. Extract all values at once!</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">🛡️</div>
+                    <h4>Guarded Patterns</h4>
+                    <p>Add conditions with <code>when</code> keyword. Pattern match AND check conditions together!</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">🙈</div>
+                    <h4>Underscore Pattern</h4>
+                    <p>Use <code>_</code> to ignore values you don't care about. No unused variable warnings!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NESTED RECORD PATTERNS -->
+        <div class="section">
+            <h2>📦 1. Nested Record Patterns</h2>
+
+            <div class="info-box success">
+                <h4>💡 The Power: One-Step Destructuring!</h4>
+                <p>Extract values from nested records in a SINGLE pattern match. No intermediate variables needed!</p>
+            </div>
+
+            <!-- VISUAL REPRESENTATION -->
+            <h3 style="color: #667eea; margin: 30px 0; text-align: center;">Visual Representation</h3>
+            <div class="nested-visual">
+                <div class="record-box outer">
+                    Circle
+                    <div class="record-box inner">
+                        Point
+                        <div style="margin-top: 10px;">
+                            <span class="field">x: 5</span>
+                            <span class="field">y: 10</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <span class="field">radius: 25</span>
+                    </div>
+                </div>
+
+                <div class="destructure-arrow">⬇️ ONE PATTERN MATCH ⬇️</div>
+
+                <div style="text-align: center; font-size: 1.2em; margin: 20px 0; color: #495057;">
+                    <code style="background: #e9ecef; padding: 10px 20px; border-radius: 8px; font-size: 1.1em;">
+                        Circle(Point(int x, int y), int r)
+                    </code>
+                </div>
+
+                <div class="destructure-arrow">⬇️ EXTRACTS ALL VALUES ⬇️</div>
+
+                <div class="extracted-values">
+                    <div class="value-box">x = 5</div>
+                    <div class="value-box">y = 10</div>
+                    <div class="value-box">r = 25</div>
+                </div>
+
+                <div style="margin-top: 20px; text-align: center; font-size: 1.1em; color: #28a745; font-weight: bold;">
+                    🎉 All done in ONE line!
+                </div>
+            </div>
+
+            <!-- BEFORE/AFTER CODE -->
+            <h3 style="color: #667eea; margin: 30px 0;">Code Comparison</h3>
+            <div class="before-after">
+                <div class="code-box before">
+                    <h3>❌ Before Java 21</h3>
+                    <div class="code-snippet">
+<span class="keyword">record</span> <span class="type">Point</span>(<span class="keyword">int</span> x, <span class="keyword">int</span> y) {}
+<span class="keyword">record</span> <span class="type">Circle</span>(<span class="type">Point</span> center, <span class="keyword">int</span> radius) {}
+
+<span class="type">Circle</span> c = <span class="keyword">new</span> <span class="type">Circle</span>(
+    <span class="keyword">new</span> <span class="type">Point</span>(<span class="number">5</span>, <span class="number">10</span>), <span class="number">25</span>
+);
+
+<span class="comment">// Step 1: Check type</span>
+<span class="keyword">if</span> (c <span class="keyword">instanceof</span> <span class="type">Circle</span> circle) {
+    <span class="comment">// Step 2: Extract center</span>
+    <span class="type">Point</span> center = circle.center();
+    
+    <span class="comment">// Step 3: Extract x and y</span>
+    <span class="keyword">int</span> x = center.x();
+    <span class="keyword">int</span> y = center.y();
+    
+    <span class="comment">// Step 4: Extract radius</span>
+    <span class="keyword">int</span> r = circle.radius();
+    
+    <span class="comment">// Finally use them!</span>
+    System.out.println(<span class="string">"Center: "</span> + x + <span class="string">","</span> + y);
+}
+
+<span class="comment">// 😰 SO MANY STEPS!</span>
+                    </div>
+                </div>
+
+                <div class="code-box after">
+                    <h3>✅ Java 21</h3>
+                    <div class="code-snippet">
+<span class="keyword">record</span> <span class="type">Point</span>(<span class="keyword">int</span> x, <span class="keyword">int</span> y) {}
+<span class="keyword">record</span> <span class="type">Circle</span>(<span class="type">Point</span> center, <span class="keyword">int</span> radius) {}
+
+<span class="type">Circle</span> c = <span class="keyword">new</span> <span class="type">Circle</span>(
+    <span class="keyword">new</span> <span class="type">Point</span>(<span class="number">5</span>, <span class="number">10</span>), <span class="number">25</span>
+);
+
+<span class="comment">// ONE STEP! Extract EVERYTHING! 🎯</span>
+<span class="keyword">if</span> (c <span class="keyword">instanceof</span> <span class="type">Circle</span>(<span class="type">Point</span>(<span class="keyword">int</span> <span class="highlight">x</span>, <span class="keyword">int</span> <span class="highlight">y</span>), <span class="keyword">int</span> <span class="highlight">r</span>)) {
+    <span class="comment">// x, y, r are all available!</span>
+    System.out.println(<span class="string">"Center: "</span> + x + <span class="string">","</span> + y);
+    System.out.println(<span class="string">"Radius: "</span> + r);
+}
+
+<span class="comment">// ✨ ONE LINE TO RULE THEM ALL!</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-showcase">
+                <h3>🎯 Real-World Example: Processing Shapes</h3>
+                <div class="code-snippet">
+<span class="keyword">record</span> <span class="type">Point</span>(<span class="keyword">int</span> x, <span class="keyword">int</span> y) {}
+<span class="keyword">record</span> <span class="type">Rectangle</span>(<span class="type">Point</span> topLeft, <span class="type">Point</span> bottomRight) {}
+
+<span class="keyword">void</span> <span class="method">printArea</span>(<span class="type">Rectangle</span> r) {
+    <span class="comment">// Destructure BOTH points in one pattern! 🚀</span>
+    <span class="keyword">if</span> (r <span class="keyword">instanceof</span> <span class="type">Rectangle</span>(
+        <span class="type">Point</span>(<span class="keyword">int</span> x1, <span class="keyword">int</span> y1),
+        <span class="type">Point</span>(<span class="keyword">int</span> x2, <span class="keyword">int</span> y2)
+    )) {
+        <span class="keyword">int</span> width = x2 - x1;
+        <span class="keyword">int</span> height = y2 - y1;
+        System.out.println(<span class="string">"Area: "</span> + (width * height));
+    }
+}
+
+<span class="comment">// Before: Would need 6+ lines to extract all 4 coordinates!</span>
+<span class="comment">// After: ONE pattern match extracts x1, y1, x2, y2! 🎉</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- GUARDED PATTERNS -->
+        <div class="section">
+            <h2>🛡️ 2. Guarded Patterns (Pattern + Condition)</h2>
+
+            <div class="analogy-box">
+                <h3>🚦 The Bouncer Analogy</h3>
+                <p>
+                    Imagine a VIP club where the bouncer checks TWO things: (1) Do you have the right ticket? 
+                    (2) Are you on the guest list? <strong>Guarded patterns</strong> work the same way — 
+                    they check if the pattern matches AND if an additional condition is true! 🎫
+                </p>
+            </div>
+
+            <div class="info-box tip">
+                <h4>💡 The <code>when</code> Keyword</h4>
+                <p>Add conditions to your patterns using <code>when</code>. The pattern matches ONLY if both the structure AND the condition are satisfied!</p>
+            </div>
+
+            <!-- GUARDED PATTERN VISUALIZATION -->
+            <h3 style="color: #667eea; margin: 30px 0; text-align: center;">How Guarded Patterns Work</h3>
+            <div class="guard-visual">
+                <div class="code-snippet" style="margin-bottom: 30px;">
+<span class="keyword">record</span> <span class="type">Person</span>(<span class="type">String</span> name, <span class="keyword">int</span> age) {}
+
+<span class="type">Person</span> person = <span class="keyword">new</span> <span class="type">Person</span>(<span class="string">"Alice"</span>, <span class="number">25</span>);
+
+<span class="type">String</span> category = <span class="keyword">switch</span> (person) {
+    <span class="keyword">case</span> <span class="type">Person</span>(<span class="type">String</span> n, <span class="keyword">int</span> a) <span class="keyword">when</span> a &lt; <span class="number">18</span> -&gt; n + <span class="string">" is a minor"</span>;
+    <span class="keyword">case</span> <span class="type">Person</span>(<span class="type">String</span> n, <span class="keyword">int</span> a) <span class="keyword">when</span> a &lt; <span class="number">65</span> -&gt; n + <span class="string">" is an adult"</span>;
+    <span class="keyword">case</span> <span class="type">Person</span>(<span class="type">String</span> n, <span class="keyword">int</span> _) -&gt; n + <span class="string">" is a senior"</span>;
+};
+                </div>
+
+                <h4 style="color: #495057; margin-bottom: 20px;">For Person("Alice", 25):</h4>
+                <div class="guard-flow">
+                    <div class="guard-case not-matched">
+                        <div class="pattern-part">
+                            Person(String n, int a)
+                        </div>
+                        <span class="arrow-right">→</span>
+                        <div class="when-clause">
+                            when a &lt; 18
+                        </div>
+                        <span class="arrow-right">→</span>
+                        <div style="color: #dc3545; font-weight: bold;">
+                            ❌ 25 &lt; 18? FALSE
+                        </div>
+                    </div>
+
+                    <div class="guard-case matched">
+                        <div class="pattern-part">
+                            Person(String n, int a)
+                        </div>
+                        <span class="arrow-right">→</span>
+                        <div class="when-clause">
+                            when a &lt; 65
+                        </div>
+                        <span class="arrow-right">→</span>
+                        <div class="result">
+                            ✅ 25 &lt; 65? TRUE!
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 20px; padding: 20px; background: #d4edda; border-radius: 10px; font-size: 1.2em; font-weight: bold; color: #155724;">
+                        Result: "Alice is an adult"
+                    </div>
+                </div>
+            </div>
+
+            <!-- BEFORE/AFTER GUARDED PATTERNS -->
+            <h3 style="color: #667eea; margin: 30px 0;">Code Comparison</h3>
+            <div class="before-after">
+                <div class="code-box before">
+                    <h3>❌ Without Guarded Patterns</h3>
+                    <div class="code-snippet">
+<span class="type">String</span> category;
+
+<span class="keyword">if</span> (obj <span class="keyword">instanceof</span> <span class="type">Person</span> p) {
+    <span class="keyword">if</span> (p.age() &lt; <span class="number">18</span>) {
+        category = p.name() + <span class="string">" is a minor"</span>;
+    } <span class="keyword">else if</span> (p.age() &lt; <span class="number">65</span>) {
+        category = p.name() + <span class="string">" is an adult"</span>;
+    } <span class="keyword">else</span> {
+        category = p.name() + <span class="string">" is a senior"</span>;
+    }
+} <span class="keyword">else</span> {
+    category = <span class="string">"Unknown"</span>;
+}
+
+<span class="comment">// 😰 Nested if-else hell!</span>
+                    </div>
+                </div>
+
+                <div class="code-box after">
+                    <h3>✅ With Guarded Patterns</h3>
+                    <div class="code-snippet">
+<span class="type">String</span> category = <span class="keyword">switch</span> (obj) {
+    <span class="keyword">case</span> <span class="type">Person</span>(<span class="type">String</span> n, <span class="keyword">int</span> a) 
+        <span class="keyword">when</span> a &lt; <span class="number">18</span> 
+            -&gt; n + <span class="string">" is a minor"</span>;
+    
+    <span class="keyword">case</span> <span class="type">Person</span>(<span class="type">String</span> n, <span class="keyword">int</span> a) 
+        <span class="keyword">when</span> a &lt; <span class="number">65</span> 
+            -&gt; n + <span class="string">" is an adult"</span>;
+    
+    <span class="keyword">case</span> <span class="type">Person</span>(<span class="type">String</span> n, <span class="keyword">int</span> _) 
+        -&gt; n + <span class="string">" is a senior"</span>;
+    
+    <span class="keyword">default</span> -&gt; <span class="string">"Unknown"</span>;
+};
+
+<span class="comment">// ✨ Clean, readable, expressive!</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-showcase">
+                <h3>🎯 Real-World Example: Order Processing</h3>
+                <div class="code-snippet">
+<span class="keyword">record</span> <span class="type">Order</span>(<span class="type">String</span> id, <span class="keyword">double</span> amount, <span class="type">String</span> status) {}
+
+<span class="type">String</span> processOrder(<span class="type">Order</span> order) {
+    <span class="keyword">return switch</span> (order) {
+        <span class="comment">// High priority: Large orders that are pending</span>
+        <span class="keyword">case</span> <span class="type">Order</span>(<span class="type">String</span> id, <span class="keyword">double</span> amt, <span class="type">String</span> s) 
+            <span class="keyword">when</span> amt &gt; <span class="number">1000</span> &amp;&amp; s.equals(<span class="string">"pending"</span>) 
+                -&gt; <span class="string">"URGENT: Process order "</span> + id;
+        
+        <span class="comment">// Regular: Normal orders</span>
+        <span class="keyword">case</span> <span class="type">Order</span>(<span class="type">String</span> id, <span class="keyword">double</span> amt, <span class="type">String</span> s) 
+            <span class="keyword">when</span> s.equals(<span class="string">"pending"</span>) 
+                -&gt; <span class="string">"Process order "</span> + id;
+        
+        <span class="comment">// Already processed</span>
+        <span class="keyword">case</span> <span class="type">Order</span>(<span class="type">String</span> id, <span class="keyword">double</span> _, <span class="type">String</span> _) 
+            -&gt; <span class="string">"Order "</span> + id + <span class="string">" already processed"</span>;
+    };
+}
+                </div>
+            </div>
+        </div>
+
+        <!-- UNDERSCORE PATTERN -->
+        <div class="section">
+            <h2>🙈 3. Underscore Pattern (_)</h2>
+
+            <div class="analogy-box">
+                <h3>📋 The Form-Filling Analogy</h3>
+                <p>
+                    When filling out a form, some fields are labeled "N/A" (Not Applicable) — you acknowledge 
+                    they exist but you don't care about them. The <code>_</code> underscore works the same way 
+                    in patterns. It says "I know this value exists, but I'm NOT going to use it!" 📝
+                </p>
+            </div>
+
+            <div class="info-box warning">
+                <h4>⚠️ Why Use Underscore?</h4>
+                <p>
+                    Using <code>_</code> is better than naming a variable you don't use because:
+                    <br>• No "unused variable" warnings
+                    <br>• Makes your intent clear: "I'm intentionally ignoring this"
+                    <br>• Cleaner code
+                </p>
+            </div>
+
+            <!-- COMPARISON -->
+            <h3 style="color: #667eea; margin: 30px 0;">When to Use Underscore</h3>
+            <div class="comparison-grid">
+                <div class="pattern-example bad">
+                    <h4 style="color: #dc3545;">❌ Bad: Unused Variable</h4>
+                    <div class="code-snippet">
+<span class="keyword">case</span> <span class="type">Person</span>(<span class="type">String</span> name, <span class="keyword">int</span> age) 
+    -&gt; name + <span class="string">" (age ignored)"</span>;
+
+<span class="comment">// Compiler warning:</span>
+<span class="comment">// "Variable 'age' is never used"</span>
+<span class="comment">// 😰 Confusing! Did you forget to use it?</span>
+                    </div>
+                </div>
+
+                <div class="pattern-example good">
+                    <h4 style="color: #28a745;">✅ Good: Explicit Ignore</h4>
+                    <div class="code-snippet">
+<span class="keyword">case</span> <span class="type">Person</span>(<span class="type">String</span> name, <span class="keyword">int</span> <span class="highlight">_</span>) 
+    -&gt; name + <span class="string">" (age ignored)"</span>;
+
+<span class="comment">// No warning!</span>
+<span class="comment">// Clear intent: Age exists but we don't care</span>
+<span class="comment">// ✨ Clean and intentional!</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EXAMPLES -->
+            <div class="underscore-demo">
+                <h3 style="color: #667eea; margin-bottom: 20px;">Common Underscore Patterns</h3>
+                
+                <div class="step-by-step">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Ignore One Field</h4>
+                            <div class="code-snippet">
+<span class="keyword">case</span> <span class="type">Person</span>(<span class="type">String</span> name, <span class="keyword">int</span> <span class="highlight">_</span>) -&gt; <span class="string">"Name: "</span> + name;
+
+<span class="comment">// I only care about the name, not the age</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Ignore Multiple Fields</h4>
+                            <div class="code-snippet">
+<span class="keyword">case</span> <span class="type">Employee</span>(<span class="type">String</span> id, <span class="type">String</span> <span class="highlight">_</span>, <span class="keyword">int</span> <span class="highlight">_</span>, <span class="type">String</span> <span class="highlight">_</span>) -&gt; id;
+
+<span class="comment">// Only care about ID, ignore name, age, department</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Ignore Nested Values</h4>
+                            <div class="code-snippet">
+<span class="keyword">case</span> <span class="type">Circle</span>(<span class="type">Point</span>(<span class="keyword">int</span> x, <span class="keyword">int</span> <span class="highlight">_</span>), <span class="keyword">int</span> <span class="highlight">_</span>) -&gt; <span class="string">"x: "</span> + x;
+
+<span class="comment">// Only care about x-coordinate, ignore y and radius</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Catch-All Pattern</h4>
+                            <div class="code-snippet">
+<span class="keyword">case</span> <span class="type">Person</span>(<span class="type">String</span> <span class="highlight">_</span>, <span class="keyword">int</span> <span class="highlight">_</span>) -&gt; <span class="string">"Any person"</span>;
+
+<span class="comment">// Match any Person, don't care about any fields</span>
+<span class="comment">// Better than: case Person p -> "Any person"</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-showcase">
+                <h3>🎯 Real-World Example: Log Processing</h3>
+                <div class="code-snippet">
+<span class="keyword">record</span> <span class="type">LogEntry</span>(<span class="type">String</span> timestamp, <span class="type">String</span> level, <span class="type">String</span> message, <span class="type">String</span> source) {}
+
+<span class="type">String</span> formatLog(<span class="type">LogEntry</span> log) {
+    <span class="keyword">return switch</span> (log) {
+        <span class="comment">// Only show errors with message</span>
+        <span class="keyword">case</span> <span class="type">LogEntry</span>(<span class="type">String</span> <span class="highlight">_</span>, <span class="string">"ERROR"</span>, <span class="type">String</span> msg, <span class="type">String</span> <span class="highlight">_</span>) 
+            -&gt; <span class="string">"🔴 ERROR: "</span> + msg;
+        
+        <span class="comment">// Warnings with timestamp</span>
+        <span class="keyword">case</span> <span class="type">LogEntry</span>(<span class="type">String</span> time, <span class="string">"WARN"</span>, <span class="type">String</span> msg, <span class="type">String</span> <span class="highlight">_</span>) 
+            -&gt; <span class="string">"⚠️ "</span> + time + <span class="string">": "</span> + msg;
+        
+        <span class="comment">// Ignore info logs completely</span>
+        <span class="keyword">case</span> <span class="type">LogEntry</span>(<span class="type">String</span> <span class="highlight">_</span>, <span class="string">"INFO"</span>, <span class="type">String</span> <span class="highlight">_</span>, <span class="type">String</span> <span class="highlight">_</span>) 
+            -&gt; <span class="string">""</span>;
+        
+        <span class="keyword">default</span> -&gt; log.toString();
+    };
+}
+
+<span class="comment">// Clean! No unused variable warnings!</span>
+<span class="comment">// Intent is crystal clear! ✨</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMBINING ALL FEATURES -->
+        <div class="section">
+            <h2>🎨 Combining All Three: The Ultimate Power!</h2>
+
+            <div class="example-showcase">
+                <h3>🚀 Complete Example: Shape Processor</h3>
+                <div class="code-snippet">
+<span class="keyword">record</span> <span class="type">Point</span>(<span class="keyword">int</span> x, <span class="keyword">int</span> y) {}
+<span class="keyword">record</span> <span class="type">Circle</span>(<span class="type">Point</span> center, <span class="keyword">int</span> radius) {}
+<span class="keyword">record</span> <span class="type">Rectangle</span>(<span class="type">Point</span> topLeft, <span class="keyword">int</span> width, <span class="keyword">int</span> height) {}
+
+<span class="type">String</span> analyzeShape(<span class="type">Object</span> shape) {
+    <span class="keyword">return switch</span> (shape) {
+        <span class="comment">// Nested + Guarded + Underscore!</span>
+        <span class="keyword">case</span> <span class="type">Circle</span>(<span class="type">Point</span>(<span class="keyword">int</span> x, <span class="keyword">int</span> y), <span class="keyword">int</span> r) 
+            <span class="keyword">when</span> r &gt; <span class="number">50</span> 
+                -&gt; <span class="string">"Large circle at ("</span> + x + <span class="string">","</span> + y + <span class="string">")"</span>;
+        
+        <span class="comment">// Nested + Underscore (ignore y-coordinate)</span>
+        <span class="keyword">case</span> <span class="type">Circle</span>(<span class="type">Point</span>(<span class="keyword">int</span> x, <span class="keyword">int</span> <span class="highlight">_</span>), <span class="keyword">int</span> r) 
+            -&gt; <span class="string">"Small circle, x="</span> + x + <span class="string">", r="</span> + r;
+        
+        <span class="comment">// Nested + Guarded (check area)</span>
+        <span class="keyword">case</span> <span class="type">Rectangle</span>(<span class="type">Point</span>(<span class="keyword">int</span> <span class="highlight">_</span>, <span class="keyword">int</span> <span class="highlight">_</span>), <span class="keyword">int</span> w, <span class="keyword">int</span> h) 
+            <span class="keyword">when</span> w * h &gt; <span class="number">1000</span> 
+                -&gt; <span class="string">"Large rectangle"</span>;
+        
+        <span class="comment">// Just underscore (don't care about any fields)</span>
+        <span class="keyword">case</span> <span class="type">Rectangle</span>(<span class="type">Point</span> <span class="highlight">_</span>, <span class="keyword">int</span> <span class="highlight">_</span>, <span class="keyword">int</span> <span class="highlight">_</span>) 
+            -&gt; <span class="string">"Small rectangle"</span>;
+        
+        <span class="keyword">default</span> -&gt; <span class="string">"Unknown shape"</span>;
+    };
+}
+
+<span class="comment">// 🎯 ONE method using ALL three features!</span>
+<span class="comment">// - Nested patterns: Circle(Point(x, y), r)</span>
+<span class="comment">// - Guarded patterns: when r > 50</span>
+<span class="comment">// - Underscore: int _ for ignored values</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- BENEFITS -->
+        <div class="section">
+            <h2>🎯 Key Benefits Summary</h2>
+            
+            <div class="features">
+                <div class="feature-card">
+                    <div class="icon">🚀</div>
+                    <h4>Less Code</h4>
+                    <p>One pattern does what used to take 5-10 lines!</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">📖</div>
+                    <h4>More Readable</h4>
+                    <p>The pattern shows the structure you're matching</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">🔒</div>
+                    <h4>Type Safe</h4>
+                    <p>Compiler checks your patterns at compile-time</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">🎯</div>
+                    <h4>Expressive</h4>
+                    <p>Code reads like plain English: "if circle when radius > 50"</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">⚡</div>
+                    <h4>No Intermediate Variables</h4>
+                    <p>Extract nested values without temporary variables</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="icon">🧹</div>
+                    <h4>Clean Intent</h4>
+                    <p>Underscore makes it clear what you're ignoring</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="analogy-box" style="margin: 40px 0;">
+            <h2 style="margin-top: 0; text-align: center;">🎯 The Bottom Line</h2>
+            <div style="font-size: 1.2em; line-height: 1.8;">
+                <p style="margin-bottom: 15px;">
+                    <strong>Before Java 21:</strong> Unwrap nested objects one by one, write if-else chains, 
+                    deal with unused variable warnings
+                </p>
+                <p style="margin-bottom: 15px;">
+                    <strong>Java 21:</strong> X-ray vision to extract everything at once, add conditions with 
+                    <code>when</code>, ignore values with <code>_</code>
+                </p>
+                <p style="margin-top: 25px; font-size: 1.4em; text-align: center;">
+                    🎉 Pattern matching just got SUPERPOWERS! 🎉
+                </p>
+            </div>
+        </div>
+
+        <!-- QUICK REFERENCE -->
+        <div class="section">
+            <h2>📋 Quick Reference</h2>
+            
+            <div class="step-by-step">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Nested Pattern</h4>
+                        <div class="code-snippet">
+<span class="keyword">if</span> (shape <span class="keyword">instanceof</span> <span class="type">Circle</span>(<span class="type">Point</span>(<span class="keyword">int</span> x, <span class="keyword">int</span> y), <span class="keyword">int</span> r)) { ... }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Guarded Pattern</h4>
+                        <div class="code-snippet">
+<span class="keyword">case</span> <span class="type">Person</span>(<span class="type">String</span> n, <span class="keyword">int</span> a) <span class="keyword">when</span> a &gt; <span class="number">18</span> -&gt; <span class="string">"Adult"</span>;
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Underscore Pattern</h4>
+                        <div class="code-snippet">
+<span class="keyword">case</span> <span class="type">Person</span>(<span class="type">String</span> name, <span class="keyword">int</span> <span class="highlight">_</span>) -&gt; name;  <span class="comment">// Ignore age</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>All Three Combined</h4>
+                        <div class="code-snippet">
+<span class="keyword">case</span> <span class="type">Circle</span>(<span class="type">Point</span>(<span class="keyword">int</span> x, <span class="keyword">int</span> <span class="highlight">_</span>), <span class="keyword">int</span> r) <span class="keyword">when</span> r &gt; <span class="number">50</span> -&gt; x;
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

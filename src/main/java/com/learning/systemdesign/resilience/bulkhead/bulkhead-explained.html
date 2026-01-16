@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 15: Bulkhead Pattern Explained</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f6f8;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #2c3e50;
+        }
+
+        h1 {
+            text-align: center;
+            border-bottom: 3px solid #27ae60;
+            /* Green for Resilience */
+            padding-bottom: 10px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-container {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .analogy {
+            background-color: #e8f8f5;
+            border-left: 5px solid #1abc9c;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .alert {
+            background-color: #fde8e8;
+            border-left: 5px solid #c0392b;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #c7254e;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Module 15: Bulkhead Pattern (Isolation)</h1>
+
+        <h2>1. The Problem: Resource Exhaustion</h2>
+        <p>In a Servlet container (like Tomcat), there is a limited pool of worker threads (e.g., 200).</p>
+        <p>If <strong>Service A</strong> becomes slow (takes 5s to respond) and receives high traffic, it will
+            <strong>hog all 200 threads</strong> waiting for responses.</p>
+        <div class="alert">
+            <strong>Result:</strong> Service B, which is healthy, becomes unreachable because there are no threads left
+            to handle the requests! This is a Cascading Failure.
+        </div>
+
+        <h2>2. The Solution: Bulkheads</h2>
+        <div class="analogy">
+            <h3>🚢 The Ship Analogy</h3>
+            <p>Ships are divided into watertight compartments called <strong>Bulkheads</strong>.</p>
+            <ul>
+                <li>If the hull is breached in Section 1, water fills <em>only</em> Section 1.</li>
+                <li>The other sections remain dry, and the ship stays afloat.</li>
+                <li>Without bulkheads, water would flow everywhere, and the ship would sink (like the Titanic).</li>
+            </ul>
+        </div>
+
+        <h2>3. Visualizing Thread Pools</h2>
+        <p>We create separate "pools" (or semaphores) for different services.</p>
+
+        <div class="chart-container">
+            <pre class="mermaid">
+graph TD
+    Client[Client Requests]
+    
+    subgraph App Server
+        direction TB
+        
+        subgraph PoolA [Bulkhead A (Max 3)]
+            T1[Thread 1: Busy]
+            T2[Thread 2: Busy]
+            T3[Thread 3: Busy]
+            Q1[Queue: Full]
+        end
+        
+        subgraph PoolB [Bulkhead B (Max 50)]
+            T4[Thread 4: Free]
+            T5[Thread 5: Free]
+            T6[Thread 6: Free]
+        end
+        
+    end
+    
+    Client -->|Request to A| PoolA
+    Client -->|Request to B| PoolB
+    
+    PoolA -.->|REJECTED| Error[503 Service Unavailable]
+    PoolB -->|Processed| Response[200 OK]
+    
+    classDef error fill:#f9d7da,stroke:#c0392b,stroke-width:2px;
+    class Error error;
+        </pre>
+        </div>
+
+        <h2>4. Our Implementation</h2>
+        <p>We used <strong>Resilience4j</strong> to limit concurrent calls.</p>
+        <code>resilience4j.bulkhead.instances.bulkheadService.max-concurrent-calls=3</code>
+
+        <h3>What happens when the 4th request comes?</h3>
+        <div class="chart-container">
+            <pre class="mermaid">
+sequenceDiagram
+    participant User
+    participant Bulkhead
+    participant Service
+
+    User->>Bulkhead: Request 1
+    Bulkhead->>Service: Enter (1/3)
+    
+    User->>Bulkhead: Request 2
+    Bulkhead->>Service: Enter (2/3)
+    
+    User->>Bulkhead: Request 3
+    Bulkhead->>Service: Enter (3/3)
+    
+    User->>Bulkhead: Request 4
+    Note right of Bulkhead: Limit Reached!
+    Bulkhead--xUser: 503 "Service Busy"
+    
+    Service-->>Bulkhead: Request 1 Finish
+    Note right of Bulkhead: Capacity freed (2/3)
+        </pre>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
