@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 1: Java Basics - Records, Sealed Classes & Text Blocks</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: #fff;
+            padding: 60px 20px 40px;
+            margin-bottom: 50px;
+            animation: fadeIn 0.8s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .header h1 {
+            font-size: 3.8em;
+            font-weight: 800;
+            text-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            letter-spacing: -1.5px;
+        }
+        .header p {
+            font-size: 1.5em;
+            font-weight: 300;
+            margin-bottom: 30px;
+            opacity: 0.95;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+        .badge, .version-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.98);
+            color: #f5576c;
+            padding: 12px 28px;
+            border-radius: 30px;
+            font-weight: 700;
+            margin: 10px;
+            font-size: 1em;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .badge:hover, .version-badge:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(550px, 1fr));
+            gap: 35px;
+            margin-bottom: 50px;
+        }
+        .card, .feature-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideIn 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before, .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card:hover, .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .card h3, .feature-card h3 {
+            color: #f5576c;
+            font-size: 2em;
+            margin-bottom: 20px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .card > p, .feature-card > p {
+            color: #555;
+            font-size: 1.1em;
+            margin-bottom: 25px;
+            line-height: 1.8;
+        }
+        .code, .code-block {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 5px solid #f5576c;
+            padding: 25px;
+            border-radius: 10px;
+            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+            font-size: 0.95em;
+            margin: 20px 0;
+            overflow-x: auto;
+            color: #2d3748;
+            line-height: 1.7;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+            white-space: pre-wrap;
+        }
+        .code-comment {
+            color: #38a169;
+            font-style: italic;
+        }
+        .keyword {
+            color: #9c27b0;
+            font-weight: 600;
+        }
+        .string {
+            color: #d32f2f;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 25px 0;
+        }
+        .before, .after, .old-way, .new-way, .platform-thread, .virtual-thread, .traditional, .enhanced {
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            transition: transform 0.3s ease;
+        }
+        .before:hover, .after:hover, .old-way:hover, .new-way:hover, 
+        .platform-thread:hover, .virtual-thread:hover, .traditional:hover, .enhanced:hover {
+            transform: scale(1.02);
+        }
+        .before, .old-way, .platform-thread, .traditional {
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+            border: 3px solid #fc8181;
+        }
+        .after, .new-way, .virtual-thread, .enhanced {
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            border: 3px solid #68d391;
+        }
+        .before h4, .old-way h4, .platform-thread h4, .traditional h4 {
+            color: #c53030;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+        .after h4, .new-way h4, .virtual-thread h4, .enhanced h4 {
+            color: #2f855a;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+        .before .code, .after .code, .old-way .code-block, .new-way .code-block,
+        .platform-thread .code-block, .virtual-thread .code-block {
+            background: rgba(255,255,255,0.9);
+            font-size: 0.9em;
+            padding: 18px;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 25px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        th {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: #fff;
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.95em;
+            letter-spacing: 0.8px;
+        }
+        td {
+            padding: 16px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+            background: #fff;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover td {
+            background: #f7fafc;
+        }
+        .info-box, .note, .tips, .performance-tip, .tip-box, .benefit-box, .use-case-box {
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 25px;
+            border-left: 6px solid;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .info-box.tip, .tips, .performance-tip, .tip-box {
+            background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+            border-color: #3182ce;
+        }
+        .info-box.warning, .note {
+            background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%);
+            border-color: #dd6b20;
+        }
+        .info-box.success, .benefit-box, .use-case-box {
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            border-color: #38a169;
+        }
+        .info-box strong, .note strong, .tips strong, .benefit-box strong {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 1.15em;
+            color: #2d3748;
+        }
+        ul {
+            margin-left: 25px;
+            color: # 4a5568;
+        }
+        ul li {
+            margin: 12px 0;
+            line-height: 1.8;
+        }
+        ul ul {
+            margin-top: 10px;
+        }
+        @media (max-width: 1200px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 10px;
+            }
+            .card, .feature-card {
+                padding: 25px;
+            }
+            .header h1 {
+                font-size: 2.5em;
+            }
+            .header p {
+                font-size: 1.2em;
+            }
+            .code, .code-block {
+                font-size: 0.85em;
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Java Basics - Modern Features</h1>
+            <p class="subtitle">Records, Sealed Classes & Text Blocks</p>
+            <div>
+                <span class="version-badge">Java 14+ (Text Blocks)</span>
+                <span class="version-badge">Java 16+ (Records)</span>
+                <span class="version-badge">Java 17+ (Sealed Classes)</span>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Records -->
+            <div class="feature-card">
+                <h3><span class="icon">📋</span> Records</h3>
+                <p>Records are immutable data carriers that eliminate boilerplate code for simple data classes.</p>
+                
+                <div class="comparison">
+                    <div class="old-way">
+                        <h4>❌ Java 8-15 (Verbose)</h4>
+                        <div class="code-block">
+public class User {
+    private final String name;
+    private final int age;
+    
+    public User(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    public String name() { 
+        return name; 
+    }
+    public int age() { 
+        return age; 
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        // 15+ lines of code
+    }
+    
+    @Override
+    public int hashCode() {
+        // 3+ lines of code
+    }
+    
+    @Override
+    public String toString() {
+        // 1+ lines of code
+    }
+}
+                        </div>
+                    </div>
+                    
+                    <div class="new-way">
+                        <h4>✅ Java 16+ (Records)</h4>
+                        <div class="code-block">
+public record User(
+    String name, 
+    int age
+) {}
+
+// That's it! 
+// Auto-generates:
+// - Constructor
+// - Getters (name(), age())
+// - equals()
+// - hashCode()
+// - toString()
+
+// Usage:
+User user = new User("Alice", 30);
+System.out.println(user.name());
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="benefits">
+                    <h4>✨ Benefits</h4>
+                    <ul>
+                        <li><strong>Immutable by default</strong> - Thread-safe</li>
+                        <li><strong>90% less code</strong> - No boilerplate</li>
+                        <li><strong>Perfect for DTOs</strong> - API responses, value objects</li>
+                        <li><strong>Pattern matching ready</strong> - Works with destructuring</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Sealed Classes -->
+            <div class="feature-card">
+                <h3><span class="icon">🔒</span> Sealed Classes</h3>
+                <p>Control which classes can extend or implement your types, creating closed hierarchies.</p>
+                
+                <div class="code-block">
+// Define sealed interface
+public sealed interface Shape 
+    permits Circle, Rectangle, Square {
+    double area();
+}
+
+// Only these can implement Shape
+public final class Circle implements Shape {
+    private final double radius;
+    public double area() { 
+        return Math.PI * radius * radius; 
+    }
+}
+
+public final class Rectangle implements Shape {
+    private final double width, height;
+    public double area() { 
+        return width * height; 
+    }
+}
+
+public final class Square implements Shape {
+    private final double side;
+    public double area() { 
+        return side * side; 
+    }
+}
+                </div>
+                
+                <div class="benefits">
+                    <h4>✨ Benefits</h4>
+                    <ul>
+                        <li><strong>Exhaustive switch</strong> - Compiler knows all subtypes</li>
+                        <li><strong>Security</strong> - Prevent unauthorized extensions</li>
+                        <li><strong>Domain modeling</strong> - Express precise type hierarchies</li>
+                        <li><strong>Better maintenance</strong> - Controlled evolution</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Text Blocks -->
+            <div class="feature-card">
+                <h3><span class="icon">📝</span> Text Blocks</h3>
+                <p>Multi-line string literals that improve readability for JSON, SQL, HTML, and more.</p>
+                
+                <div class="comparison">
+                    <div class="old-way">
+                        <h4>❌ Old Way (Ugly)</h4>
+                        <div class="code-block">
+String json = "{\n" +
+    "  \"name\": \"John\",\n" +
+    "  \"age\": 30,\n" +
+    "  \"city\": \"NYC\"\n" +
+    "}";
+
+String sql = "SELECT id, name, email\n" +
+    "FROM users\n" +
+    "WHERE age > 18\n" +
+    "ORDER BY name";
+                        </div>
+                    </div>
+                    
+                    <div class="new-way">
+                        <h4>✅ Text Blocks (Clean)</h4>
+                        <div class="code-block">
+String json = """
+    {
+      "name": "John",
+      "age": 30,
+      "city": "NYC"
+    }
+    """;
+
+String sql = """
+    SELECT id, name, email
+    FROM users
+    WHERE age > 18
+    ORDER BY name
+    """;
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="benefits">
+                    <h4>✨ Benefits</h4>
+                    <ul>
+                        <li><strong>Natural formatting</strong> - What you see is what you get</li>
+                        <li><strong>No escape hell</strong> - Quotes and newlines just work</li>
+                        <li><strong>Better readability</strong> - Perfect for embedded languages</li>
+                        <li><strong>Automatic indentation</strong> - Smart whitespace handling</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Records with Methods -->
+            <div class="feature-card">
+                <h3><span class="icon">🔧</span> Records with Custom Logic</h3>
+                <p>Records aren't just data - you can add methods, validation, and custom constructors!</p>
+                
+                <div class="code-block">
+public record User(String name, int age) {
+    
+    // Compact constructor (validation)
+    public User {
+        if (age < 0) {
+            throw new IllegalArgumentException(
+                "Age cannot be negative"
+            );
+        }
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException(
+                "Name is required"
+            );
+        }
+    }
+    
+    // Custom methods
+    public boolean isAdult() {
+        return age >= 18;
+    }
+    
+    public String formalName() {
+        return "Mr/Ms. " + name;
+    }
+    
+    // Static factory methods
+    public static User anonymous() {
+        return new User("Anonymous", 0);
+    }
+}
+
+// Usage:
+User user = new User("Alice", 25);
+System.out.println(user.isAdult());  // true
+                </div>
+            </div>
+
+            <!-- Sealed Classes with Switch -->
+            <div class="feature-card">
+                <h3><span class="icon">🔀</span> Exhaustive Switch with Sealed Types</h3>
+                <p>Sealed classes enable compile-time exhaustiveness checking in switch expressions.</p>
+                
+                <div class="code-block">
+sealed interface Result&lt;T&gt; 
+    permits Success, Error {}
+
+record Success&lt;T&gt;(T value) implements Result&lt;T&gt; {}
+record Error&lt;T&gt;(String message) implements Result&lt;T&gt; {}
+
+// Exhaustive switch - no default needed!
+String handle(Result&lt;String&gt; result) {
+    return switch (result) {
+        case Success&lt;String&gt; s -> 
+            "Success: " + s.value();
+        case Error&lt;String&gt; e -> 
+            "Error: " + e.message();
+        // Compiler ensures all cases covered!
+    };
+}
+
+// If you add a new type later:
+// record Pending&lt;T&gt;() implements Result&lt;T&gt; {}
+// Compiler will force you to handle it!
+                </div>
+                
+                <div class="benefits">
+                    <h4>✨ Power Combo</h4>
+                    <ul>
+                        <li><strong>Type safety</strong> - Can't forget a case</li>
+                        <li><strong>Refactoring</strong> - Add types, compiler guides you</li>
+                        <li><strong>No runtime surprises</strong> - Catch errors at compile time</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Text Blocks Features -->
+            <div class="feature-card">
+                <h3><span class="icon">🎨</span> Text Blocks Advanced Features</h3>
+                <p>Text blocks come with smart features for formatting and escaping.</p>
+                
+                <div class="code-block">
+// Trailing backslash - no newline
+String oneLineSQL = """
+    SELECT * FROM users \
+    WHERE active = true \
+    ORDER BY name""";
+
+// \s escape - preserve trailing spaces
+String formatted = """
+    Name:  \s
+    Age:   \s
+    City:  \s
+    """;
+
+// String interpolation with formatted()
+String name = "Alice";
+int age = 30;
+String message = """
+    {
+      "name": "%s",
+      "age": %d
+    }
+    """.formatted(name, age);
+
+// Or use String.format()
+String sql = """
+    SELECT * FROM %s
+    WHERE id = %d
+    """.formatted("users", 123);
+                </div>
+            </div>
+        </div>
+
+        <!-- Sealed Classes Hierarchy Diagram -->
+        <div class="diagram">
+            <h2>🔒 Sealed Classes Hierarchy</h2>
+            <div class="hierarchy">
+                <div class="hierarchy-box">sealed interface Shape</div>
+                <div class="arrow">↓ permits</div>
+                <div class="hierarchy-children">
+                    <div class="hierarchy-child">final Circle</div>
+                    <div class="hierarchy-child">final Rectangle</div>
+                    <div class="hierarchy-child">final Square</div>
+                </div>
+                <p style="margin-top: 20px; color: #666;">
+                    ⚠️ No other class can implement Shape!<br>
+                    ✅ Compiler knows exhaustive list of subtypes
+                </p>
+            </div>
+        </div>
+
+        <!-- Use Cases -->
+        <div class="diagram">
+            <h2>🎯 When to Use Each Feature</h2>
+            <div class="grid" style="text-align: left;">
+                <div>
+                    <h3 style="color: #f5576c;">📋 Use Records For:</h3>
+                    <ul style="line-height: 2; color: #555;">
+                        <li>✅ DTOs (Data Transfer Objects)</li>
+                        <li>✅ API request/response models</li>
+                        <li>✅ Value objects (Point, Money, etc.)</li>
+                        <li>✅ Configuration objects</li>
+                        <li>✅ Immutable data containers</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #f5576c;">🔒 Use Sealed Classes For:</h3>
+                    <ul style="line-height: 2; color: #555;">
+                        <li>✅ Domain modeling (Order states, Payment types)</li>
+                        <li>✅ Result types (Success/Error)</li>
+                        <li>✅ Security - prevent unauthorized extensions</li>
+                        <li>✅ Exhaustive switch expressions</li>
+                        <li>✅ Controlled API evolution</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #f5576c;">📝 Use Text Blocks For:</h3>
+                    <ul style="line-height: 2; color: #555;">
+                        <li>✅ JSON/XML/HTML embedded in code</li>
+                        <li>✅ SQL queries</li>
+                        <li>✅ Regular expressions</li>
+                        <li>✅ Multi-line messages/templates</li>
+                        <li>✅ Configuration files</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

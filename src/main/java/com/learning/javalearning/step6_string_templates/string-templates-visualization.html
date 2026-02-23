@@ -1,639 +1,217 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Java 21: String Templates - Visual Guide</title>
+    <title>Step 6: String Templates (Preview)</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
-            padding: 20px;
-            color: #333;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            text-align: center;
-            color: white;
-            margin-bottom: 40px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .preview-badge {
-            display: inline-block;
-            background: #ffc107;
-            color: #212529;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.5em;
-            font-weight: bold;
-            vertical-align: middle;
-            margin-left: 10px;
-        }
-
-        .section {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        }
-
-        .section h2 {
-            color: #ff6b6b;
-            margin-bottom: 30px;
-            font-size: 1.8em;
-            border-bottom: 3px solid #ff6b6b;
-            padding-bottom: 10px;
-        }
-
-        /* TIMELINE/EVOLUTION */
-        .timeline {
-            display: flex;
-            justify-content: space-between;
-            margin: 40px 0;
-            position: relative;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            top: 40px;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(to right, #dc3545, #ffc107, #28a745);
-        }
-
-        .timeline-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            z-index: 1;
-            flex: 1;
-        }
-
-        .timeline-dot {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            margin-bottom: 20px;
-        }
-
-        .timeline-item:nth-child(1) .timeline-dot {
-            background: #dc3545;
-        }
-
-        .timeline-item:nth-child(2) .timeline-dot {
-            background: #ffc107;
-        }
-
-        .timeline-item:nth-child(3) .timeline-dot {
-            background: #28a745;
-        }
-
-        .timeline-card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            width: 100%;
-            max-width: 280px;
-        }
-
-        .timeline-card h4 {
-            margin-bottom: 10px;
-            color: #495057;
-        }
-
-        .timeline-card code {
-            display: block;
-            background: #2d2d2d;
-            color: #f1fa8c;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 0.9em;
-            margin-top: 10px;
-        }
-
-        /* CODE BOXES */
-        .code-box {
-            background: #2d2d2d;
-            color: #f8f8f2;
-            padding: 25px;
-            border-radius: 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 1em;
-            line-height: 1.8;
-            overflow-x: auto;
-            margin: 20px 0;
-            position: relative;
-        }
-
-        .code-box h4 {
-            font-family: 'Segoe UI', sans-serif;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #444;
-            color: #50fa7b;
-        }
-
-        .code-box .keyword {
-            color: #ff79c6;
-        }
-
-        .code-box .string {
-            color: #f1fa8c;
-        }
-
-        .code-box .comment {
-            color: #6272a4;
-        }
-
-        .code-box .type {
-            color: #8be9fd;
-        }
-
-        .code-box .processor {
-            color: #50fa7b;
-            font-weight: bold;
-        }
-
-        .code-box .interpolation {
-            color: #ffb86c;
-            font-weight: bold;
-        }
-
-        /* STR PROCESSOR BREAKDOWN */
-        .str-breakdown {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin: 30px 0;
-            align-items: center;
-        }
-
-        .str-part {
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 1.3em;
-            text-align: center;
-        }
-
-        .str-part.processor {
-            background: linear-gradient(135deg, #50fa7b 0%, #28a745 100%);
-            color: white;
-            font-weight: bold;
-        }
-
-        .str-part.dot {
-            background: #6c757d;
-            color: white;
-        }
-
-        .str-part.quote {
-            background: #f1fa8c;
-            color: #212529;
-        }
-
-        .str-part.text {
-            background: #2d2d2d;
-            color: #f8f8f2;
-        }
-
-        .str-part.interpolation {
-            background: linear-gradient(135deg, #ffb86c 0%, #ff6b6b 100%);
-            color: white;
-        }
-
-        /* WARNING BOX */
-        .warning-box {
-            background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
-            border-left: 5px solid #ffc107;
-            padding: 20px 25px;
-            border-radius: 0 15px 15px 0;
-            margin: 20px 0;
-        }
-
-        .warning-box h4 {
-            color: #856404;
-            margin-bottom: 10px;
-        }
-
-        .warning-box p {
-            color: #856404;
-        }
-
-        /* COMPARISON GRID */
-        .comparison-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
-        }
-
-        .comparison-card {
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .comparison-card .header {
-            padding: 15px 20px;
-            color: white;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .comparison-card.bad .header {
-            background: #dc3545;
-        }
-
-        .comparison-card.ok .header {
-            background: #ffc107;
-            color: #212529;
-        }
-
-        .comparison-card.good .header {
-            background: #28a745;
-        }
-
-        .comparison-card .body {
-            padding: 20px;
-            background: #f8f9fa;
-        }
-
-        .comparison-card code {
-            display: block;
-            background: #2d2d2d;
-            color: #f8f8f2;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 0.85em;
-            white-space: pre-wrap;
-        }
-
-        /* BENEFITS */
-        .benefits {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
-        }
-
-        .benefit-card {
-            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .benefit-card h4 {
-            font-size: 1.3em;
-            margin-bottom: 10px;
-        }
-
-        .benefit-card p {
-            font-size: 0.95em;
-            line-height: 1.5;
-        }
-
-        .icon {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-
-        /* MULTI-LINE DEMO */
-        .multiline-demo {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            border-radius: 20px;
-            padding: 30px;
-            margin: 30px 0;
-        }
-
-        .multiline-result {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-top: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .multiline-result {
-                grid-template-columns: 1fr;
-            }
-
-            .timeline {
-                flex-direction: column;
-                gap: 30px;
-            }
-
-            .timeline::before {
-                display: none;
-            }
-        }
-
-        .output-box {
-            background: #0d1117;
-            border: 2px solid #30363d;
-            border-radius: 10px;
-            padding: 20px;
-            font-family: 'Courier New', monospace;
-            color: #c9d1d9;
-        }
-
-        .output-box h5 {
-            color: #58a6ff;
-            margin-bottom: 15px;
-            font-size: 1em;
-        }
-
-        /* RUN COMMAND */
-        .run-command {
-            background: #1a1a2e;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .run-command h4 {
-            color: #50fa7b;
-            margin-bottom: 10px;
-        }
-
-        .run-command code {
-            display: block;
-            background: #2d2d2d;
-            color: #f8f8f2;
-            padding: 15px;
-            border-radius: 5px;
-            font-size: 0.95em;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); min-height: 100vh; padding: 40px 20px; line-height: 1.6; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { text-align: center; color: #fff; padding: 60px 20px 40px; margin-bottom: 50px; animation: fadeIn 0.8s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .header h1 { font-size: 3.8em; font-weight: 800; text-shadow: 2px 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px; letter-spacing: -1.5px; }
+        .header p { font-size: 1.5em; font-weight: 300; margin-bottom: 30px; opacity: 0.95; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); }
+        .badge, .version-badge { display: inline-block; background: rgba(255,255,255,0.98); color: #e91e63; padding: 12px 28px; border-radius: 30px; font-weight: 700; margin: 10px; font-size: 1em; box-shadow: 0 5px 20px rgba(0,0,0,0.25); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .badge:hover, .version-badge:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 25px rgba(0,0,0,0.35); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(550px, 1fr)); gap: 35px; margin-bottom: 50px; }
+        .card, .feature-card { background: #fff; border-radius: 20px; padding: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.2); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); animation: slideIn 0.6s ease-out; position: relative; overflow: hidden; }
+        .card::before, .feature-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #a8edea 0%, #fed6e3 100%); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        .card:hover, .feature-card:hover { transform: translateY(-10px); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .card h3, .feature-card h3 { color: #e91e63; font-size: 2em; margin-bottom: 20px; font-weight: 800; display: flex; align-items: center; gap: 12px; }
+        .card > p, .feature-card > p { color: #555; font-size: 1.1em; margin-bottom: 25px; line-height: 1.8; }
+        .code, .code-block { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-left: 5px solid #e91e63; padding: 25px; border-radius: 10px; font-family: 'Monaco', 'Consolas', 'Courier New', monospace; font-size: 0.95em; margin: 20px 0; overflow-x: auto; color: #2d3748; line-height: 1.7; box-shadow: inset 0 2px 6px rgba(0,0,0,0.08); white-space: pre-wrap; }
+        .code-comment { color: #38a169; font-style: italic; }
+        .keyword { color: #9c27b0; font-weight: 600; }
+        .string { color: #d32f2f; }
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin: 25px 0; }
+        .before, .after, .old-way, .new-way, .platform-thread, .virtual-thread, .traditional, .enhanced { padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); transition: transform 0.3s ease; }
+        .before:hover, .after:hover, .old-way:hover, .new-way:hover, .platform-thread:hover, .virtual-thread:hover, .traditional:hover, .enhanced:hover { transform: scale(1.02); }
+        .before, .old-way, .platform-thread, .traditional { background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%); border: 3px solid #fc8181; }
+        .after, .new-way, .virtual-thread, .enhanced { background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); border: 3px solid #68d391; }
+        .before h4, .old-way h4, .platform-thread h4, .traditional h4 { color: #c53030; margin-bottom: 15px; font-size: 1.2em; font-weight: 700; }
+        .after h4, .new-way h4, .virtual-thread h4, .enhanced h4 { color: #2f855a; margin-bottom: 15px; font-size: 1.2em; font-weight: 700; }
+        .before .code, .after .code, .old-way .code-block, .new-way .code-block, .platform-thread .code-block, .virtual-thread .code-block { background: rgba(255,255,255,0.9); font-size: 0.9em; padding: 18px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 25px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+        th { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #fff; padding: 18px 15px; text-align: left; font-weight: 700; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.8px; }
+        td { padding: 16px 15px; border-bottom: 1px solid #e2e8f0; color: #4a5568; background: #fff; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f7fafc; }
+        .info-box, .note, .tips, .performance-tip, .tip-box, .benefit-box, .use-case-box { padding: 25px; border-radius: 15px; margin-top: 25px; border-left: 6px solid; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .info-box.tip, .tips, .performance-tip, .tip-box { background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%); border-color: #3182ce; }
+        .info-box.warning, .note { background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%); border-color: #dd6b20; }
+        .info-box.success, .benefit-box, .use-case-box { background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); border-color: #38a169; }
+        .info-box strong, .note strong, .tips strong, .benefit-box strong { display: block; margin-bottom: 12px; font-size: 1.15em; color: #2d3748; }
+        ul { margin-left: 25px; color: #4a5568; }
+        ul li { margin: 12px 0; line-height: 1.8; }
+        ul ul { margin-top: 10px; }
+        @media (max-width: 1200px) { .grid { grid-template-columns: 1fr; } .comparison { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { body { padding: 20px 10px; } .card, .feature-card { padding: 25px; } .header h1 { font-size: 2.5em; } .header p { font-size: 1.2em; } .code, .code-block { font-size: 0.85em; padding: 18px; } }
     </style>
 </head>
-
 <body>
     <div class="container">
-        <h1>✨ Java 21: String Templates <span class="preview-badge">PREVIEW</span></h1>
-
-        <!-- SECTION 1: EVOLUTION -->
-        <div class="section">
-            <h2>📈 Evolution of String Formatting</h2>
-
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-card">
-                        <h4>❌ Concatenation</h4>
-                        <p>Messy with many variables</p>
-                        <code>"Hello, " + name + "!"</code>
-                    </div>
-                </div>
-
-                <div class="timeline-item">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-card">
-                        <h4>⚠️ String.format()</h4>
-                        <p>Better but verbose</p>
-                        <code>String.format("Hello, %s!", name)</code>
-                    </div>
-                </div>
-
-                <div class="timeline-item">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-card">
-                        <h4>✅ String Templates</h4>
-                        <p>Clean and expressive!</p>
-                        <code>STR."Hello, \{name}!"</code>
-                    </div>
-                </div>
-            </div>
+        <div class="header">
+            <h1>📝 String Templates</h1>
+            <p style="font-size: 1.3em;">Safe, Expression Interpolation</p>
+            <span class="badge">Java 21 (Preview)</span>
+            <span class="badge">--enable-preview Required</span>
         </div>
 
-        <!-- SECTION 2: STR PROCESSOR -->
-        <div class="section">
-            <h2>🔧 The STR Processor</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>🎯 What are String Templates?</h3>
+                <p>String Templates allow you to embed expressions directly in strings with compile-time safety!</p>
+                <div class="code">
+// Old way: String concatenation
+String name = "Alice";
+int age = 30;
+String msg = "Hello, " + name + "! You are " + age + " years old.";
 
-            <p style="font-size: 1.1em; margin-bottom: 25px; color: #495057;">
-                String Templates use a <strong>template processor</strong> to interpolate values.
-                <code>STR</code> is the built-in processor for simple string interpolation.
-            </p>
+// Old way: String.format (runtime)
+String msg = String.format("Hello, %s! You are %d years old.", name, age);
 
-            <div class="str-breakdown">
-                <div class="str-part processor">STR</div>
-                <div class="str-part dot">.</div>
-                <div class="str-part quote">"</div>
-                <div class="str-part text">Hello, </div>
-                <div class="str-part interpolation">\{name}</div>
-                <div class="str-part text">!</div>
-                <div class="str-part quote">"</div>
-            </div>
-
-            <div style="text-align: center; margin: 20px 0;">
-                <p style="color: #6c757d; font-size: 1.1em;">
-                    <span style="color: #28a745; font-weight: bold;">STR</span> = Template Processor &nbsp;|&nbsp;
-                    <span style="color: #ffb86c; font-weight: bold;">\{...}</span> = Expression to embed
-                </p>
-            </div>
-
-            <div class="code-box">
-                <h4>Basic Usage</h4>
-                <pre><span class="type">String</span> name = <span class="string">"Alice"</span>;
-<span class="type">int</span> age = <span class="string">25</span>;
-<span class="type">double</span> balance = <span class="string">1234.56</span>;
-
-<span class="comment">// Simple interpolation</span>
-<span class="type">String</span> greeting = <span class="processor">STR</span>.<span class="string">"Hello, </span><span class="interpolation">\{name}</span><span class="string">!"</span>;
-
-<span class="comment">// Multiple values</span>
-<span class="type">String</span> info = <span class="processor">STR</span>.<span class="string">"</span><span class="interpolation">\{name}</span><span class="string"> is </span><span class="interpolation">\{age}</span><span class="string"> years old. Balance: $</span><span class="interpolation">\{balance}</span><span class="string">"</span>;
-
-<span class="comment">// Expressions work too!</span>
-<span class="type">String</span> future = <span class="processor">STR</span>.<span class="string">"Next year you'll be </span><span class="interpolation">\{age + 1}</span><span class="string">"</span>;</pre>
-            </div>
-        </div>
-
-        <!-- SECTION 3: COMPARISON -->
-        <div class="section">
-            <h2>⚖️ Side-by-Side Comparison</h2>
-
-            <div class="comparison-grid">
-                <div class="comparison-card bad">
-                    <div class="header">❌ Concatenation</div>
-                    <div class="body">
-                        <code>String msg = "User " + name + 
-    " (age " + age + ") has " +
-    "balance: $" + balance;</code>
-                        <p style="margin-top: 15px; color: #dc3545;">
-                            😵 Hard to read<br>
-                            🐛 Easy to miss quotes/spaces<br>
-                            ❌ Gets worse with more variables
-                        </p>
-                    </div>
+// New way: String Templates (compile-time checked!)
+String msg = STR."Hello, \{name}! You are \{age} years old.";
+//              ↑                  ↑              ↑
+//              Template processor   Embedded expressions
                 </div>
-
-                <div class="comparison-card ok">
-                    <div class="header">⚠️ String.format()</div>
-                    <div class="body">
-                        <code>String msg = String.format(
-    "User %s (age %d) has " +
-    "balance: $%.2f",
-    name, age, balance);</code>
-                        <p style="margin-top: 15px; color: #856404;">
-                            📝 Format specifiers to remember<br>
-                            🔢 Must match order of args<br>
-                            ⚠️ Runtime errors if wrong
-                        </p>
-                    </div>
-                </div>
-
-                <div class="comparison-card good">
-                    <div class="header">✅ String Template</div>
-                    <div class="body">
-                        <code>String msg = STR."User \{name} " +
-    "(age \{age}) has " +
-    "balance: $\{balance}";</code>
-                        <p style="margin-top: 15px; color: #28a745;">
-                            ✨ Clear and readable<br>
-                            🎯 Values inline where used<br>
-                            ✅ Compile-time safety
-                        </p>
-                    </div>
+                <div class="warn">
+                    <strong>⚠️ Preview Feature:</strong> Requires <code>--enable-preview</code> flag to compile and run!
                 </div>
             </div>
-        </div>
 
-        <!-- SECTION 4: MULTI-LINE -->
-        <div class="section">
-            <h2>📄 Multi-line Templates</h2>
+            <div class="card">
+                <h3>🔧 STR Template Processor</h3>
+                <p>STR is the standard template processor for simple interpolation.</p>
+                <div class="code">
+// Basic interpolation
+String name = "World";
+String greeting = STR."Hello, \{name}!";
+// Output: "Hello, World!"
 
-            <p style="font-size: 1.1em; margin-bottom: 20px; color: #495057;">
-                Combine String Templates with Text Blocks for beautiful multi-line strings!
-            </p>
+// Expressions in templates
+int x = 10, y = 20;
+String result = STR."\{x} + \{y} = \{x + y}";
+// Output: "10 + 20 = 30"
 
-            <div class="multiline-demo">
-                <div class="multiline-result">
-                    <div>
-                        <h4 style="color: #50fa7b; margin-bottom: 15px;">📝 Template Code</h4>
-                        <div class="code-box" style="margin: 0;">
-                            <pre><span class="type">String</span> name = <span class="string">"Mahesh"</span>;
-<span class="type">int</span> age = <span class="string">30</span>;
+// Method calls
+String text = "java";
+String upper = STR."Uppercase: \{text.toUpperCase()}";
+// Output: "Uppercase: JAVA"
 
-<span class="type">String</span> json = <span class="processor">STR</span>.<span class="string">"""
+// Complex expressions
+List<String> names = List.of("Alice", "Bob");
+String list = STR."Names: \{names.stream().collect(Collectors.joining(", "))}";
+// Output: "Names: Alice, Bob"
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🛡️ FMT Template Processor</h3>
+                <p>FMT adds formatting capabilities like printf.</p>
+                <div class="code">
+// Format numbers
+double pi = Math.PI;
+String formatted = FMT."Pi = %.2f\{pi}";
+// Output: "Pi = 3.14"
+
+// Multiple formats
+int count = 42;
+double price = 19.99;
+String msg = FMT."""
+    Items: %d\{count}
+    Total: $%.2f\{price * count}
+    """;
+// Output:
+// Items: 42
+// Total: $839.58
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🎨 Multi-line Templates</h3>
+                <p>Combine with text blocks formulti-line content!</p>
+                <div class="code">
+String name = "Alice";
+int age = 30;
+String city = "NYC";
+
+String json = STR."""
     {
-        "name": "</span><span class="interpolation">\{name}</span><span class="string">",
-        "age": </span><span class="interpolation">\{age}</span><span class="string">,
-        "adult": </span><span class="interpolation">\{age >= 18}</span><span class="string">,
-        "category": "</span><span class="interpolation">\{age < 30 ? "young" : "experienced"}</span><span class="string">"
+      "name": "\{name}",
+      "age": \{age},
+      "city": "\{city}"
     }
-    """</span>;</pre>
-                        </div>
-                    </div>
+    """;
 
-                    <div>
-                        <h4 style="color: #58a6ff; margin-bottom: 15px;">📤 Output</h4>
-                        <div class="output-box">
-                            <pre>{
-    "name": "Mahesh",
-    "age": 30,
-    "adult": true,
-    "category": "experienced"
-}</pre>
-                        </div>
-                    </div>
+// SQL with parameters
+String table = "users";
+int minAge = 18;
+String sql = STR."""
+    SELECT * FROM \{table}
+    WHERE age >= \{minAge}
+    ORDER BY name
+    """;
                 </div>
             </div>
+
+            <div class="card">
+                <h3>🔒 Security: SQL Injection Prevention</h3>
+                <div class="code">
+// ❌ DANGEROUS: String concatenation
+String userInput = "admin'; DROP TABLE users; --";
+String bad = "SELECT * FROM users WHERE name = '" + userInput + "'";
+// SQL Injection vulnerability!
+
+// ✅ SAFE: Custom template processor
+record Query(String sql, List<Object> params) {}
+
+static final StringTemplate.Processor<Query, RuntimeException> SQL = 
+    st -> new Query(
+        st.fragments().stream().collect(Collectors.joining("?")),
+        st.values()
+    );
+
+// Usage:
+Query query = SQL."SELECT * FROM users WHERE name = \{userInput}";
+// Automatically parameterized - safe from injection!
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>💼 Practical Examples</h3>
+                <div class="code">
+// HTML generation
+String generateCard(String title, String content) {
+    return STR."""
+        <div class="card">
+            <h3>\{title}</h3>
+            <p>\{content}</p>
         </div>
+        """;
+}
 
-        <!-- WARNING BOX -->
-        <div class="section">
-            <h2>⚠️ Preview Feature Notice</h2>
+// Logging with context
+void log(String level, String message) {
+    var timestamp = Instant.now();
+    var thread = Thread.currentThread().getName();
+    System.out.println(STR."""
+        [\{timestamp}] [\{level}] [\{thread}] \{message}
+        """);
+}
 
-            <div class="warning-box">
-                <h4>🔬 This is a Preview Feature (JEP 430)</h4>
-                <p style="margin-bottom: 15px;">
-                    String Templates are a preview feature in Java 21. The syntax and behavior
-                    may change in future releases before becoming a permanent feature.
-                </p>
-                <p>
-                    <strong>Note:</strong> As of Java 23, String Templates were withdrawn for redesign.
-                    Check the latest Java documentation for current status.
-                </p>
-            </div>
-
-            <div class="run-command">
-                <h4>🚀 Running with Preview Features</h4>
-                <code>
-# Compile<br>
-javac --enable-preview --source 21 YourFile.java<br><br>
-# Run<br>
-java --enable-preview YourFile
-                </code>
-            </div>
-        </div>
-
-        <!-- BENEFITS -->
-        <div class="section">
-            <h2>🎯 Why String Templates?</h2>
-
-            <div class="benefits">
-                <div class="benefit-card">
-                    <div class="icon">📖</div>
-                    <h4>Readable</h4>
-                    <p>Values appear exactly where they're used in the string. No more counting arguments!</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="icon">🔒</div>
-                    <h4>Type Safe</h4>
-                    <p>Compiler validates expressions at compile time. No runtime format errors!</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="icon">🧮</div>
-                    <h4>Expressions</h4>
-                    <p>Embed any Java expression: method calls, arithmetic, ternary operators!</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="icon">🔌</div>
-                    <h4>Extensible</h4>
-                    <p>Custom processors can add validation, SQL injection prevention, and more!</p>
+// Configuration strings
+record Config(String host, int port, boolean ssl) {
+    String connectionString() {
+        var protocol = ssl ? "https" : "http";
+        return STR."\{protocol}://\{host}:\{port}";
+    }
+}
                 </div>
             </div>
-        </div>
-
-        <!-- SUMMARY -->
-        <div class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-            <h2 style="color: white; border-bottom-color: rgba(255,255,255,0.3);">🎓 Java 21 Learning Complete!</h2>
-            <p style="font-size: 1.1em; line-height: 1.6; margin-bottom: 20px;">
-                You've now learned the major Java 21 features:
-            </p>
-            <ul style="font-size: 1.1em; line-height: 2; list-style: none;">
-                <li>✅ Step 1: Records, Sealed Classes, Text Blocks</li>
-                <li>✅ Step 2: Pattern Matching for instanceof</li>
-                <li>✅ Step 3: Virtual Threads</li>
-                <li>✅ Step 4: Sequenced Collections</li>
-                <li>✅ Step 5: Advanced Record Patterns</li>
-                <li>✅ Step 6: String Templates (Preview)</li>
-            </ul>
         </div>
     </div>
 </body>
-
 </html>

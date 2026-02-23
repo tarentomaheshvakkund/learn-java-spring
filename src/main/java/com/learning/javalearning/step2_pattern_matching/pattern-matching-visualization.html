@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 2: Pattern Matching for Switch</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: #fff;
+            padding: 60px 20px 40px;
+            margin-bottom: 50px;
+            animation: fadeIn 0.8s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .header h1 {
+            font-size: 3.8em;
+            font-weight: 800;
+            text-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            letter-spacing: -1.5px;
+        }
+        .header p {
+            font-size: 1.5em;
+            font-weight: 300;
+            margin-bottom: 30px;
+            opacity: 0.95;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+        .badge, .version-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.98);
+            color: #00b4d8;
+            padding: 12px 28px;
+            border-radius: 30px;
+            font-weight: 700;
+            margin: 10px;
+            font-size: 1em;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .badge:hover, .version-badge:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(550px, 1fr));
+            gap: 35px;
+            margin-bottom: 50px;
+        }
+        .card, .feature-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideIn 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before, .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card:hover, .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .card h3, .feature-card h3 {
+            color: #00b4d8;
+            font-size: 2em;
+            margin-bottom: 20px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .card > p, .feature-card > p {
+            color: #555;
+            font-size: 1.1em;
+            margin-bottom: 25px;
+            line-height: 1.8;
+        }
+        .code, .code-block {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 5px solid #00b4d8;
+            padding: 25px;
+            border-radius: 10px;
+            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+            font-size: 0.95em;
+            margin: 20px 0;
+            overflow-x: auto;
+            color: #2d3748;
+            line-height: 1.7;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+            white-space: pre-wrap;
+        }
+        .code-comment {
+            color: #38a169;
+            font-style: italic;
+        }
+        .keyword {
+            color: #9c27b0;
+            font-weight: 600;
+        }
+        .string {
+            color: #d32f2f;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 25px 0;
+        }
+        .before, .after, .old-way, .new-way, .platform-thread, .virtual-thread, .traditional, .enhanced {
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            transition: transform 0.3s ease;
+        }
+        .before:hover, .after:hover, .old-way:hover, .new-way:hover, 
+        .platform-thread:hover, .virtual-thread:hover, .traditional:hover, .enhanced:hover {
+            transform: scale(1.02);
+        }
+        .before, .old-way, .platform-thread, .traditional {
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+            border: 3px solid #fc8181;
+        }
+        .after, .new-way, .virtual-thread, .enhanced {
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            border: 3px solid #68d391;
+        }
+        .before h4, .old-way h4, .platform-thread h4, .traditional h4 {
+            color: #c53030;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+        .after h4, .new-way h4, .virtual-thread h4, .enhanced h4 {
+            color: #2f855a;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+        .before .code, .after .code, .old-way .code-block, .new-way .code-block,
+        .platform-thread .code-block, .virtual-thread .code-block {
+            background: rgba(255,255,255,0.9);
+            font-size: 0.9em;
+            padding: 18px;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 25px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        th {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: #fff;
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.95em;
+            letter-spacing: 0.8px;
+        }
+        td {
+            padding: 16px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+            background: #fff;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover td {
+            background: #f7fafc;
+        }
+        .info-box, .note, .tips, .performance-tip, .tip-box, .benefit-box, .use-case-box {
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 25px;
+            border-left: 6px solid;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .info-box.tip, .tips, .performance-tip, .tip-box {
+            background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+            border-color: #3182ce;
+        }
+        .info-box.warning, .note {
+            background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%);
+            border-color: #dd6b20;
+        }
+        .info-box.success, .benefit-box, .use-case-box {
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            border-color: #38a169;
+        }
+        .info-box strong, .note strong, .tips strong, .benefit-box strong {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 1.15em;
+            color: #2d3748;
+        }
+        ul {
+            margin-left: 25px;
+            color: # 4a5568;
+        }
+        ul li {
+            margin: 12px 0;
+            line-height: 1.8;
+        }
+        ul ul {
+            margin-top: 10px;
+        }
+        @media (max-width: 1200px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 10px;
+            }
+            .card, .feature-card {
+                padding: 25px;
+            }
+            .header h1 {
+                font-size: 2.5em;
+            }
+            .header p {
+                font-size: 1.2em;
+            }
+            .code, .code-block {
+                font-size: 0.85em;
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Pattern Matching for Switch</h1>
+            <p class="subtitle">Type Patterns, Guarded Patterns & Record Patterns</p>
+            <div>
+                <span class="version-badge">Java 21 (Standard)</span>
+                <span class="version-badge">Preview: Java 17-20</span>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Basic Pattern Matching -->
+            <div class="feature-card">
+                <h3><span class="icon">🎯</span> Type Pattern Matching</h3>
+                <p>Match and extract types in one step - no more instanceof + cast!</p>
+                
+                <div class="comparison">
+                    <div class="before">
+                        <h4>❌ Old Way (Verbose)</h4>
+                        <div class="code-block">
+String format(Object obj) {
+    String result;
+    if (obj instanceof Integer) {
+        Integer i = (Integer) obj;
+        result = "int: " + i;
+    } else if (obj instanceof String) {
+        String s = (String) obj;
+        result = "String: " + s;
+    } else if (obj instanceof Long) {
+        Long l = (Long) obj;
+        result = "long: " + l;
+    } else {
+        result = "Unknown";
+    }
+    return result;
+}
+                        </div>
+                    </div>
+                    
+                    <div class="after">
+                        <h4>✅ Pattern Matching (Clean)</h4>
+                        <div class="code-block">
+String format(Object obj) {
+    return switch (obj) {
+        case Integer i -> 
+            "int: " + i;
+        case String s -> 
+            "String: " + s;
+        case Long l -> 
+            "long: " + l;
+        case null -> 
+            "null value";
+        default -> 
+            "Unknown";
+    };
+}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="benefits">
+                    <h4>✨ Benefits</h4>
+                    <ul>
+                        <li>✅ No manual casting needed</li>
+                        <li>✅ Type and extract in one step</li>
+                        <li>✅ Null-safe by default</li>
+                        <li>✅ More readable and maintainable</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Guarded Patterns -->
+            <div class="feature-card">
+                <h3><span class="icon">🛡️</span> Guarded Patterns (when)</h3>
+                <p>Add conditions to patterns for even more precise matching!</p>
+                
+                <div class="code-block">
+String categorize(Object obj) {
+    return switch (obj) {
+        case String s when s.length() > 10 ->
+            "Long string: " + s.substring(0, 10) + "...";
+            
+        case String s when s.isBlank() ->
+            "Empty or blank string";
+            
+        case String s ->
+            "Short string: " + s;
+            
+        case Integer i when i > 0 ->
+            "Positive number: " + i;
+            
+        case Integer i when i < 0 ->
+            "Negative number: " + i;
+            
+        case Integer i ->
+            "Zero";
+            
+        case null ->
+            "Null value";
+            
+        default ->
+            "Other type";
+    };
+}
+
+// Real-world example: HTTP status codes
+String handleResponse(int statusCode) {
+    return switch (statusCode) {
+        case int s when s >= 200 && s < 300 ->
+            "Success!";
+        case int s when s >= 300 && s < 400 ->
+            "Redirect";
+        case int s when s >= 400 && s < 500 ->
+            "Client error";
+        case int s when s >= 500 ->
+            "Server error";
+        default ->
+            "Unknown status";
+    };
+}
+                </div>
+                
+                <div class="benefits">
+                    <h4>✨ Power of Guards</h4>
+                    <ul>
+                        <li>✅ Combine type checking with conditions</li>
+                        <li>✅ More expressive than nested ifs</li>
+                        <li>✅ Guard expressions can use matched variable</li>
+                        <li>✅ Multiple guards for same type</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Record Patterns -->
+            <div class="feature-card">
+                <h3><span class="icon">📦</span> Record Pattern Matching</h3>
+                <p>Destructure records directly in pattern matching - extract components in one step!</p>
+                
+                <div class="code-block">
+record Point(int x, int y) {}
+record Circle(Point center, double radius) {}
+record Rectangle(Point topLeft, Point bottomRight) {}
+
+// Destructure records in switch!
+String describe(Object shape) {
+    return switch (shape) {
+        case Circle(Point(var x, var y), var r) ->
+            "Circle at (" + x + "," + y + 
+            ") with radius " + r;
+            
+        case Rectangle(
+            Point(var x1, var y1),
+            Point(var x2, var y2)
+        ) ->
+            "Rectangle from (" + x1 + "," + y1 + 
+            ") to (" + x2 + "," + y2 + ")";
+            
+        case Point(var x, var y) ->
+            "Point at (" + x + "," + y + ")";
+            
+        case null ->
+            "No shape";
+            
+        default ->
+            "Unknown shape";
+    };
+}
+
+// Usage:
+Circle c = new Circle(new Point(0, 0), 5.0);
+System.out.println(describe(c));
+// Output: Circle at (0,0) with radius 5.0
+                </div>
+                
+                <div class="highlight">
+                    <strong>🎯 Key Insight:</strong> Record patterns let you "unwrap" nested data structures in a single pattern, making code dramatically more concise!
+                </div>
+            </div>
+
+            <!-- Nested Record Patterns -->
+            <div class="feature-card">
+                <h3><span class="icon">🎁</span> Deeply Nested Patterns</h3>
+                <p>Handle complex nested structures with ease!</p>
+                
+                <div class="code-block">
+record Address(String street, String city, String zip) {}
+record Person(String name, int age, Address address) {}
+record Company(String name, Person ceo) {}
+
+// Deep nesting extraction!
+String getCeoCity(Object obj) {
+    return switch (obj) {
+        // Extract city 3 levels deep!
+        case Company(
+            var companyName,
+            Person(
+                var ceoName,
+                var age,
+                Address(var street, var city, var zip)
+            )
+        ) ->
+            ceoName + " (CEO of " + companyName + 
+            ") lives in " + city;
+            
+        case Person(
+            var name,
+            var age,
+            Address(var street, var city, var zip)
+        ) ->
+            name + " lives in " + city;
+            
+        case Address(var street, var city, var zip) ->
+            "Address in " + city;
+            
+        case null ->
+            "No data";
+            
+        default ->
+            "Invalid type";
+    };
+}
+
+// Before pattern matching, this would require:
+// - Multiple instanceof checks
+// - Multiple casts
+// - Null checks at each level
+// - 20+ lines of boilerplate!
+                </div>
+            </div>
+
+            <!-- Exhaustiveness -->
+            <div class="feature-card">
+                <h3><span class="icon">✅</span> Exhaustiveness Checking</h3>
+                <p>Compiler ensures you handle all possible cases!</p>
+                
+                <div class="code-block">
+sealed interface Result permits Success, Error {}
+record Success(String data) implements Result {}
+record Error(String message) implements Result {}
+
+// No default needed - exhaustive!
+String handle(Result result) {
+    return switch (result) {
+        case Success(var data) -> 
+            "Got: " + data;
+        case Error(var msg) -> 
+            "Failed: " + msg;
+        // Compiler knows all cases covered!
+    };
+}
+
+// If you add a new type:
+// record Pending() implements Result {}
+// 
+// The compiler will give ERROR:
+// "The switch expression does not cover 
+//  all possible input values"
+//
+// This prevents bugs at COMPILE TIME!
+                </div>
+                
+                <div class="benefits">
+                    <h4>✨ Exhaustiveness Benefits</h4>
+                    <ul>
+                        <li>✅ Catch missing cases at compile time</li>
+                        <li>✅ Safe refactoring when adding new types</li>
+                        <li>✅ No runtime surprises</li>
+                        <li>✅ Works with sealed types</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Practical Example -->
+            <div class="feature-card">
+                <h3><span class="icon">💼</span> Real-World Example</h3>
+                <p>JSON parser with pattern matching</p>
+                
+                <div class="code-block">
+sealed interface JsonValue {}
+record JsonString(String value) implements JsonValue {}
+record JsonNumber(double value) implements JsonValue {}
+record JsonBoolean(boolean value) implements JsonValue {}
+record JsonNull() implements JsonValue {}
+record JsonArray(List&lt;JsonValue&gt; items) 
+    implements JsonValue {}
+record JsonObject(Map&lt;String, JsonValue&gt; fields) 
+    implements JsonValue {}
+
+// Convert to Java types with pattern matching
+Object toJava(JsonValue json) {
+    return switch (json) {
+        case JsonString(var s) -> s;
+        case JsonNumber(var n) -> n;
+        case JsonBoolean(var b) -> b;
+        case JsonNull() -> null;
+        case JsonArray(var items) ->
+            items.stream()
+                .map(this::toJava)
+                .toList();
+        case JsonObject(var fields) ->
+            fields.entrySet().stream()
+                .collect(Collectors.toMap(
+                    Map.Entry::getKey,
+                    e -> toJava(e.getValue())
+                ));
+    };
+}
+
+// Pretty printing with guards
+String prettyPrint(JsonValue json, int indent) {
+    return switch (json) {
+        case JsonString(var s) ->
+            "\"" + s + "\"";
+        case JsonNumber(var n) when n % 1 == 0 ->
+            String.valueOf((int) n);
+        case JsonNumber(var n) ->
+            String.valueOf(n);
+        case JsonBoolean(var b) ->
+            String.valueOf(b);
+        case JsonNull() ->
+            "null";
+        case JsonArray(var items) when items.isEmpty() ->
+            "[]";
+        case JsonArray(var items) ->
+            "[\n" + items.stream()
+                .map(v -> " ".repeat(indent + 2) + 
+                    prettyPrint(v, indent + 2))
+                .collect(Collectors.joining(",\n")) +
+            "\n" + " ".repeat(indent) + "]";
+        case JsonObject(var fields) when fields.isEmpty() ->
+            "{}";
+        case JsonObject(var fields) ->
+            "{\n" + fields.entrySet().stream()
+                .map(e -> " ".repeat(indent + 2) + 
+                    "\"" + e.getKey() + "\": " +
+                    prettyPrint(e.getValue(), indent + 2))
+                .collect(Collectors.joining(",\n")) +
+            "\n" + " ".repeat(indent) + "}";
+    };
+}
+                </div>
+            </div>
+        </div>
+
+        <!-- Flow Diagram -->
+        <div class="flow-diagram">
+            <h2>🔄 Pattern Matching Flow</h2>
+            
+            <div class="flow-step">
+                <div class="flow-number">1</div>
+                <div>
+                    <strong>Type Test</strong><br>
+                    Check if value matches the pattern type (e.g., Integer, String)
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="flow-number">2</div>
+                <div>
+                    <strong>Guard Evaluation (Optional)</strong><br>
+                    If 'when' clause exists, evaluate the condition
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="flow-number">3</div>
+                <div>
+                    <strong>Binding</strong><br>
+                    If match succeeds, bind the value to pattern variable(s)
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="flow-number">4</div>
+                <div>
+                    <strong>Deconstruction (Records)</strong><br>
+                    For record patterns, extract component values automatically
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="flow-number">5</div>
+                <div>
+                    <strong>Execute Branch</strong><br>
+                    Run the code for the matched case with bound variables
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Table -->
+        <div class="flow-diagram">
+            <h2>📊 Evolution of Switch</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #4facfe; color: white;">
+                        <th style="padding: 15px; text-align: left;">Feature</th>
+                        <th style="padding: 15px; text-align: left;">Before Java 14</th>
+                        <th style="padding: 15px; text-align: left;">Java 14-16</th>
+                        <th style="padding: 15px; text-align: left;">Java 21+</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: #f5f5f5;">
+                        <td style="padding: 15px;"><strong>Return value</strong></td>
+                        <td style="padding: 15px;">❌ No (statement only)</td>
+                        <td style="padding: 15px;">✅ Yes (expression)</td>
+                        <td style="padding: 15px;">✅ Yes</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px;"><strong>Pattern matching</strong></td>
+                        <td style="padding: 15px;">❌ No</td>
+                        <td style="padding: 15px;">❌ No</td>
+                        <td style="padding: 15px;">✅ Yes</td>
+                    </tr>
+                    <tr style="background: #f5f5f5;">
+                        <td style="padding: 15px;"><strong>Guarded patterns</strong></td>
+                        <td style="padding: 15px;">❌ No</td>
+                        <td style="padding: 15px;">❌ No</td>
+                        <td style="padding: 15px;">✅ Yes (when)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px;"><strong>Record patterns</strong></td>
+                        <td style="padding: 15px;">❌ No</td>
+                        <td style="padding: 15px;">❌ No</td>
+                        <td style="padding: 15px;">✅ Yes</td>
+                    </tr>
+                    <tr style="background: #f5f5f5;">
+                        <td style="padding: 15px;"><strong>Null handling</strong></td>
+                        <td style="padding: 15px;">⚠️ NullPointerException</td>
+                        <td style="padding: 15px;">⚠️ NullPointerException</td>
+                        <td style="padding: 15px;">✅ case null</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px;"><strong>Exhaustiveness</strong></td>
+                        <td style="padding: 15px;">❌ No checking</td>
+                        <td style="padding: 15px;">⚠️ With enums</td>
+                        <td style="padding: 15px;">✅ With sealed types</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

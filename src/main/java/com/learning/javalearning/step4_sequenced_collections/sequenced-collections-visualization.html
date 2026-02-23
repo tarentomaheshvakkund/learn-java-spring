@@ -1,571 +1,715 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Java 21: Sequenced Collections - Visual Guide</title>
+    <title>Step 4: Sequenced Collections</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            padding: 20px;
-            color: #333;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
             min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.6;
         }
-
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
-
-        h1 {
+        .header {
             text-align: center;
-            color: white;
-            margin-bottom: 40px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            color: #fff;
+            padding: 60px 20px 40px;
+            margin-bottom: 50px;
+            animation: fadeIn 0.8s ease-in;
         }
-
-        .section {
-            background: white;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .header h1 {
+            font-size: 3.8em;
+            font-weight: 800;
+            text-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            letter-spacing: -1.5px;
+        }
+        .header p {
+            font-size: 1.5em;
+            font-weight: 300;
+            margin-bottom: 30px;
+            opacity: 0.95;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+        .badge, .version-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.98);
+            color: #d63447;
+            padding: 12px 28px;
+            border-radius: 30px;
+            font-weight: 700;
+            margin: 10px;
+            font-size: 1em;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .badge:hover, .version-badge:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(550px, 1fr));
+            gap: 35px;
+            margin-bottom: 50px;
+        }
+        .card, .feature-card {
+            background: #fff;
             border-radius: 20px;
             padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideIn 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
         }
-
-        .section h2 {
-            color: #1e3c72;
-            margin-bottom: 30px;
-            font-size: 1.8em;
-            border-bottom: 3px solid #1e3c72;
-            padding-bottom: 10px;
-        }
-
-        /* INTERFACE HIERARCHY */
-        .hierarchy-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 30px 0;
-        }
-
-        .interface-box {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 20px 40px;
-            border-radius: 15px;
-            font-weight: bold;
-            font-size: 1.2em;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            margin: 10px;
-        }
-
-        .interface-box.main {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            font-size: 1.4em;
-            padding: 25px 50px;
-        }
-
-        .implementations {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .impl-box {
-            background: #28a745;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-weight: bold;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .connector-line {
-            width: 2px;
-            height: 30px;
-            background: #1e3c72;
-        }
-
-        /* COMPARISON TABLE */
-        .comparison-table {
+        .card::before, .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
+            height: 4px;
+            background: linear-gradient(90deg, #fa709a 0%, #fee140 100%);
         }
-
-        .comparison-table th {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 15px;
-            text-align: left;
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        .comparison-table td {
-            padding: 15px;
-            border-bottom: 1px solid #e9ecef;
+        .card:hover, .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-
-        .comparison-table tr:nth-child(even) {
-            background: #f8f9fa;
-        }
-
-        .old-way {
-            background: #ffebee !important;
-            font-family: 'Courier New', monospace;
-            color: #c62828;
-        }
-
-        .new-way {
-            background: #e8f5e9 !important;
-            font-family: 'Courier New', monospace;
-            color: #2e7d32;
-        }
-
-        /* REVERSED VIEW ANIMATION */
-        .reversed-demo {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 30px;
-            margin: 30px 0;
-        }
-
-        .list-container {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .list-item {
-            width: 60px;
-            height: 60px;
+        .card h3, .feature-card h3 {
+            color: #d63447;
+            font-size: 2em;
+            margin-bottom: 20px;
+            font-weight: 800;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 12px;
+        }
+        .card > p, .feature-card > p {
+            color: #555;
+            font-size: 1.1em;
+            margin-bottom: 25px;
+            line-height: 1.8;
+        }
+        .code, .code-block {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 5px solid #d63447;
+            padding: 25px;
             border-radius: 10px;
-            font-weight: bold;
-            font-size: 1.5em;
-            color: white;
+            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+            font-size: 0.95em;
+            margin: 20px 0;
+            overflow-x: auto;
+            color: #2d3748;
+            line-height: 1.7;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+            white-space: pre-wrap;
+        }
+        .code-comment {
+            color: #38a169;
+            font-style: italic;
+        }
+        .keyword {
+            color: #9c27b0;
+            font-weight: 600;
+        }
+        .string {
+            color: #d32f2f;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 25px 0;
+        }
+        .before, .after, .old-way, .new-way, .platform-thread, .virtual-thread, .traditional, .enhanced {
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
             transition: transform 0.3s ease;
         }
-
-        .list-item:hover {
-            transform: scale(1.1);
+        .before:hover, .after:hover, .old-way:hover, .new-way:hover, 
+        .platform-thread:hover, .virtual-thread:hover, .traditional:hover, .enhanced:hover {
+            transform: scale(1.02);
         }
-
-        .original .list-item:nth-child(1) {
-            background: #e91e63;
+        .before, .old-way, .platform-thread, .traditional {
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+            border: 3px solid #fc8181;
         }
-
-        .original .list-item:nth-child(2) {
-            background: #9c27b0;
+        .after, .new-way, .virtual-thread, .enhanced {
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            border: 3px solid #68d391;
         }
-
-        .original .list-item:nth-child(3) {
-            background: #673ab7;
-        }
-
-        .original .list-item:nth-child(4) {
-            background: #3f51b5;
-        }
-
-        .original .list-item:nth-child(5) {
-            background: #2196f3;
-        }
-
-        .reversed-view .list-item:nth-child(1) {
-            background: #2196f3;
-        }
-
-        .reversed-view .list-item:nth-child(2) {
-            background: #3f51b5;
-        }
-
-        .reversed-view .list-item:nth-child(3) {
-            background: #673ab7;
-        }
-
-        .reversed-view .list-item:nth-child(4) {
-            background: #9c27b0;
-        }
-
-        .reversed-view .list-item:nth-child(5) {
-            background: #e91e63;
-        }
-
-        .label {
-            font-weight: bold;
-            color: #495057;
-            margin-bottom: 10px;
-            font-size: 1.1em;
-        }
-
-        .arrow-down {
-            font-size: 3em;
-            color: #1e3c72;
-        }
-
-        .info-badge {
-            background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-weight: bold;
-            display: inline-block;
-            margin-top: 10px;
-        }
-
-        /* METHOD CARDS */
-        .method-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
-        }
-
-        .method-card {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .method-card h4 {
-            font-size: 1.3em;
+        .before h4, .old-way h4, .platform-thread h4, .traditional h4 {
+            color: #c53030;
             margin-bottom: 15px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-            padding-bottom: 10px;
+            font-size: 1.2em;
+            font-weight: 700;
         }
-
-        .method-card .method-name {
-            font-family: 'Courier New', monospace;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px 12px;
-            border-radius: 5px;
-            display: inline-block;
-            margin: 5px 0;
+        .after h4, .new-way h4, .virtual-thread h4, .enhanced h4 {
+            color: #2f855a;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: 700;
         }
-
-        .method-card p {
-            margin-top: 10px;
+        .before .code, .after .code, .old-way .code-block, .new-way .code-block,
+        .platform-thread .code-block, .virtual-thread .code-block {
+            background: rgba(255,255,255,0.9);
+            font-size: 0.9em;
+            padding: 18px;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 25px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        th {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: #fff;
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
             font-size: 0.95em;
-            line-height: 1.4;
+            letter-spacing: 0.8px;
         }
-
-        /* BENEFITS */
-        .benefits {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
+        td {
+            padding: 16px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+            background: #fff;
         }
-
-        .benefit-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover td {
+            background: #f7fafc;
+        }
+        .info-box, .note, .tips, .performance-tip, .tip-box, .benefit-box, .use-case-box {
             padding: 25px;
             border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 25px;
+            border-left: 6px solid;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-
-        .benefit-card h4 {
-            font-size: 1.3em;
-            margin-bottom: 10px;
+        .info-box.tip, .tips, .performance-tip, .tip-box {
+            background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+            border-color: #3182ce;
         }
-
-        .benefit-card p {
-            font-size: 0.95em;
-            line-height: 1.5;
+        .info-box.warning, .note {
+            background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%);
+            border-color: #dd6b20;
         }
-
-        .icon {
-            font-size: 2em;
-            margin-bottom: 10px;
+        .info-box.success, .benefit-box, .use-case-box {
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            border-color: #38a169;
         }
-
-        /* CODE BLOCK */
-        .code-block {
-            background: #2d2d2d;
-            color: #f8f8f2;
-            padding: 20px;
-            border-radius: 10px;
-            font-family: 'Courier New', monospace;
-            overflow-x: auto;
-            margin: 20px 0;
+        .info-box strong, .note strong, .tips strong, .benefit-box strong {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 1.15em;
+            color: #2d3748;
         }
-
-        .code-block .keyword {
-            color: #ff79c6;
+        ul {
+            margin-left: 25px;
+            color: # 4a5568;
         }
-
-        .code-block .method {
-            color: #50fa7b;
+        ul li {
+            margin: 12px 0;
+            line-height: 1.8;
         }
-
-        .code-block .string {
-            color: #f1fa8c;
+        ul ul {
+            margin-top: 10px;
         }
-
-        .code-block .comment {
-            color: #6272a4;
+        @media (max-width: 1200px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .comparison {
+                grid-template-columns: 1fr;
+            }
         }
-
-        .code-block .type {
-            color: #8be9fd;
-        }
-
-        /* PROBLEM STATEMENT */
-        .problem-box {
-            background: #ffebee;
-            border-left: 5px solid #c62828;
-            padding: 20px;
-            border-radius: 0 10px 10px 0;
-            margin: 20px 0;
-        }
-
-        .solution-box {
-            background: #e8f5e9;
-            border-left: 5px solid #2e7d32;
-            padding: 20px;
-            border-radius: 0 10px 10px 0;
-            margin: 20px 0;
-        }
-
         @media (max-width: 768px) {
-            .list-container {
-                flex-wrap: wrap;
-                justify-content: center;
+            body {
+                padding: 20px 10px;
+            }
+            .card, .feature-card {
+                padding: 25px;
+            }
+            .header h1 {
+                font-size: 2.5em;
+            }
+            .header p {
+                font-size: 1.2em;
+            }
+            .code, .code-block {
+                font-size: 0.85em;
+                padding: 18px;
             }
         }
     </style>
 </head>
-
 <body>
     <div class="container">
-        <h1>📦 Java 21: Sequenced Collections (JEP 431)</h1>
-
-        <!-- SECTION 1: THE PROBLEM -->
-        <div class="section">
-            <h2>🤔 The Problem: Inconsistent API</h2>
-
-            <div class="problem-box">
-                <h3 style="color: #c62828; margin-bottom: 15px;">❌ Before Java 21</h3>
-                <p style="margin-bottom: 15px;">Getting the first/last element was inconsistent across collections:</p>
-
-                <table class="comparison-table">
-                    <tr>
-                        <th>Collection</th>
-                        <th>Get First</th>
-                        <th>Get Last</th>
-                    </tr>
-                    <tr>
-                        <td><strong>List</strong></td>
-                        <td class="old-way">list.get(0)</td>
-                        <td class="old-way">list.get(list.size()-1)</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Deque</strong></td>
-                        <td class="old-way">deque.getFirst()</td>
-                        <td class="old-way">deque.getLast()</td>
-                    </tr>
-                    <tr>
-                        <td><strong>SortedSet</strong></td>
-                        <td class="old-way">set.first()</td>
-                        <td class="old-way">set.last()</td>
-                    </tr>
-                    <tr>
-                        <td><strong>LinkedHashSet</strong></td>
-                        <td class="old-way">set.iterator().next()</td>
-                        <td class="old-way">😱 ???</td>
-                    </tr>
-                </table>
+        <div class="header">
+            <h1>🔗 Sequenced Collections</h1>
+            <p class="subtitle" style="font-size: 1.3em;">Encounter Order with First-Last Access</p>
+            <div>
+                <span class="version-badge">Java 21 (Standard)</span>
             </div>
+        </div>
 
-            <div class="solution-box">
-                <h3 style="color: #2e7d32; margin-bottom: 15px;">✅ Java 21 Solution: Unified Interface!</h3>
-                <p>Now ALL ordered collections use the same methods:</p>
+        <div class="grid">
+            <!-- Introduction -->
+            <div class="feature-card">
+                <h3>📚 What are Sequenced Collections?</h3>
+                <p>A new collection hierarchy that adds explicit support for collections with a definedencounter order, providing uniform access to first and last elements.</p>
+                
                 <div class="code-block">
-                    <span class="comment">// Same for List, Deque, LinkedHashSet, TreeSet...</span>
-                    <span class="type">String</span> first = collection.<span class="method">getFirst</span>();
-                    <span class="type">String</span> last = collection.<span class="method">getLast</span>();
+// New interfaces in Java 21:
+interface SequencedCollection&lt;E&gt; extends Collection&lt;E&gt;
+interface SequencedSet&lt;E&gt; extends SequencedCollection&lt;E&gt;, Set&lt;E&gt;
+interface SequencedMap&lt;K,V&gt; extends Map&lt;K,V&gt;
+
+// Key methods:
+void addFirst(E);
+void addLast(E);
+E getFirst();
+E getLast();
+E removeFirst();
+E removeLast();
+SequencedCollection&lt;E&gt; reversed();
+                </div>
+                
+                <div class="benefits">
+                    <h4>✨ Why Sequenced Collections?</h4>
+                    <ul>
+                        <li>Uniform API for collections with order</li>
+                        <li>First/last access without workarounds</li>
+                        <li>Bidirectional iteration made easy</li>
+                        <li>Fixes inconsistencies in Collection APIs</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- The Problem -->
+            <div class="feature-card">
+                <h3>❌ The Problem Before Java 21</h3>
+                <p>Accessing first/last elements was inconsistent across collections!</p>
+                
+                <div class="code-block">
+// Before Java 21: Inconsistent APIs
+
+// List: get(0) and get(size()-1)
+List&lt;String&gt; list = new ArrayList&lt;&gt;();
+String first = list.get(0);  // Index-based
+String last = list.get(list.size() - 1);  // Verbose
+
+// Deque: getFirst() and getLast()
+Deque&lt;String&gt; deque = new LinkedList&lt;&gt;();
+String first = deque.getFirst();  // Different method!
+String last = deque.getLast();
+
+// Set: No direct way!
+Set&lt;String&gt; set = new LinkedHashSet&lt;&gt;();
+String first = set.iterator().next();  // Awkward
+String last = ??? // No easy way!
+
+// Map: No direct way for first/last entry!
+Map&lt;String, Integer&gt; map = new LinkedHashMap&lt;&gt;();
+var first = map.entrySet().iterator().next();  // Clunky
+                </div>
+                
+                <div style="background: #ffebee; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <strong style="color: #c62828;">Problem:</strong> Different collections, different methods, no consistency!
+                </div>
+            </div>
+
+            <!-- The Solution -->
+            <div class="feature-card">
+                <h3>✅ The Solution: Uniform API</h3>
+                <p>Java 21 introduces consistent methods across all sequenced collections!</p>
+                
+                <div class="code-block">
+// Java 21: Consistent API everywhere!
+
+List&lt;String&gt; list = List.of("A", "B", "C");
+list.getFirst();   // "A"
+list.getLast();    // "C"
+
+Deque&lt;String&gt; deque = new ArrayDeque&lt;&gt;(list);
+deque.getFirst();  // "A" - Same method!
+deque.getLast();   // "C" - Same method!
+
+Set&lt;String&gt; set = new LinkedHashSet&lt;&gt;(list);
+set.getFirst();    // "A" - Same method!
+set.getLast();     // "C" - Same method!
+
+// Even SortedSet works!
+SortedSet&lt;String&gt; sorted = new TreeSet&lt;&gt;(list);
+sorted.getFirst(); // "A" (smallest)
+sorted.getLast();  // "C" (largest)
+                </div>
+                
+                <div class="benefits">
+                    <h4>✨ Benefits</h4>
+                    <ul>
+                        <li>✅ One method name for all collections</li>
+                        <li>✅ Generic code works with any SequencedCollection</li>
+                        <li>✅ No need to remember different APIs</li>
+                        <li>✅ More readable and maintainable</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Adding Elements -->
+            <div class="feature-card">
+                <h3>➕ Adding Elements: First & Last</h3>
+                <p>Add elements to either end with addFirst() and addLast().</p>
+                
+                <div class="code-block">
+List&lt;String&gt; list = new ArrayList&lt;&gt;();
+
+// Traditional way
+list.add(0, "First");  // Add at beginning
+list.add("Last");      // Add at end
+
+// Java 21: Explicit and clear
+list.addFirst("First");  // Clearer intent!
+list.addLast("Last");    // Explicit!
+
+// Works with all sequenced collections
+Deque&lt;String&gt; deque = new ArrayDeque&lt;&gt;();
+deque.addFirst("A");  // [A]
+deque.addLast("B");   // [A, B]
+deque.addFirst("Z");  // [Z, A, B]
+deque.addLast("C");   // [Z, A, B, C]
+
+// LinkedHashSet (maintains insertion order)
+SequencedSet&lt;Integer&gt; set = new LinkedHashSet&lt;&gt;();
+set.addFirst(10);  // {10}
+set.addFirst(20);  // {20, 10}
+set.addLast(30);   // {20, 10, 30}
+                </div>
+            </div>
+
+            <!-- Removing Elements -->
+            <div class="feature-card">
+                <h3>➖ Removing Elements: First & Last</h3>
+                <p>Remove and return first/last elements consistently.</p>
+                
+                <div class="code-block">
+List&lt;String&gt; list = new ArrayList&lt;&gt;(
+    List.of("A", "B", "C", "D")
+);
+
+// Remove from both ends
+String first = list.removeFirst();  // "A"
+String last = list.removeLast();    // "D"
+// list is now ["B", "C"]
+
+// Works like a queue
+Deque&lt;String&gt; queue = new ArrayDeque&lt;&gt;();
+queue.addLast("Task1");
+queue.addLast("Task2");
+queue.addLast("Task3");
+
+// Process in order
+while (!queue.isEmpty()) {
+    String task = queue.removeFirst();
+    System.out.println("Processing: " + task);
+}
+
+// Works like a stack
+Deque&lt;String&gt; stack = new ArrayDeque&lt;&gt;();
+stack.addFirst("Page1");
+stack.addFirst("Page2");
+stack.addFirst("Page3");
+
+// Pop in LIFO order
+while (!stack.isEmpty()) {
+    String page = stack.removeFirst();
+    System.out.println("Back to: " + page);
+}
+                </div>
+            </div>
+
+            <!-- Reversed View -->
+            <div class="feature-card">
+                <h3>🔄 Reversed View</h3>
+                <p>Get a reversed view of any sequenced collection - no copying!</p>
+                
+                <div class="code-block">
+List&lt;String&gt; original = List.of("A", "B", "C", "D");
+
+// Get reversed view (not a copy!)
+SequencedCollection&lt;String&gt; reversed = 
+    original.reversed();
+
+System.out.println(original);  // [A, B, C, D]
+System.out.println(reversed);  // [D, C, B, A]
+
+// reversed() is a VIEW - changes reflect back!
+List&lt;String&gt; mutable = new ArrayList&lt;&gt;(original);
+List&lt;String&gt; reversedView = mutable.reversed();
+
+reversedView.addFirst("Z");  // Add "Z" at "start" of reversed
+System.out.println(mutable);  // [A, B, C, D, Z]
+System.out.println(reversedView);  // [Z, D, C, B, A]
+
+// Iterate in reverse easily!
+List&lt;Integer&gt; numbers = List.of(1, 2, 3, 4, 5);
+
+for (Integer num : numbers.reversed()) {
+    System.out.println(num);  // 5, 4, 3, 2, 1
+}
+
+// No need for manual reversal loops!
+                </div>
+                
+                <div class="benefits">
+                    <h4>✨ Reversed View Benefits</h4>
+                    <ul>
+                        <li>✅ No copying - O(1) time & space</li>
+                        <li>✅ Bidirectional changes</li>
+                        <li>✅ Clean reverse iteration</li>
+                        <li>✅ Works with all sequenced collections</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SequencedMap -->
+            <div class="feature-card">
+                <h3>🗺️ SequencedMap</h3>
+                <p>Maps with defined entry order get first/last entry access!</p>
+                
+                <div class="code-block">
+// LinkedHashMap now implements SequencedMap!
+SequencedMap&lt;String, Integer&gt; map = 
+    new LinkedHashMap&lt;&gt;();
+
+map.put("first", 1);
+map.put("second", 2);
+map.put("third", 3);
+
+// Access first entry
+Map.Entry&lt;String, Integer&gt; first = 
+    map.firstEntry();
+System.out.println(first);  // first=1
+
+// Access last entry
+Map.Entry&lt;String, Integer&gt; last = 
+    map.lastEntry();
+System.out.println(last);  // third=3
+
+// Add at beginning
+map.putFirst("zero", 0);
+// map: {zero=0, first=1, second=2, third=3}
+
+// Add at end
+map.putLast("fourth", 4);
+// map: {zero=0, first=1, second=2, third=3, fourth=4}
+
+// Remove from ends
+map.pollFirstEntry();  // Removes zero=0
+map.pollLastEntry();   // Removes fourth=4
+
+// Reversed view of map!
+SequencedMap&lt;String, Integer&gt; reversed = 
+    map.reversed();
+
+for (var entry : reversed.entrySet()) {
+    System.out.println(entry);
+    // Iterates in reverse order!
+}
+                </div>
+            </div>
+
+            <!-- Practical Example -->
+            <div class="feature-card">
+                <h3>💼 Practical Example: LRU Cache</h3>
+                <p>Implement an LRU (Least Recently Used) cache easily!</p>
+                
+                <div class="code-block">
+class LRUCache&lt;K, V&gt; {
+    private final int maxSize;
+    private final SequencedMap&lt;K, V&gt; cache;
+    
+    public LRUCache(int maxSize) {
+        this.maxSize = maxSize;
+        this.cache = new LinkedHashMap&lt;&gt;();
+    }
+    
+    public V get(K key) {
+        V value = cache.remove(key);
+        if (value != null) {
+            // Move to end (most recently used)
+            cache.putLast(key, value);
+        }
+        return value;
+    }
+    
+    public void put(K key, V value) {
+        // Remove if exists
+        cache.remove(key);
+        
+        // Add to end (most recently used)
+        cache.putLast(key, value);
+        
+        // Evict oldest if over capacity
+        if (cache.size() > maxSize) {
+            // Remove least recently used (first entry)
+            cache.pollFirstEntry();
+        }
+    }
+    
+    public V getLeastRecentlyUsed() {
+        return cache.firstEntry().getValue();
+    }
+    
+    public V getMostRecentlyUsed() {
+        return cache.lastEntry().getValue();
+    }
+}
+
+// Usage:
+LRUCache&lt;String, String&gt; cache = new LRUCache&lt;&gt;(3);
+cache.put("A", "Data A");
+cache.put("B", "Data B");
+cache.put("C", "Data C");
+cache.put("D", "Data D");  // Evicts "A"
+
+System.out.println(cache.get("B"));  // Data B
+// B moves to end, C is now LRU
                 </div>
             </div>
         </div>
 
-        <!-- SECTION 2: NEW INTERFACES -->
-        <div class="section">
-            <h2>🏗️ New Interface Hierarchy</h2>
-
-            <div class="hierarchy-container">
-                <div class="interface-box main">SequencedCollection&lt;E&gt;</div>
-                <div class="connector-line"></div>
-
-                <div style="display: flex; gap: 40px;">
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <div class="interface-box">SequencedSet&lt;E&gt;</div>
-                        <div class="connector-line"></div>
-                        <div class="implementations">
-                            <div class="impl-box">LinkedHashSet</div>
-                            <div class="impl-box">TreeSet</div>
-                        </div>
+        <!-- Hierarchy Diagram -->
+        <div class="diagram">
+            <h2>📊 Sequenced Collection Hierarchy</h2>
+            
+            <div style="text-align: center; padding: 30px;">
+                <div style="background: #5E35B1; color: white; padding: 15px; border-radius: 10px; display: inline-block; margin: 10px;">
+                    <strong>SequencedCollection&lt;E&gt;</strong><br>
+                    <small>addFirst(), addLast(), getFirst(), getLast(), removeFirst(), removeLast(), reversed()</small>
+                </div>
+                
+                <div style="margin: 20px 0;">↓ extends</div>
+                
+                <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+                    <div style="background: #7E57C2; color: white; padding: 15px; border-radius: 10px;">
+                        <strong>List&lt;E&gt;</strong><br>
+                        <small>ArrayList, LinkedList</small>
                     </div>
-
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <div class="interface-box">List&lt;E&gt;</div>
-                        <div class="connector-line"></div>
-                        <div class="implementations">
-                            <div class="impl-box">ArrayList</div>
-                            <div class="impl-box">LinkedList</div>
-                        </div>
+                    
+                    <div style="background: #7E57C2; color: white; padding: 15px; border-radius: 10px;">
+                        <strong>Deque&lt;E&gt;</strong><br>
+                        <small>ArrayDeque, LinkedList</small>
+                    </div>
+                    
+                    <div style="background: #7E57C2; color: white; padding: 15px; border-radius: 10px;">
+                        <strong>SequencedSet&lt;E&gt;</strong><br>
+                        <small>LinkedHashSet, TreeSet</small>
                     </div>
                 </div>
             </div>
-
-            <div class="hierarchy-container" style="margin-top: 40px;">
-                <div class="interface-box main">SequencedMap&lt;K,V&gt;</div>
-                <div class="connector-line"></div>
-                <div class="implementations">
-                    <div class="impl-box">LinkedHashMap</div>
-                    <div class="impl-box">TreeMap</div>
+            
+            <div style="text-align: center; padding: 30px; margin-top: 30px; border-top: 3px dashed #ddd;">
+                <div style="background: #5E35B1; color: white; padding: 15px; border-radius: 10px; display: inline-block; margin: 10px;">
+                    <strong>SequencedMap&lt;K,V&gt;</strong><br>
+                    <small>firstEntry(), lastEntry(), putFirst(), putLast(), pollFirstEntry(), pollLastEntry(), reversed()</small>
                 </div>
-            </div>
-        </div>
-
-        <!-- SECTION 3: KEY METHODS -->
-        <div class="section">
-            <h2>🔧 New Methods</h2>
-
-            <div class="method-grid">
-                <div class="method-card">
-                    <h4>📋 SequencedCollection</h4>
-                    <div class="method-name">getFirst()</div>
-                    <div class="method-name">getLast()</div>
-                    <div class="method-name">addFirst(E)</div>
-                    <div class="method-name">addLast(E)</div>
-                    <div class="method-name">removeFirst()</div>
-                    <div class="method-name">removeLast()</div>
-                    <div class="method-name">reversed()</div>
-                </div>
-
-                <div class="method-card">
-                    <h4>🗺️ SequencedMap</h4>
-                    <div class="method-name">firstEntry()</div>
-                    <div class="method-name">lastEntry()</div>
-                    <div class="method-name">putFirst(K, V)</div>
-                    <div class="method-name">putLast(K, V)</div>
-                    <div class="method-name">pollFirstEntry()</div>
-                    <div class="method-name">pollLastEntry()</div>
-                    <div class="method-name">reversed()</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SECTION 4: REVERSED VIEW -->
-        <div class="section">
-            <h2>🔄 Reversed Views (Zero Copy!)</h2>
-
-            <p style="font-size: 1.1em; margin-bottom: 20px; color: #495057;">
-                The <code>reversed()</code> method returns a <strong>VIEW</strong>, not a copy.
-                Changes to the view affect the original!
-            </p>
-
-            <div class="reversed-demo">
-                <div>
-                    <div class="label">📌 Original List</div>
-                    <div class="list-container original">
-                        <div class="list-item">1</div>
-                        <div class="list-item">2</div>
-                        <div class="list-item">3</div>
-                        <div class="list-item">4</div>
-                        <div class="list-item">5</div>
+                
+                <div style="margin: 20px 0;">↓ implements</div>
+                
+                <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+                    <div style="background: #7E57C2; color: white; padding: 15px; border-radius: 10px;">
+                        <strong>LinkedHashMap&lt;K,V&gt;</strong>
+                    </div>
+                    
+                    <div style="background: #7E57C2; color: white; padding: 15px; border-radius: 10px;">
+                        <strong>SortedMap&lt;K,V&gt;</strong><br>
+                        <small>TreeMap</small>
                     </div>
                 </div>
-
-                <div class="arrow-down">⬇️ list.reversed()</div>
-
-                <div>
-                    <div class="label">👁️ Reversed View (No Copy!)</div>
-                    <div class="list-container reversed-view">
-                        <div class="list-item">5</div>
-                        <div class="list-item">4</div>
-                        <div class="list-item">3</div>
-                        <div class="list-item">2</div>
-                        <div class="list-item">1</div>
-                    </div>
-                </div>
-
-                <div class="info-badge">⚡ Same memory, different perspective!</div>
-            </div>
-
-            <div class="code-block">
-                <span class="type">List</span>&lt;<span class="type">Integer</span>&gt; nums = <span
-                    class="keyword">new</span> ArrayList&lt;&gt;(List.of(<span class="string">1, 2, 3, 4, 5</span>));
-                <span class="type">List</span>&lt;<span class="type">Integer</span>&gt; rev = nums.<span
-                    class="method">reversed</span>(); <span class="comment">// NOT a copy!</span>
-
-                <span class="comment">// Iterate in reverse - simple and elegant</span>
-                <span class="keyword">for</span> (<span class="type">int</span> n : nums.<span
-                    class="method">reversed</span>()) {
-                System.out.print(n + <span class="string">" "</span>); <span class="comment">// 5 4 3 2 1</span>
-                }
-
-                <span class="comment">// Modifying the view affects the original!</span>
-                rev.<span class="method">set</span>(<span class="string">0</span>, <span class="string">100</span>);
-                <span class="comment">// Sets nums[4] to 100</span>
             </div>
         </div>
 
-        <!-- SECTION 5: BENEFITS -->
-        <div class="section">
-            <h2>🎯 Why This Matters</h2>
-
-            <div class="benefits">
-                <div class="benefit-card">
-                    <div class="icon">🔗</div>
-                    <h4>Unified API</h4>
-                    <p>Same methods work across all ordered collections. Learn once, use everywhere!</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="icon">⚡</div>
-                    <h4>Zero-Copy Reversal</h4>
-                    <p>reversed() returns a view, not a copy. Memory efficient for large collections!</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="icon">📖</div>
-                    <h4>Readable Code</h4>
-                    <p>getFirst() and getLast() are self-documenting. No more get(size()-1)!</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="icon">🛡️</div>
-                    <h4>Safe Operations</h4>
-                    <p>Throws NoSuchElementException on empty collections instead of IndexOutOfBounds.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- NEXT STEP TEASER -->
-        <div class="section" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
-            <h2 style="color: white; border-bottom-color: rgba(255,255,255,0.3);">🚀 Next: Step 5 - Advanced Record
-                Patterns</h2>
-            <p style="font-size: 1.1em; line-height: 1.6;">
-                Learn how to destructure nested records in a single expression and add guards with the <code>when</code>
-                clause!
-            </p>
+        <!-- Method Comparison -->
+        <div class="diagram">
+            <h2>📋 Method Comparison: Before vs After</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Operation</th>
+                        <th>Before Java 21</th>
+                        <th>Java 21 (Sequenced)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Get first element</strong></td>
+                        <td>list.get(0)<br>deque.getFirst()<br>set.iterator().next()</td>
+                        <td>collection.getFirst()</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Get last element</strong></td>
+                        <td>list.get(list.size()-1)<br>deque.getLast()<br>❌ No easy way for Set</td>
+                        <td>collection.getLast()</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Add at start</strong></td>
+                        <td>list.add(0, e)<br>deque.addFirst(e)<br>❌ Not possible for Set</td>
+                        <td>collection.addFirst(e)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Add at end</strong></td>
+                        <td>list.add(e)<br>deque.addLast(e)<br>set.add(e)</td>
+                        <td>collection.addLast(e)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Remove first</strong></td>
+                        <td>list.remove(0)<br>deque.removeFirst()</td>
+                        <td>collection.removeFirst()</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Remove last</strong></td>
+                        <td>list.remove(list.size()-1)<br>deque.removeLast()</td>
+                        <td>collection.removeLast()</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Reverse iteration</strong></td>
+                        <td>for (int i=list.size()-1; i>=0; i--)<br>deque.descendingIterator()<br>❌ Complex for Set</td>
+                        <td>for (var e : collection.reversed())</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </body>
-
 </html>

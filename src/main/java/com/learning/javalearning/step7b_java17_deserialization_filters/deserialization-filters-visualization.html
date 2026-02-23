@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 7b: Deserialization Filters</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background: linear-gradient(135deg, #ff6e7f 0%, #bfe9ff 100%); min-height: 100vh; padding: 40px 20px; line-height: 1.6; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { text-align: center; color: #fff; padding: 60px 20px 40px; margin-bottom: 50px; animation: fadeIn 0.8s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .header h1 { font-size: 3.8em; font-weight: 800; text-shadow: 2px 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px; letter-spacing: -1.5px; }
+        .header p { font-size: 1.5em; font-weight: 300; margin-bottom: 30px; opacity: 0.95; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); }
+        .badge, .version-badge { display: inline-block; background: rgba(255,255,255,0.98); color: #e84393; padding: 12px 28px; border-radius: 30px; font-weight: 700; margin: 10px; font-size: 1em; box-shadow: 0 5px 20px rgba(0,0,0,0.25); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .badge:hover, .version-badge:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 25px rgba(0,0,0,0.35); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(550px, 1fr)); gap: 35px; margin-bottom: 50px; }
+        .card, .feature-card { background: #fff; border-radius: 20px; padding: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.2); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); animation: slideIn 0.6s ease-out; position: relative; overflow: hidden; }
+        .card::before, .feature-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #ff6e7f 0%, #bfe9ff 100%); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        .card:hover, .feature-card:hover { transform: translateY(-10px); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .card h3, .feature-card h3 { color: #e84393; font-size: 2em; margin-bottom: 20px; font-weight: 800; display: flex; align-items: center; gap: 12px; }
+        .card > p, .feature-card > p { color: #555; font-size: 1.1em; margin-bottom: 25px; line-height: 1.8; }
+        .code, .code-block { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-left: 5px solid #e84393; padding: 25px; border-radius: 10px; font-family: 'Monaco', 'Consolas', 'Courier New', monospace; font-size: 0.95em; margin: 20px 0; overflow-x: auto; color: #2d3748; line-height: 1.7; box-shadow: inset 0 2px 6px rgba(0,0,0,0.08); white-space: pre-wrap; }
+        .code-comment { color: #38a169; font-style: italic; }
+        .keyword { color: #9c27b0; font-weight: 600; }
+        .string { color: #d32f2f; }
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin: 25px 0; }
+        .before, .after, .old-way, .new-way, .platform-thread, .virtual-thread, .traditional, .enhanced { padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); transition: transform 0.3s ease; }
+        .before:hover, .after:hover, .old-way:hover, .new-way:hover, .platform-thread:hover, .virtual-thread:hover, .traditional:hover, .enhanced:hover { transform: scale(1.02); }
+        .before, .old-way, .platform-thread, .traditional { background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%); border: 3px solid #fc8181; }
+        .after, .new-way, .virtual-thread, .enhanced { background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); border: 3px solid #68d391; }
+        .before h4, .old-way h4, .platform-thread h4, .traditional h4 { color: #c53030; margin-bottom: 15px; font-size: 1.2em; font-weight: 700; }
+        .after h4, .new-way h4, .virtual-thread h4, .enhanced h4 { color: #2f855a; margin-bottom: 15px; font-size: 1.2em; font-weight: 700; }
+        .before .code, .after .code, .old-way .code-block, .new-way .code-block, .platform-thread .code-block, .virtual-thread .code-block { background: rgba(255,255,255,0.9); font-size: 0.9em; padding: 18px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 25px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+        th { background: linear-gradient(135deg, #ff6e7f 0%, #bfe9ff 100%); color: #fff; padding: 18px 15px; text-align: left; font-weight: 700; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.8px; }
+        td { padding: 16px 15px; border-bottom: 1px solid #e2e8f0; color: #4a5568; background: #fff; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f7fafc; }
+        .info-box, .note, .tips, .performance-tip, .tip-box, .benefit-box, .use-case-box { padding: 25px; border-radius: 15px; margin-top: 25px; border-left: 6px solid; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .info-box.tip, .tips, .performance-tip, .tip-box { background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%); border-color: #3182ce; }
+        .info-box.warning, .note { background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%); border-color: #dd6b20; }
+        .info-box.success, .benefit-box, .use-case-box { background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); border-color: #38a169; }
+        .info-box strong, .note strong, .tips strong, .benefit-box strong { display: block; margin-bottom: 12px; font-size: 1.15em; color: #2d3748; }
+        ul { margin-left: 25px; color: #4a5568; }
+        ul li { margin: 12px 0; line-height: 1.8; }
+        ul ul { margin-top: 10px; }
+        @media (max-width: 1200px) { .grid { grid-template-columns: 1fr; } .comparison { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { body { padding: 20px 10px; } .card, .feature-card { padding: 25px; } .header h1 { font-size: 2.5em; } .header p { font-size: 1.2em; } .code, .code-block { font-size: 0.85em; padding: 18px; } }
+    </style>
+</head>
+<body>
+<div class="grid">
+<div class="card"><h3>⚠️ The Deserialization Problem</h3>
+<div class="warn"><strong>Security Risk:</strong> Malicious data can exploit Java deserialization to execute arbitrary code!</div>
+<div class="code">// Vulnerable code (NO FILTER!)
+ObjectInputStream ois = new ObjectInputStream(input);
+Object obj = ois.readObject();  // DANGEROUS!
+
+// Attacker sends:
+// - Gadget chains (execute code)
+// - Denial of service attacks
+// - Consume excessive memory/CPU</div></div>
+
+<div class="card"><h3>✅ Basic Filter</h3>
+<div class="code">// Allow only specific classes
+ObjectInputFilter filter = ObjectInputFilter.Config
+    .createFilter("com.example.User;!*");
+    
+// Pattern syntax:
+// "com.example.User"  - Allow this class
+// "com.example.*"     - Allow this package
+// "!*"                - Reject everything else
+
+ObjectInputStream ois = new ObjectInputStream(input);
+ois.setObjectInputFilter(filter);
+
+Object obj = ois.readObject();  // Safe!</div></div>
+
+<div class="card"><h3>🛡️ Custom Filter</h3>
+<div class="code">ObjectInputFilter customFilter = filterInfo -> {
+    Class<?> serialClass = filterInfo.serialClass();
+    
+    // Reject if class is null (array, primitive, etc.)
+    if (serialClass == null) {
+        return ObjectInputFilter.Status.UNDECIDED;
+    }
+    
+    // Only allow specific classes
+    if (serialClass == User.class || 
+        serialClass == Order.class) {
+        return ObjectInputFilter.Status.ALLOWED;
+    }
+    
+    // Reject everything else
+    return ObjectInputFilter.Status.REJECTED;
+};
+
+ois.setObjectInputFilter(customFilter);</div></div>
+
+<div class="card"><h3>📊 Filter Info</h3>
+<div class="code">ObjectInputFilter filter = filterInfo -> {
+    // Check class
+    Class<?> clazz = filterInfo.serialClass();
+    
+    // Check array depth
+    long depth = filterInfo.depth();
+    if (depth > 10) {
+        return ObjectInputFilter.Status.REJECTED;
+    }
+    
+    // Check object count
+    long count = filterInfo.references();
+    if (count > 1000) {
+        return ObjectInputFilter.Status.REJECTED;
+    }
+    
+    // Check bytes read
+    long bytes = filterInfo.streamBytes();
+    if (bytes > 1_000_000) {  // 1 MB limit
+        return ObjectInputFilter.Status.REJECTED;
+    }
+    
+    // Check array length
+    long arrayLength = filterInfo.arrayLength();
+    if (arrayLength > 10000) {
+        return ObjectInputFilter.Status.REJECTED;
+    }
+    
+    return ObjectInputFilter.Status.UNDECIDED;
+};</div></div>
+
+<div class="card"><h3>🌍 JVM-Wide Filter</h3>
+<div class="code">// Set global filter for entire JVM
+ObjectInputFilter globalFilter = ObjectInputFilter.Config
+    .createFilter("com.example.*;!*");
+    
+ObjectInputFilter.Config
+    .setSerialFilter(globalFilter);
+
+// Or via system property:
+// -Djdk.serialFilter="com.example.*;!*"
+
+// Or via security properties file:
+// jdk.serialFilter=com.example.*;!*</div></div>
+
+<div class="card"><h3>💼 Real-World Example</h3>
+<div class="code">class SafeDeserializer {
+    private static final Set<Class<?>> ALLOWED = Set.of(
+        User.class,
+        Order.class,
+        Product.class,
+        String.class,
+        Integer.class,
+        Long.class,
+        Date.class,
+        ArrayList.class,
+        HashMap.class
+    );
+    
+    public static Object deserialize(byte[] data) 
+            throws IOException, ClassNotFoundException {
+        
+        ObjectInputFilter filter = filterInfo -> {
+            Class<?> clazz = filterInfo.serialClass();
+            
+            if (clazz == null) {
+                return ObjectInputFilter.Status.UNDECIDED;
+            }
+            
+            // Limits
+            if (filterInfo.depth() > 20 ||
+                filterInfo.references() > 10000 ||
+                filterInfo.streamBytes() > 10_000_000) {
+                return ObjectInputFilter.Status.REJECTED;
+            }
+            
+            // Allowlist check
+            if (ALLOWED.contains(clazz) ||
+                ALLOWED.stream().anyMatch(
+                    allowed -> clazz.getName()
+                        .startsWith(allowed.getPackageName()))) {
+                return ObjectInputFilter.Status.ALLOWED;
+            }
+            
+            // Reject unknown classes
+            log.warn("Rejected class: " + clazz.getName());
+            return ObjectInputFilter.Status.REJECTED;
+        };
+        
+        try (ByteArrayInputStream bis = 
+                new ByteArrayInputStream(data);
+             ObjectInputStream ois = 
+                new ObjectInputStream(bis)) {
+            
+            ois.setObjectInputFilter(filter);
+            return ois.readObject();
+        }
+    }
+}</div></div>
+</body>
+</html>

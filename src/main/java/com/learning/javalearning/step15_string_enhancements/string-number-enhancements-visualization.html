@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 15: String & Number Enhancements (Java 12-13)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: #fff;
+            padding: 60px 20px 40px;
+            margin-bottom: 50px;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header h1 {
+            font-size: 3.8em;
+            font-weight: 800;
+            text-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            letter-spacing: -1.5px;
+        }
+
+        .header p {
+            font-size: 1.5em;
+            font-weight: 300;
+            margin-bottom: 30px;
+            opacity: 0.95;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.98);
+            color: #667eea;
+            padding: 12px 28px;
+            border-radius: 30px;
+            font-weight: 700;
+            margin: 10px;
+            font-size: 1em;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .badge:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(550px, 1fr));
+            gap: 35px;
+            margin-bottom: 50px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideIn 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .card h3 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card > p {
+            color: #555;
+            font-size: 1.1em;
+            margin-bottom: 25px;
+            line-height: 1.8;
+        }
+
+        .code {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 5px solid #667eea;
+            padding: 25px;
+            border-radius: 10px;
+            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+            font-size: 0.95em;
+            margin: 20px 0;
+            overflow-x: auto;
+            color: #2d3748;
+            line-height: 1.7;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+            white-space: pre-wrap;
+        }
+
+        .code-comment {
+            color: #38a169;
+            font-style: italic;
+        }
+
+        .keyword {
+            color: #9c27b0;
+            font-weight: 600;
+        }
+
+        .string {
+            color: #d32f2f;
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 25px 0;
+        }
+
+        .before, .after {
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            transition: transform 0.3s ease;
+        }
+
+        .before:hover, .after:hover {
+            transform: scale(1.02);
+        }
+
+        .before {
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+            border: 3px solid #fc8181;
+        }
+
+        .after {
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            border: 3px solid #68d391;
+        }
+
+        .before h4 {
+            color: #c53030;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+
+        .after h4 {
+            color: #2f855a;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+
+        .before .code, .after .code {
+            background: rgba(255,255,255,0.9);
+            font-size: 0.9em;
+            padding: 18px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 25px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.95em;
+            letter-spacing: 0.8px;
+        }
+
+        td {
+            padding: 16px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+            background: #fff;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #f7fafc;
+        }
+
+        .info-box {
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 25px;
+            border-left: 6px solid;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .info-box.tip {
+            background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+            border-color: #3182ce;
+        }
+
+        .info-box.warning {
+            background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%);
+            border-color: #dd6b20;
+        }
+
+        .info-box.success {
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            border-color: #38a169;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 1.15em;
+            color: #2d3748;
+        }
+
+        ul {
+            margin-left: 25px;
+            color: #4a5568;
+        }
+
+        ul li {
+            margin: 12px 0;
+            line-height: 1.8;
+        }
+
+        ul ul {
+            margin-top: 10px;
+        }
+
+        @media (max-width: 1200px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 10px;
+            }
+
+            .card {
+                padding: 25px;
+            }
+
+            .header h1 {
+                font-size: 2.5em;
+            }
+
+            .header p {
+                font-size: 1.2em;
+            }
+
+            .code {
+                font-size: 0.85em;
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 String & Number Enhancements</h1>
+            <p>Modern text manipulation & compact formatting in Java 12-13</p>
+            <span class="badge">☕ Java 12</span>
+            <span class="badge">☕ Java 13</span>
+        </div>
+
+        <div class="grid">
+            <!-- String.indent() -->
+            <div class="card">
+                <h3>1️⃣ String.indent()</h3>
+                <p>Effortlessly add or remove leading whitespace from each line. Perfect for code generation and text formatting.</p>
+                
+                <div class="code"><span class="keyword">String</span> text = <span class="string">"Hello\nWorld"</span>;
+
+<span class="code-comment">// Add 4 spaces to each line</span>
+<span class="keyword">String</span> indented = text.indent(4);
+<span class="code-comment">// Result: "    Hello\n    World\n"</span>
+
+<span class="code-comment">// Remove 2 spaces from each line</span>
+<span class="keyword">String</span> dedented = text.indent(-2);</div>
+
+                <div class="comparison">
+                    <div class="before">
+                        <h4>❌ Before (Java 11)</h4>
+                        <div class="code"><span class="keyword">String</span> result = Arrays.stream(text.split(<span class="string">"\n"</span>))
+    .map(line -> <span class="string">"    "</span> + line)
+    .collect(Collectors.joining(<span class="string">"\n"</span>));</div>
+                    </div>
+                    <div class="after">
+                        <h4>✅ After (Java 12)</h4>
+                        <div class="code"><span class="keyword">String</span> result = text.indent(4);
+<span class="code-comment">// Clean, readable, efficient!</span></div>
+                    </div>
+                </div>
+
+                <div class="info-box tip">
+                    <strong>💡 Common Use Cases</strong>
+                    <ul>
+                        <li><strong>Code Generation:</strong> Format generated Java/SQL/JSON with proper indentation</li>
+                        <li><strong>Template Processing:</strong> Adjust text block indentation dynamically</li>
+                        <li><strong>Logging & Reports:</strong> Create hierarchical log messages</li>
+                        <li><strong>Remove Indentation:</strong> Use negative values like <code>text.indent(-4)</code></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- String.transform() -->
+            <div class="card">
+                <h3>2️⃣ String.transform()</h3>
+                <p>Apply a function to a string in a fluent, chainable way. Makes complex transformations readable and elegant.</p>
+                
+                <div class="code"><span class="keyword">String</span> result = <span class="string">"  hello world  "</span>
+    .transform(String::trim)
+    .transform(String::toUpperCase)
+    .transform(s -> s.replace(<span class="string">" "</span>, <span class="string">"-"</span>));
+
+<span class="code-comment">// Result: "HELLO-WORLD"</span></div>
+
+                <div class="comparison">
+                    <div class="before">
+                        <h4>❌ Nested Approach</h4>
+                        <div class="code"><span class="keyword">String</span> result = 
+    someMethod(
+        anotherMethod(
+            yetAnotherMethod(text)
+        )
+    );
+<span class="code-comment">// Hard to read!</span></div>
+                    </div>
+                    <div class="after">
+                        <h4>✅ Fluent Chain</h4>
+                        <div class="code"><span class="keyword">String</span> result = text
+    .transform(this::someMethod)
+    .transform(this::anotherMethod)
+    .transform(this::yetAnotherMethod);
+<span class="code-comment">// Clean pipeline!</span></div>
+                    </div>
+                </div>
+
+                <div class="info-box success">
+                    <strong>✨ Real-World Examples</strong>
+                    <ul>
+                        <li><strong>URL Slugs:</strong> Convert "Hello World!" to "hello-world"</li>
+                        <li><strong>Phone Formatting:</strong> Transform "1234567890" to "(123) 456-7890"</li>
+                        <li><strong>Data Sanitization:</strong> Chain trim, lowercase, and validation</li>
+                        <li><strong>Custom Pipelines:</strong> Build reusable transformation chains</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- String.stripIndent() -->
+            <div class="card">
+                <h3>3️⃣ String.stripIndent()</h3>
+                <p>Remove incidental whitespace from text blocks while preserving intentional formatting. Essential for multi-line strings.</p>
+                
+                <div class="code"><span class="keyword">String</span> html = <span class="string">"""
+        &lt;div&gt;
+            &lt;h1&gt;Title&lt;/h1&gt;
+            &lt;p&gt;Content&lt;/p&gt;
+        &lt;/div&gt;
+        """</span>.stripIndent();
+
+<span class="code-comment">// Removes common leading whitespace</span>
+<span class="code-comment">// Preserves relative indentation</span></div>
+
+                <div class="info-box tip">
+                    <strong>💡 Perfect For</strong>
+                    <ul>
+                        <li><strong>SQL Queries:</strong> Clean formatting without extra spaces</li>
+                        <li><strong>JSON/XML Templates:</strong> Remove indentation from text blocks</li>
+                        <li><strong>Email Templates:</strong> Format multi-line messages</li>
+                        <li><strong>Documentation:</strong> Embedded code examples in strings</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- String.translateEscapes() -->
+            <div class="card">
+                <h3>4️⃣ String.translateEscapes()</h3>
+                <p>Process escape sequences like \n, \t, \r in strings. Useful when reading escape sequences from external sources.</p>
+                
+                <div class="code"><span class="keyword">String</span> raw = <span class="string">"Hello\\nWorld\\t!"</span>;
+<span class="keyword">String</span> processed = raw.translateEscapes();
+
+<span class="code-comment">// Result: "Hello\nWorld\t!"</span>
+<span class="code-comment">// Actual newline and tab characters</span></div>
+
+                <div class="comparison">
+                    <div class="before">
+                        <h4>❌ Manual Processing</h4>
+                        <div class="code"><span class="keyword">String</span> result = text
+    .replace(<span class="string">"\\n"</span>, <span class="string">"\n"</span>)
+    .replace(<span class="string">"\\t"</span>, <span class="string">"\t"</span>)
+    .replace(<span class="string">"\\r"</span>, <span class="string">"\r"</span>)
+    .replace(<span class="string">"\\\\"</span>, <span class="string">"\\"</span>);
+<span class="code-comment">// Error-prone!</span></div>
+                    </div>
+                    <div class="after">
+                        <h4>✅ Built-in Method</h4>
+                        <div class="code"><span class="keyword">String</span> result = 
+    text.translateEscapes();
+
+<span class="code-comment">// Handles all escapes correctly</span></div>
+                    </div>
+                </div>
+
+                <div class="info-box warning">
+                    <strong>⚠️ Important Notes</strong>
+                    <ul>
+                        <li>Processes standard Java escape sequences: \n, \t, \r, \\, \", \'</li>
+                        <li>Use when reading escaped strings from files/databases</li>
+                        <li>Don't use on already-escaped Java string literals (redundant)</li>
+                        <li>Throws exception for invalid escape sequences</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Compact Number Formatting -->
+            <div class="card">
+                <h3>5️⃣ Compact Number Formatting</h3>
+                <p>Format large numbers in a human-readable way: 1,000 → "1K", 1,000,000 → "1M". Perfect for dashboards and social media displays.</p>
+                
+                <div class="code"><span class="keyword">NumberFormat</span> fmt = NumberFormat
+    .getCompactNumberInstance(Locale.US, NumberFormat.Style.SHORT);
+
+System.out.println(fmt.format(1000));      <span class="code-comment">// "1K"</span>
+System.out.println(fmt.format(1000000));   <span class="code-comment">// "1M"</span>
+System.out.println(fmt.format(1000000000)); <span class="code-comment">// "1B"</span></div>
+
+                <h4 style="color: #667eea; margin-top: 30px; margin-bottom: 15px; font-size: 1.3em;">📊 SHORT vs LONG Styles</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Number</th>
+                            <th>SHORT Style</th>
+                            <th>LONG Style</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1,000</td>
+                            <td><strong>1K</strong></td>
+                            <td><strong>1 thousand</strong></td>
+                        </tr>
+                        <tr>
+                            <td>1,000,000</td>
+                            <td><strong>1M</strong></td>
+                            <td><strong>1 million</strong></td>
+                        </tr>
+                        <tr>
+                            <td>1,000,000,000</td>
+                            <td><strong>1B</strong></td>
+                            <td><strong>1 billion</strong></td>
+                        </tr>
+                        <tr>
+                            <td>1,500,000</td>
+                            <td><strong>2M</strong></td>
+                            <td><strong>2 million</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="info-box success">
+                    <strong>✨ Real-World Applications</strong>
+                    <ul>
+                        <li><strong>Social Media:</strong> "1.2K likes", "5M followers", "234K views"</li>
+                        <li><strong>Analytics Dashboards:</strong> Display metrics compactly</li>
+                        <li><strong>File Sizes:</strong> "2.5M" instead of "2,500,000 bytes"</li>
+                        <li><strong>Financial Reports:</strong> "$1.2M revenue", "$500K profit"</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Locale-Specific Formatting -->
+            <div class="card">
+                <h3>6️⃣ Locale-Specific Formatting</h3>
+                <p>Compact number formatting adapts to different locales and languages automatically.</p>
+                
+                <h4 style="color: #667eea; margin-bottom: 15px; font-size: 1.3em;">🌍 Global Format Examples</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Locale</th>
+                            <th>1,000</th>
+                            <th>1,000,000</th>
+                            <th>1,000,000,000</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>🇺🇸 US English</td>
+                            <td><strong>1K</strong></td>
+                            <td><strong>1M</strong></td>
+                            <td><strong>1B</strong></td>
+                        </tr>
+                        <tr>
+                            <td>🇬🇧 UK English</td>
+                            <td><strong>1K</strong></td>
+                            <td><strong>1M</strong></td>
+                            <td><strong>1B</strong></td>
+                        </tr>
+                        <tr>
+                            <td>🇫🇷 France</td>
+                            <td><strong>1 k</strong></td>
+                            <td><strong>1 M</strong></td>
+                            <td><strong>1 Md</strong></td>
+                        </tr>
+                        <tr>
+                            <td>🇩🇪 Germany</td>
+                            <td><strong>1000</strong></td>
+                            <td><strong>1 Mio.</strong></td>
+                            <td><strong>1 Mrd.</strong></td>
+                        </tr>
+                        <tr>
+                            <td>🇯🇵 Japan</td>
+                            <td><strong>1000</strong></td>
+                            <td><strong>100万</strong></td>
+                            <td><strong>10億</strong></td>
+                        </tr>
+                        <tr>
+                            <td>🇨🇳 China</td>
+                            <td><strong>1000</strong></td>
+                            <td><strong>100万</strong></td>
+                            <td><strong>10亿</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="code" style="margin-top: 25px;"><span class="code-comment">// US English</span>
+<span class="keyword">NumberFormat</span> usFormat = NumberFormat
+    .getCompactNumberInstance(Locale.US, NumberFormat.Style.SHORT);
+
+<span class="code-comment">// French</span>
+<span class="keyword">NumberFormat</span> frFormat = NumberFormat
+    .getCompactNumberInstance(Locale.FRANCE, NumberFormat.Style.SHORT);
+
+<span class="code-comment">// Japanese</span>
+<span class="keyword">NumberFormat</span> jpFormat = NumberFormat
+    .getCompactNumberInstance(Locale.JAPAN, NumberFormat.Style.SHORT);</div>
+            </div>
+
+            <!-- Practical Examples -->
+            <div class="card">
+                <h3>7️⃣ Practical Examples</h3>
+                <p>See how these features work together in real applications.</p>
+                
+                <h4 style="color: #667eea; margin-bottom: 15px; font-size: 1.3em;">📱 Social Media Counter</h4>
+                <div class="code"><span class="keyword">public class</span> SocialMediaCounter {
+    <span class="keyword">private static final NumberFormat</span> formatter = 
+        NumberFormat.getCompactNumberInstance(Locale.US, NumberFormat.Style.SHORT);
+    
+    <span class="keyword">public static String</span> formatCount(<span class="keyword">long</span> count) {
+        <span class="keyword">return</span> formatter.format(count);
+    }
+}
+
+<span class="code-comment">// Usage</span>
+formatCount(1234)        <span class="code-comment">// "1K"</span>
+formatCount(987654)      <span class="code-comment">// "988K"</span>
+formatCount(5_000_000)   <span class="code-comment">// "5M"</span></div>
+
+                <h4 style="color: #667eea; margin: 30px 0 15px 0; font-size: 1.3em;">🔧 Advanced String Processing</h4>
+                <div class="code"><span class="keyword">String</span> processTemplate(<span class="keyword">String</span> template, <span class="keyword">Map&lt;String, String&gt;</span> vars) {
+    <span class="keyword">return</span> template
+        .stripIndent()
+        .translateEscapes()
+        .transform(s -> replaceVariables(s, vars))
+        .transform(String::trim);
+}
+
+<span class="code-comment">// Chain multiple transformations elegantly!</span></div>
+
+                <div class="info-box tip">
+                    <strong>💡 Best Practices</strong>
+                    <ul>
+                        <li><strong>Reuse Formatters:</strong> NumberFormat instances are expensive, cache them</li>
+                        <li><strong>Chain Wisely:</strong> Order transform() calls for maximum efficiency</li>
+                        <li><strong>Test Locales:</strong> Always test with target locales, formats vary</li>
+                        <li><strong>Null Safety:</strong> Handle null checks before transformations</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Parsing -->
+            <div class="card">
+                <h3>8️⃣ Parsing Compact Numbers</h3>
+                <p>Convert compact number strings back to numeric values.</p>
+                
+                <div class="code"><span class="keyword">NumberFormat</span> fmt = NumberFormat
+    .getCompactNumberInstance(Locale.US, NumberFormat.Style.SHORT);
+
+<span class="code-comment">// Parse compact notation back to numbers</span>
+<span class="keyword">Number</span> parsed = fmt.parse(<span class="string">"1.2K"</span>);   <span class="code-comment">// 1200</span>
+<span class="keyword">Number</span> parsed = fmt.parse(<span class="string">"5M"</span>);     <span class="code-comment">// 5000000</span>
+<span class="keyword">Number</span> parsed = fmt.parse(<span class="string">"3.5B"</span>);   <span class="code-comment">// 3500000000</span></div>
+
+                <div class="info-box warning">
+                    <strong>⚠️ Parsing Considerations</strong>
+                    <ul>
+                        <li>parse() returns Number, cast to Long/Double as needed</li>
+                        <li>Can throw ParseException for invalid formats</li>
+                        <li>Locale-specific parsing: "1.5K" works in US, "1,5K" in Germany</li>
+                        <li>Always use same locale for formatting and parsing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Reference -->
+        <div style="background: rgba(255,255,255,0.98); border-radius: 20px; padding: 40px; margin-top: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.2);">
+            <h2 style="color: #667eea; font-size: 2.5em; margin-bottom: 30px; text-align: center; font-weight: 800;">📚 Quick Reference</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+                <div>
+                    <h4 style="color: #667eea; font-size: 1.3em; margin-bottom: 15px;">String Methods (Java 12-13)</h4>
+                    <div class="code">indent(<span class="keyword">int</span> n)
+stripIndent()
+translateEscapes()
+transform(Function&lt;String,R&gt; f)</div>
+                </div>
+                
+                <div>
+                    <h4 style="color: #667eea; font-size: 1.3em; margin-bottom: 15px;">NumberFormat (Java 12)</h4>
+                    <div class="code">getCompactNumberInstance(
+    Locale locale,
+    NumberFormat.Style style
+)
+
+<span class="code-comment">// Styles: SHORT, LONG</span></div>
+                </div>
+            </div>
+
+            <div class="info-box tip" style="margin-top: 30px;">
+                <strong>🎯 When to Use What</strong>
+                <ul>
+                    <li><strong>indent():</strong> Code generation, template formatting, hierarchical text</li>
+                    <li><strong>transform():</strong> Building transformation pipelines, data processing</li>
+                    <li><strong>stripIndent():</strong> Multi-line string literals, text blocks</li>
+                    <li><strong>translateEscapes():</strong> Reading escaped strings from external sources</li>
+                    <li><strong>Compact Numbers:</strong> UI displays, dashboards, social media, reports</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 60px; color: #fff; padding: 40px;">
+            <h3 style="font-size: 2em; margin-bottom: 20px; font-weight: 700;">🚀 Ready to use these features!</h3>
+            <p style="font-size: 1.3em; opacity: 0.9;">Check out the example files in step15_string_enhancements/</p>
+        </div>
+    </div>
+</body>
+</html>

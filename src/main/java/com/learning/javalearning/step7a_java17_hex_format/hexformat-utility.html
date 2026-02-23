@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HexFormat Utility - Java 17</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 2.8em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: white;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+        }
+
+        .java17-badge {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #17a2b8;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+        
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 45px;
+            margin-bottom: 35px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .section h2 {
+            color: #f5576c;
+            margin-bottom: 35px;
+            font-size: 2.2em;
+            border-bottom: 4px solid #f5576c;
+            padding-bottom: 15px;
+        }
+
+        /* STORY BOX */
+        .story-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 35px;
+            border-radius: 15px;
+            margin: 25px 0;
+            font-size: 1.15em;
+            line-height: 1.9;
+        }
+
+        .story-box h3 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        /* CODE */
+        .code {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 25px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.05em;
+            line-height: 1.8;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .keyword {
+            color: #ff79c6;
+            font-weight: bold;
+        }
+
+        .type {
+            color: #8be9fd;
+        }
+
+        .string {
+            color: #f1fa8c;
+        }
+
+        .comment {
+            color: #6272a4;
+            font-style: italic;
+        }
+
+        .highlight {
+            background: #ffeb3b;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #2d2d2d;
+            font-weight: bold;
+        }
+
+        .number {
+            color: #bd93f9;
+        }
+
+        /* CONVERSION VISUAL */
+        .conversion-visual {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .conversion-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .data-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 4px solid;
+            text-align: center;
+            min-width: 250px;
+        }
+
+        .data-box.bytes {
+            border-color: #17a2b8;
+        }
+
+        .data-box.hex {
+            border-color: #f5576c;
+        }
+
+        .data-box h4 {
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .data-box.bytes h4 {
+            color: #17a2b8;
+        }
+
+        .data-box.hex h4 {
+            color: #f5576c;
+        }
+
+        .data-content {
+            font-family: 'Courier New', monospace;
+            font-size: 1.3em;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .arrow-big {
+            font-size: 3em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        /* COMPARISON TABLE */
+        .comparison-table {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            margin: 25px 0;
+        }
+
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th {
+            background: #f5576c;
+            color: white;
+            padding: 18px;
+            text-align: left;
+            font-size: 1.2em;
+        }
+
+        .comparison-table td {
+            padding: 18px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 1.05em;
+        }
+
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* INFO BOXES */
+        .info-box {
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border-left: 6px solid;
+            font-size: 1.1em;
+            line-height: 1.7;
+        }
+
+        .info-box.blue {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+
+        .info-box.yellow {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .info-box.green {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .info-box h4 {
+            margin-bottom: 12px;
+            font-size: 1.3em;
+        }
+
+        /* EXAMPLE CARD */
+        .example-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-left: 6px solid #f5576c;
+        }
+
+        .example-card h3 {
+            color: #f5576c;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        /* HIGHLIGHT BOX */
+        .highlight-box {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            font-size: 1.2em;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        /* USE CASE CARDS */
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .use-case-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .use-case-card .icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .use-case-card h4 {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+        }
+
+        .use-case-card p {
+            font-size: 1.05em;
+            line-height: 1.6;
+        }
+
+        .use-case-card .example {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        /* FORMAT OPTIONS */
+        .format-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .format-option {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            border-top: 5px solid #f5576c;
+        }
+
+        .format-option h4 {
+            color: #f5576c;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1000px) {
+            .conversion-flow {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔢 HexFormat Utility</h1>
+        <p class="subtitle">Easy Hex Conversion in Java 17!</p>
+        
+        <div class="java17-badge">
+            <span class="badge">☕ Java 17+ Feature</span>
+        </div>
+
+        <!-- WHAT IS HEXFORMAT -->
+        <div class="section">
+            <h2>🤔 What is HexFormat?</h2>
+
+            <div class="story-box">
+                <h3>🔢 Real Life: Binary Translator</h3>
+                <p>
+                    Imagine you have a secret code written in binary (0s and 1s), but it's too long to read:
+                    <br><strong>Binary:</strong> 11001010 11111110 10111010 10111110
+                </p>
+                <p style="margin-top: 20px;">
+                    <strong>Old Way (Before Java 17):</strong>
+                    <br>• Write your own converter
+                    <br>• Or use external libraries (Apache Commons Codec)
+                    <br>• Handle uppercase/lowercase manually
+                    <br>• Format delimiters yourself
+                    <br>• Lots of boilerplate code! 😰
+                </p>
+                <p style="margin-top: 20px;">
+                    <strong>New Way (Java 17 HexFormat):</strong>
+                    <br>• One-line conversion! ✨
+                    <br>• Built into Java (no external libraries!)
+                    <br>• Automatic formatting options
+                    <br>• Clean and simple API
+                </p>
+                <p style="margin-top: 20px; font-size: 1.3em; color: #ffd700;">
+                    <strong>This is HexFormat!</strong> 
+                    Convert bytes to hex strings (and back) effortlessly! 🎉
+                </p>
+            </div>
+
+            <div class="info-box blue">
+                <h4>💡 What is Hexadecimal?</h4>
+                <p>
+                    <strong>Hexadecimal (Hex)</strong> is a number system that uses 16 symbols: 0-9 and A-F
+                    <br><br>
+                    <strong>Why use hex?</strong>
+                    <br>• Compact way to represent binary data
+                    <br>• Easier to read than long binary strings
+                    <br>• Each hex digit = 4 binary bits
+                    <br>• Common in networking, cryptography, colors
+                    <br><br>
+                    <strong>Example:</strong>
+                    <br>Binary: 11001010 → Hex: CA (much shorter!)
+                </p>
+            </div>
+
+            <div class="conversion-visual">
+                <h3 style="color: #667eea; text-align: center; margin-bottom: 30px; font-size: 1.8em;">
+                    Bytes ↔️ Hex Conversion
+                </h3>
+
+                <div class="conversion-flow">
+                    <div class="data-box bytes">
+                        <h4>📦 Bytes</h4>
+                        <div class="data-content">
+                            0xCA 0xFE 0xBA 0xBE
+                        </div>
+                        <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
+                            Binary data (hard to read!)
+                        </p>
+                    </div>
+
+                    <div class="arrow-big">↔️</div>
+
+                    <div class="data-box hex">
+                        <h4>🔢 Hex String</h4>
+                        <div class="data-content" style="color: #f5576c;">
+                            "CAFEBABE"
+                        </div>
+                        <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
+                            Human-readable!
+                        </p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <div class="highlight-box">
+                        <strong>HexFormat makes this conversion super easy!</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BASIC USAGE -->
+        <div class="section">
+            <h2>🚀 Basic Usage</h2>
+
+            <div class="example-card">
+                <h3>📝 Simple Examples</h3>
+                <div class="code">
+<span class="keyword">import</span> java.util.HexFormat;
+
+<span class="comment">// Create a basic HexFormat</span>
+<span class="type">HexFormat</span> hex = <span class="type">HexFormat</span>.of();
+
+<span class="comment">// Example 1: Bytes to Hex String 📦 → 🔢</span>
+<span class="keyword">byte</span>[] bytes = {(<span class="keyword">byte</span>) <span class="number">0xCA</span>, (<span class="keyword">byte</span>) <span class="number">0xFE</span>, (<span class="keyword">byte</span>) <span class="number">0xBA</span>, (<span class="keyword">byte</span>) <span class="number">0xBE</span>};
+<span class="type">String</span> hexStr = hex.<span class="highlight">formatHex</span>(bytes);
+System.out.println(hexStr);  <span class="comment">// Output: "cafebabe"</span>
+
+<span class="comment">// Example 2: Hex String to Bytes 🔢 → 📦</span>
+<span class="keyword">byte</span>[] parsed = hex.<span class="highlight">parseHex</span>(<span class="string">"cafebabe"</span>);
+<span class="comment">// parsed = {0xCA, 0xFE, 0xBA, 0xBE}</span>
+
+<span class="comment">// Example 3: Single byte to hex</span>
+<span class="type">String</span> singleByte = hex.toHexDigits((<span class="keyword">byte</span>) <span class="number">255</span>);
+System.out.println(singleByte);  <span class="comment">// Output: "ff"</span>
+
+<span class="comment">// Example 4: Int to hex</span>
+<span class="type">String</span> intHex = hex.toHexDigits(<span class="number">42</span>);
+System.out.println(intHex);  <span class="comment">// Output: "0000002a"</span>
+                </div>
+            </div>
+
+            <div class="info-box green">
+                <h4>✅ Key Methods</h4>
+                <p>
+                    <strong>formatHex(byte[])</strong> → Convert bytes to hex string
+                    <br><strong>parseHex(String)</strong> → Convert hex string to bytes
+                    <br><strong>toHexDigits(byte)</strong> → Convert single byte to hex
+                    <br><strong>toHexDigits(int)</strong> → Convert int to hex (8 chars)
+                    <br><strong>toHexDigits(long)</strong> → Convert long to hex (16 chars)
+                </p>
+            </div>
+        </div>
+
+        <!-- FORMAT OPTIONS -->
+        <div class="section">
+            <h2>🎨 Formatting Options</h2>
+
+            <div class="story-box">
+                <h3>🎨 Real Life: Name Tags</h3>
+                <p>
+                    Think of hex formatting like designing name tags:
+                    <br><br>
+                    <strong>Basic tag:</strong> "cafebabe"
+                    <br><strong>Uppercase:</strong> "CAFEBABE" (more formal!)
+                    <br><strong>With separators:</strong> "CA:FE:BA:BE" (easier to read!)
+                    <br><strong>With labels:</strong> "[CA] [FE] [BA] [BE]" (extra fancy!)
+                </p>
+            </div>
+
+            <div class="format-options">
+                <div class="format-option">
+                    <h4>1️⃣ Uppercase</h4>
+                    <p style="margin: 15px 0; font-size: 1.05em;">
+                        Convert to uppercase letters
+                    </p>
+                    <div class="code">
+<span class="type">HexFormat</span> hex = <span class="type">HexFormat</span>.of()
+    .<span class="highlight">withUpperCase</span>();
+
+<span class="keyword">byte</span>[] bytes = {(<span class="keyword">byte</span>) <span class="number">0xCA</span>, (<span class="keyword">byte</span>) <span class="number">0xFE</span>};
+<span class="type">String</span> result = hex.formatHex(bytes);
+<span class="comment">// Output: "CAFE"</span>
+                    </div>
+                </div>
+
+                <div class="format-option">
+                    <h4>2️⃣ With Delimiter</h4>
+                    <p style="margin: 15px 0; font-size: 1.05em;">
+                        Add separator between bytes
+                    </p>
+                    <div class="code">
+<span class="type">HexFormat</span> hex = <span class="type">HexFormat</span>
+    .<span class="highlight">ofDelimiter</span>(<span class="string">":"</span>);
+
+<span class="keyword">byte</span>[] bytes = {(<span class="keyword">byte</span>) <span class="number">0xCA</span>, (<span class="keyword">byte</span>) <span class="number">0xFE</span>};
+<span class="type">String</span> result = hex.formatHex(bytes);
+<span class="comment">// Output: "ca:fe"</span>
+                    </div>
+                </div>
+
+                <div class="format-option">
+                    <h4>3️⃣ With Prefix</h4>
+                    <p style="margin: 15px 0; font-size: 1.05em;">
+                        Add prefix before each byte
+                    </p>
+                    <div class="code">
+<span class="type">HexFormat</span> hex = <span class="type">HexFormat</span>.of()
+    .<span class="highlight">withPrefix</span>(<span class="string">"0x"</span>);
+
+<span class="keyword">byte</span>[] bytes = {(<span class="keyword">byte</span>) <span class="number">0xCA</span>, (<span class="keyword">byte</span>) <span class="number">0xFE</span>};
+<span class="type">String</span> result = hex.formatHex(bytes);
+<span class="comment">// Output: "0xca0xfe"</span>
+                    </div>
+                </div>
+
+                <div class="format-option">
+                    <h4>4️⃣ With Suffix</h4>
+                    <p style="margin: 15px 0; font-size: 1.05em;">
+                        Add suffix after each byte
+                    </p>
+                    <div class="code">
+<span class="type">HexFormat</span> hex = <span class="type">HexFormat</span>.of()
+    .<span class="highlight">withSuffix</span>(<span class="string">"h"</span>);
+
+<span class="keyword">byte</span>[] bytes = {(<span class="keyword">byte</span>) <span class="number">0xCA</span>, (<span class="keyword">byte</span>) <span class="number">0xFE</span>};
+<span class="type">String</span> result = hex.formatHex(bytes);
+<span class="comment">// Output: "cahfeh"</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>🎨 Combined Formatting</h3>
+                <p style="margin-bottom: 20px; font-size: 1.1em;">
+                    You can combine multiple formatting options!
+                </p>
+                <div class="code">
+<span class="comment">// Example 1: Uppercase with delimiter</span>
+<span class="type">HexFormat</span> hex1 = <span class="type">HexFormat</span>.ofDelimiter(<span class="string">":"</span>)
+    .withUpperCase();
+
+<span class="keyword">byte</span>[] bytes = {(<span class="keyword">byte</span>) <span class="number">0xCA</span>, (<span class="keyword">byte</span>) <span class="number">0xFE</span>, (<span class="keyword">byte</span>) <span class="number">0xBA</span>, (<span class="keyword">byte</span>) <span class="number">0xBE</span>};
+System.out.println(hex1.formatHex(bytes));
+<span class="comment">// Output: "CA:FE:BA:BE"</span>
+
+<span class="comment">// Example 2: Fancy brackets with spaces</span>
+<span class="type">HexFormat</span> hex2 = <span class="type">HexFormat</span>.ofDelimiter(<span class="string">" "</span>)
+    .withPrefix(<span class="string">"["</span>)
+    .withSuffix(<span class="string">"]"</span>)
+    .withUpperCase();
+
+System.out.println(hex2.formatHex(bytes));
+<span class="comment">// Output: "[CA] [FE] [BA] [BE]"</span>
+
+<span class="comment">// Example 3: 0x prefix with space</span>
+<span class="type">HexFormat</span> hex3 = <span class="type">HexFormat</span>.ofDelimiter(<span class="string">" "</span>)
+    .withPrefix(<span class="string">"0x"</span>)
+    .withUpperCase();
+
+System.out.println(hex3.formatHex(bytes));
+<span class="comment">// Output: "0xCA 0xFE 0xBA 0xBE"</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- USE CASES -->
+        <div class="section">
+            <h2>💼 Real-World Use Cases</h2>
+
+            <div class="use-cases">
+                <div class="use-case-card">
+                    <div class="icon">📡</div>
+                    <h4>MAC Address</h4>
+                    <p>
+                        Display network hardware addresses in standard format
+                    </p>
+                    <div class="example">
+                        00:1A:2B:3C:4D:5E
+                    </div>
+                    <div class="code" style="margin-top: 15px;">
+<span class="type">HexFormat</span> mac = 
+    <span class="type">HexFormat</span>.ofDelimiter(<span class="string">":"</span>)
+    .withUpperCase();
+                    </div>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">🔐</div>
+                    <h4>Hash Display</h4>
+                    <p>
+                        Show cryptographic hashes (MD5, SHA-256)
+                    </p>
+                    <div class="example">
+                        5d41402abc4b2a76b...
+                    </div>
+                    <div class="code" style="margin-top: 15px;">
+<span class="type">HexFormat</span> hash = 
+    <span class="type">HexFormat</span>.of();
+<span class="comment">// lowercase, no delimiter</span>
+                    </div>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">🎨</div>
+                    <h4>Color Codes</h4>
+                    <p>
+                        Display RGB colors in hex format
+                    </p>
+                    <div class="example">
+                        #FF69B4
+                    </div>
+                    <div class="code" style="margin-top: 15px;">
+<span class="type">HexFormat</span> color = 
+    <span class="type">HexFormat</span>.of()
+    .withPrefix(<span class="string">"#"</span>)
+    .withUpperCase();
+                    </div>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">🐛</div>
+                    <h4>Debug Binary</h4>
+                    <p>
+                        Debug binary data with readable hex
+                    </p>
+                    <div class="example">
+                        CA FE BA BE
+                    </div>
+                    <div class="code" style="margin-top: 15px;">
+<span class="type">HexFormat</span> debug = 
+    <span class="type">HexFormat</span>.ofDelimiter(<span class="string">" "</span>)
+    .withUpperCase();
+                    </div>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">📄</div>
+                    <h4>File Signatures</h4>
+                    <p>
+                        Identify file types by magic numbers
+                    </p>
+                    <div class="example">
+                        PDF: 25 50 44 46
+                    </div>
+                    <div class="code" style="margin-top: 15px;">
+<span class="type">HexFormat</span> magic = 
+    <span class="type">HexFormat</span>.ofDelimiter(<span class="string">" "</span>)
+    .withUpperCase();
+                    </div>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">🔢</div>
+                    <h4>Memory Addresses</h4>
+                    <p>
+                        Display memory addresses in hex
+                    </p>
+                    <div class="example">
+                        0x7FFF5FBFF8A0
+                    </div>
+                    <div class="code" style="margin-top: 15px;">
+<span class="type">HexFormat</span> addr = 
+    <span class="type">HexFormat</span>.of()
+    .withPrefix(<span class="string">"0x"</span>)
+    .withUpperCase();
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPLETE EXAMPLES -->
+        <div class="section">
+            <h2>🎯 Complete Real-World Examples</h2>
+
+            <div class="example-card">
+                <h3>📡 Example 1: MAC Address Formatter</h3>
+                <div class="code">
+<span class="keyword">import</span> java.util.HexFormat;
+
+<span class="keyword">public class</span> <span class="type">MacAddressFormatter</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="comment">// Create formatter for MAC addresses</span>
+        <span class="type">HexFormat</span> macFormat = <span class="type">HexFormat</span>.ofDelimiter(<span class="string">":"</span>)
+            .withUpperCase();
+        
+        <span class="comment">// Example MAC address bytes</span>
+        <span class="keyword">byte</span>[] macBytes = {
+            (<span class="keyword">byte</span>) <span class="number">0x00</span>, (<span class="keyword">byte</span>) <span class="number">0x1A</span>, (<span class="keyword">byte</span>) <span class="number">0x2B</span>,
+            (<span class="keyword">byte</span>) <span class="number">0x3C</span>, (<span class="keyword">byte</span>) <span class="number">0x4D</span>, (<span class="keyword">byte</span>) <span class="number">0x5E</span>
+        };
+        
+        <span class="comment">// Format to MAC address string</span>
+        <span class="type">String</span> macAddress = macFormat.formatHex(macBytes);
+        System.out.println(<span class="string">"MAC Address: "</span> + macAddress);
+        <span class="comment">// Output: MAC Address: 00:1A:2B:3C:4D:5E</span>
+        
+        <span class="comment">// Parse back to bytes</span>
+        <span class="keyword">byte</span>[] parsed = macFormat.parseHex(<span class="string">"00:1A:2B:3C:4D:5E"</span>);
+        System.out.println(<span class="string">"Bytes parsed: "</span> + parsed.length);
+        <span class="comment">// Output: Bytes parsed: 6</span>
+    }
+}
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>🔐 Example 2: Hash Display</h3>
+                <div class="code">
+<span class="keyword">import</span> java.security.MessageDigest;
+<span class="keyword">import</span> java.util.HexFormat;
+
+<span class="keyword">public class</span> <span class="type">HashDisplay</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        <span class="comment">// Create SHA-256 hash</span>
+        <span class="type">String</span> input = <span class="string">"Hello, Java 17!"</span>;
+        <span class="type">MessageDigest</span> digest = <span class="type">MessageDigest</span>.getInstance(<span class="string">"SHA-256"</span>);
+        <span class="keyword">byte</span>[] hashBytes = digest.digest(input.getBytes());
+        
+        <span class="comment">// Display hash in hex (lowercase)</span>
+        <span class="type">HexFormat</span> hex = <span class="type">HexFormat</span>.of();
+        <span class="type">String</span> hashHex = hex.formatHex(hashBytes);
+        
+        System.out.println(<span class="string">"Input: "</span> + input);
+        System.out.println(<span class="string">"SHA-256: "</span> + hashHex);
+        <span class="comment">// Output: SHA-256: 3d7a8c...</span>
+        
+        <span class="comment">// Also display in uppercase with spaces</span>
+        <span class="type">HexFormat</span> hexDebug = <span class="type">HexFormat</span>.ofDelimiter(<span class="string">" "</span>)
+            .withUpperCase();
+        System.out.println(<span class="string">"Debug: "</span> + hexDebug.formatHex(hashBytes));
+        <span class="comment">// Output: Debug: 3D 7A 8C...</span>
+    }
+}
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>🎨 Example 3: RGB Color Converter</h3>
+                <div class="code">
+<span class="keyword">import</span> java.util.HexFormat;
+
+<span class="keyword">public class</span> <span class="type">ColorConverter</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="comment">// Create color formatter (#RRGGBB)</span>
+        <span class="type">HexFormat</span> colorFormat = <span class="type">HexFormat</span>.of()
+            .withPrefix(<span class="string">"#"</span>)
+            .withUpperCase();
+        
+        <span class="comment">// Example: RGB(255, 105, 180) = Hot Pink!</span>
+        <span class="keyword">byte</span>[] rgb = {
+            (<span class="keyword">byte</span>) <span class="number">255</span>,  <span class="comment">// Red</span>
+            (<span class="keyword">byte</span>) <span class="number">105</span>,  <span class="comment">// Green</span>
+            (<span class="keyword">byte</span>) <span class="number">180</span>   <span class="comment">// Blue</span>
+        };
+        
+        <span class="comment">// Convert to hex color code</span>
+        <span class="type">String</span> hexColor = colorFormat.formatHex(rgb);
+        System.out.println(<span class="string">"Color: "</span> + hexColor);
+        <span class="comment">// Output: Color: #FF69B4</span>
+        
+        <span class="comment">// Parse hex color back to RGB</span>
+        <span class="type">String</span> colorCode = <span class="string">"#FF69B4"</span>;
+        <span class="keyword">byte</span>[] rgbBytes = colorFormat.parseHex(colorCode);
+        
+        System.out.println(<span class="string">"RGB: ("</span> + 
+            (rgbBytes[<span class="number">0</span>] & <span class="number">0xFF</span>) + <span class="string">", "</span> + 
+            (rgbBytes[<span class="number">1</span>] & <span class="number">0xFF</span>) + <span class="string">", "</span> + 
+            (rgbBytes[<span class="number">2</span>] & <span class="number">0xFF</span>) + <span class="string">")"</span>);
+        <span class="comment">// Output: RGB: (255, 105, 180)</span>
+    }
+}
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>📄 Example 4: File Signature Checker</h3>
+                <div class="code">
+<span class="keyword">import</span> java.io.*;
+<span class="keyword">import</span> java.util.HexFormat;
+
+<span class="keyword">public class</span> <span class="type">FileSignatureChecker</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) <span class="keyword">throws</span> <span class="type">IOException</span> {
+        <span class="type">HexFormat</span> hex = <span class="type">HexFormat</span>.ofDelimiter(<span class="string">" "</span>)
+            .withUpperCase();
+        
+        <span class="comment">// Known file signatures (magic numbers)</span>
+        <span class="type">String</span> pdfSignature = <span class="string">"25 50 44 46"</span>;  <span class="comment">// %PDF</span>
+        <span class="type">String</span> pngSignature = <span class="string">"89 50 4E 47"</span>;  <span class="comment">// .PNG</span>
+        <span class="type">String</span> jpgSignature = <span class="string">"FF D8 FF"</span>;     <span class="comment">// JPEG</span>
+        
+        <span class="comment">// Read first 4 bytes of a file</span>
+        <span class="keyword">byte</span>[] fileHeader = readFileHeader(<span class="string">"document.pdf"</span>, <span class="number">4</span>);
+        <span class="type">String</span> headerHex = hex.formatHex(fileHeader);
+        
+        System.out.println(<span class="string">"File header: "</span> + headerHex);
+        
+        <span class="comment">// Check file type</span>
+        <span class="keyword">if</span> (headerHex.startsWith(pdfSignature)) {
+            System.out.println(<span class="string">"✅ This is a PDF file!"</span>);
+        } <span class="keyword">else if</span> (headerHex.startsWith(pngSignature)) {
+            System.out.println(<span class="string">"✅ This is a PNG file!"</span>);
+        } <span class="keyword">else if</span> (headerHex.startsWith(jpgSignature)) {
+            System.out.println(<span class="string">"✅ This is a JPEG file!"</span>);
+        } <span class="keyword">else</span> {
+            System.out.println(<span class="string">"❓ Unknown file type"</span>);
+        }
+    }
+    
+    <span class="keyword">static byte</span>[] readFileHeader(<span class="type">String</span> filename, <span class="keyword">int</span> bytes) 
+        <span class="keyword">throws</span> <span class="type">IOException</span> {
+        <span class="keyword">try</span> (<span class="type">FileInputStream</span> fis = <span class="keyword">new</span> <span class="type">FileInputStream</span>(filename)) {
+            <span class="keyword">byte</span>[] header = <span class="keyword">new byte</span>[bytes];
+            fis.read(header);
+            <span class="keyword">return</span> header;
+        }
+    }
+}
+                </div>
+            </div>
+        </div>
+
+        <!-- BEFORE VS AFTER -->
+        <div class="section">
+            <h2>⚖️ Before Java 17 vs After</h2>
+
+            <div class="comparison-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Before Java 17</th>
+                            <th>With HexFormat</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Bytes to Hex</strong></td>
+                            <td>Manual loop with String.format()</td>
+                            <td>hex.formatHex(bytes) ✅</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Hex to Bytes</strong></td>
+                            <td>Complex parsing logic</td>
+                            <td>hex.parseHex(string) ✅</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Uppercase</strong></td>
+                            <td>Manual .toUpperCase()</td>
+                            <td>withUpperCase() ✅</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Delimiters</strong></td>
+                            <td>Manual string building</td>
+                            <td>ofDelimiter(":") ✅</td>
+                        </tr>
+                        <tr>
+                            <td><strong>External Library</strong></td>
+                            <td>Often needed (Apache Commons)</td>
+                            <td>Built-in! ✅</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="example-card">
+                <h3>Before: Manual Conversion 😰</h3>
+                <div class="code">
+<span class="comment">// Old way - manual conversion</span>
+<span class="keyword">public static</span> <span class="type">String</span> bytesToHex(<span class="keyword">byte</span>[] bytes) {
+    <span class="type">StringBuilder</span> sb = <span class="keyword">new</span> <span class="type">StringBuilder</span>();
+    <span class="keyword">for</span> (<span class="keyword">byte</span> b : bytes) {
+        sb.append(<span class="type">String</span>.format(<span class="string">"%02x"</span>, b));
+    }
+    <span class="keyword">return</span> sb.toString();
+}
+
+<span class="comment">// With delimiters - even more code!</span>
+<span class="keyword">public static</span> <span class="type">String</span> bytesToHexWithDelimiter(<span class="keyword">byte</span>[] bytes, <span class="type">String</span> delimiter) {
+    <span class="type">StringBuilder</span> sb = <span class="keyword">new</span> <span class="type">StringBuilder</span>();
+    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; bytes.length; i++) {
+        <span class="keyword">if</span> (i &gt; <span class="number">0</span>) sb.append(delimiter);
+        sb.append(<span class="type">String</span>.format(<span class="string">"%02x"</span>, bytes[i]));
+    }
+    <span class="keyword">return</span> sb.toString();
+}
+
+<span class="comment">// So much boilerplate! 😰</span>
+                </div>
+            </div>
+
+            <div class="example-card">
+                <h3>After: One-Liner! 🎉</h3>
+                <div class="code">
+<span class="comment">// New way - simple and clean!</span>
+<span class="type">String</span> hex = <span class="type">HexFormat</span>.of().formatHex(bytes);
+
+<span class="comment">// With delimiters - still one line!</span>
+<span class="type">String</span> hex = <span class="type">HexFormat</span>.ofDelimiter(<span class="string">":"</span>).formatHex(bytes);
+
+<span class="comment">// Uppercase with delimiters - easy!</span>
+<span class="type">String</span> hex = <span class="type">HexFormat</span>.ofDelimiter(<span class="string">":"</span>)
+    .withUpperCase()
+    .formatHex(bytes);
+
+<span class="comment">// Much cleaner! ✨</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="section" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+            <h2 style="color: white; border-color: white;">🎯 Quick Summary</h2>
+
+            <div style="font-size: 1.15em; line-height: 1.9; margin-top: 25px;">
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="font-size: 1.8em; margin-bottom: 15px;">🔢 What is HexFormat?</h3>
+                    <p>
+                        A built-in Java 17 utility for converting between bytes and hexadecimal strings. No more manual conversion or external libraries!
+                    </p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="font-size: 1.8em; margin-bottom: 15px;">🔑 Key Features</h3>
+                    <p>
+                        <strong>• Simple API:</strong> formatHex() and parseHex()
+                        <br><strong>• Formatting options:</strong> Uppercase, delimiters, prefix, suffix
+                        <br><strong>• Built-in:</strong> No external dependencies
+                        <br><strong>• Flexible:</strong> Combine multiple options
+                    </p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="font-size: 1.8em; margin-bottom: 15px;">💼 Common Uses</h3>
+                    <p>
+                        MAC addresses (00:1A:2B:3C:4D:5E)
+                        <br>Hash display (5d41402abc4b2a76...)
+                        <br>Color codes (#FF69B4)
+                        <br>File signatures (magic numbers)
+                        <br>Memory addresses (0x7FFF...)
+                    </p>
+                </div>
+
+                <div style="margin-top: 40px; text-align: center; font-size: 1.5em; padding: 25px; background: rgba(255,255,255,0.2); border-radius: 12px;">
+                    <strong>Bottom Line:</strong> Clean, simple, and built-in hex conversion! 🚀
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

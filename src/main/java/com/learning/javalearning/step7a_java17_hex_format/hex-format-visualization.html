@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 7a: HexFormat Utility</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); min-height: 100vh; padding: 40px 20px; line-height: 1.6; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { text-align: center; color: #fff; padding: 60px 20px 40px; margin-bottom: 50px; animation: fadeIn 0.8s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .header h1 { font-size: 3.8em; font-weight: 800; text-shadow: 2px 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px; letter-spacing: -1.5px; }
+        .header p { font-size: 1.5em; font-weight: 300; margin-bottom: 30px; opacity: 0.95; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); }
+        .badge, .version-badge { display: inline-block; background: rgba(255,255,255,0.98); color: #ff6348; padding: 12px 28px; border-radius: 30px; font-weight: 700; margin: 10px; font-size: 1em; box-shadow: 0 5px 20px rgba(0,0,0,0.25); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .badge:hover, .version-badge:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 25px rgba(0,0,0,0.35); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(550px, 1fr)); gap: 35px; margin-bottom: 50px; }
+        .card, .feature-card { background: #fff; border-radius: 20px; padding: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.2); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); animation: slideIn 0.6s ease-out; position: relative; overflow: hidden; }
+        .card::before, .feature-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #ffecd2 0%, #fcb69f 100%); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        .card:hover, .feature-card:hover { transform: translateY(-10px); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .card h3, .feature-card h3 { color: #ff6348; font-size: 2em; margin-bottom: 20px; font-weight: 800; display: flex; align-items: center; gap: 12px; }
+        .card > p, .feature-card > p { color: #555; font-size: 1.1em; margin-bottom: 25px; line-height: 1.8; }
+        .code, .code-block { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-left: 5px solid #ff6348; padding: 25px; border-radius: 10px; font-family: 'Monaco', 'Consolas', 'Courier New', monospace; font-size: 0.95em; margin: 20px 0; overflow-x: auto; color: #2d3748; line-height: 1.7; box-shadow: inset 0 2px 6px rgba(0,0,0,0.08); white-space: pre-wrap; }
+        .code-comment { color: #38a169; font-style: italic; }
+        .keyword { color: #9c27b0; font-weight: 600; }
+        .string { color: #d32f2f; }
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin: 25px 0; }
+        .before, .after, .old-way, .new-way, .platform-thread, .virtual-thread, .traditional, .enhanced { padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); transition: transform 0.3s ease; }
+        .before:hover, .after:hover, .old-way:hover, .new-way:hover, .platform-thread:hover, .virtual-thread:hover, .traditional:hover, .enhanced:hover { transform: scale(1.02); }
+        .before, .old-way, .platform-thread, .traditional { background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%); border: 3px solid #fc8181; }
+        .after, .new-way, .virtual-thread, .enhanced { background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); border: 3px solid #68d391; }
+        .before h4, .old-way h4, .platform-thread h4, .traditional h4 { color: #c53030; margin-bottom: 15px; font-size: 1.2em; font-weight: 700; }
+        .after h4, .new-way h4, .virtual-thread h4, .enhanced h4 { color: #2f855a; margin-bottom: 15px; font-size: 1.2em; font-weight: 700; }
+        .before .code, .after .code, .old-way .code-block, .new-way .code-block, .platform-thread .code-block, .virtual-thread .code-block { background: rgba(255,255,255,0.9); font-size: 0.9em; padding: 18px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 25px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+        th { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #fff; padding: 18px 15px; text-align: left; font-weight: 700; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.8px; }
+        td { padding: 16px 15px; border-bottom: 1px solid #e2e8f0; color: #4a5568; background: #fff; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f7fafc; }
+        .info-box, .note, .tips, .performance-tip, .tip-box, .benefit-box, .use-case-box { padding: 25px; border-radius: 15px; margin-top: 25px; border-left: 6px solid; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .info-box.tip, .tips, .performance-tip, .tip-box { background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%); border-color: #3182ce; }
+        .info-box.warning, .note { background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%); border-color: #dd6b20; }
+        .info-box.success, .benefit-box, .use-case-box { background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); border-color: #38a169; }
+        .info-box strong, .note strong, .tips strong, .benefit-box strong { display: block; margin-bottom: 12px; font-size: 1.15em; color: #2d3748; }
+        ul { margin-left: 25px; color: #4a5568; }
+        ul li { margin: 12px 0; line-height: 1.8; }
+        ul ul { margin-top: 10px; }
+        @media (max-width: 1200px) { .grid { grid-template-columns: 1fr; } .comparison { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { body { padding: 20px 10px; } .card, .feature-card { padding: 25px; } .header h1 { font-size: 2.5em; } .header p { font-size: 1.2em; } .code, .code-block { font-size: 0.85em; padding: 18px; } }
+    </style>
+</head>
+<body>
+<div class="grid">
+<div class="card"><h3>🎯 What is HexFormat?</h3><p>A utility class for converting between byte arrays and hexadecimal string representations.</p>
+<div class="code">// Old way: Manual conversion (error-prone!)
+String toHex(byte[] bytes) {
+    StringBuilder sb = new StringBuilder();
+    for (byte b : bytes) {
+        sb.append(String.format("%02x", b));
+    }
+    return sb.toString();
+}
+
+// New way: HexFormat (built-in!)
+HexFormat hex = HexFormat.of();
+byte[] bytes = {0x12, 0x34, 0x56, 0x78};
+String hexString = hex.formatHex(bytes);
+// Output: "12345678"</div></div>
+
+<div class="card"><h3>📤 Bytes to Hex</h3>
+<div class="code">HexFormat hex = HexFormat.of();
+
+// Format byte array
+byte[] bytes = {(byte) 0xCA, (byte) 0xFE, (byte) 0xBA, (byte) 0xBE};
+String result = hex.formatHex(bytes);
+// Output: "cafebabe"
+
+// Format single byte
+byte b = (byte) 0xFF;
+String single = hex.toHexDigits(b);
+// Output: "ff"
+
+// Format with uppercase
+HexFormat upper = HexFormat.ofDelimiter("").withUpperCase();
+String upperHex = upper.formatHex(bytes);
+// Output: "CAFEBABE"
+
+// Format with delimiter
+HexFormat delim = HexFormat.ofDelimiter(":");
+String formatted = delim.formatHex(bytes);
+// Output: "ca:fe:ba:be"</div></div>
+
+<div class="card"><h3>📥 Hex to Bytes</h3>
+<div class="code">HexFormat hex = HexFormat.of();
+
+// Parse hex string to bytes
+String hexString = "48656c6c6f";
+byte[] bytes = hex.parseHex(hexString);
+System.out.println(new String(bytes));
+// Output: "Hello"
+
+// Parse with delimiter
+HexFormat colonHex = HexFormat.ofDelimiter(":");
+byte[] mac = colonHex.parseHex("00:11:22:33:44:55");
+// Returns: {0x00, 0x11, 0x22, 0x33, 0x44, 0x55}
+
+// Parse with prefix/suffix
+HexFormat formatted = HexFormat.ofDelimiter(",")
+    .withPrefix("0x");
+byte[] data = formatted.parseHex("0x01,0x02,0x03");
+// Returns: {0x01, 0x02, 0x03}</div></div>
+
+<div class="card"><h3>🎨 Custom Formatting</h3>
+<div class="code">// Uppercase with colon delimiter
+HexFormat macFormat = HexFormat.ofDelimiter(":")
+    .withUpperCase();
+    
+byte[] macAddress = {0x00, 0x1a, 0x2b, 0x3c, 0x4d, 0x5e};
+String mac = macFormat.formatHex(macAddress);
+// Output: "00:1A:2B:3C:4D:5E"
+
+// With prefix "0x" and comma delimiter
+HexFormat arrayFormat = HexFormat.ofDelimiter(", ")
+    .withPrefix("0x")
+    .withUpperCase();
+    
+byte[] data = {0xde, (byte) 0xad, (byte) 0xbe, (byte) 0xef};
+String formatted = arrayFormat.formatHex(data);
+// Output: "0xDE, 0xAD, 0xBE, 0xEF"
+
+// UUID format (with hyphens)
+HexFormat uuidFormat = HexFormat.ofDelimiter("")
+    .withLowerCase();
+byte[] uuid = new byte[16];
+new Random().nextBytes(uuid);
+String uuidStr = String.format(
+    "%s-%s-%s-%s-%s",
+    uuidFormat.formatHex(uuid, 0, 4),
+    uuidFormat.formatHex(uuid, 4, 6),
+    uuidFormat.formatHex(uuid, 6, 8),
+    uuidFormat.formatHex(uuid, 8, 10),
+    uuidFormat.formatHex(uuid, 10, 16)
+);
+// Output: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"</div></div>
+
+<div class="card"><h3>💼 Practical Examples</h3>
+<div class="code">// Hash to hex string
+MessageDigest md = MessageDigest.getInstance("SHA-256");
+byte[] hash = md.digest("Hello".getBytes());
+String hashHex = HexFormat.of().formatHex(hash);
+
+// Color codes
+byte[] rgb = {(byte) 0xFF, 0x5A, 0x3C};
+String color = "#" + HexFormat.of()
+    .withUpperCase()
+    .formatHex(rgb);
+// Output: "#FF5A3C"
+
+// Network packet debugging
+void debugPacket(byte[] packet) {
+    HexFormat hex = HexFormat.ofDelimiter(" ")
+        .withUpperCase();
+    System.out.println("Packet: " + hex.formatHex(packet));
+}
+
+// IP address (v6)
+byte[] ipv6 = {0x20, 0x01, 0x0d, (byte) 0xb8,
+               0x00, 0x00, 0x00, 0x00,
+               0x00, 0x00, 0x00, 0x00,
+               0x00, 0x00, 0x00, 0x01};
+HexFormat ipFormat = HexFormat.ofDelimiter(":");
+String ipv6Str = ipFormat.formatHex(ipv6);
+// Output: "2001:0db8:0000:0000:0000:0000:0000:0001"</div></div>
+
+<div class="card"><h3>⚡ Performance Tips</h3>
+<div class="code">// ✅ Reuse HexFormat instances
+private static final HexFormat HEX = HexFormat.of();
+
+public String toHex(byte[] bytes) {
+    return HEX.formatHex(bytes);
+}
+
+// ✅ Use appropriate methods
+// For single byte: toHexDigits(byte)
+// For byte array: formatHex(byte[])
+// For range: formatHex(byte[], int, int)
+
+// ✅ Choose lowercase (default) for performance
+HexFormat lower = HexFormat.of();  // Faster
+HexFormat upper = HexFormat.of().withUpperCase();  // Slower
+
+// ❌ Don't create new instances repeatedly
+for (byte[] data : datasets) {
+    // Bad: Creates new instance each time
+    String hex = HexFormat.of().formatHex(data);
+}
+
+// ✅ Create once, use many times
+HexFormat hex = HexFormat.of();
+for (byte[] data : datasets) {
+    String hexStr = hex.formatHex(data);
+}</div></div>
+</body>
+</html>

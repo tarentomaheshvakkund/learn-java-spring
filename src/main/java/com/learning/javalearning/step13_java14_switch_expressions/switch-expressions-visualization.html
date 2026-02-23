@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 13: Switch Expressions (Java 14)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); min-height: 100vh; padding: 40px 20px; line-height: 1.6; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { text-align: center; color: #fff; padding: 60px 20px 40px; margin-bottom: 50px; animation: fadeIn 0.8s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .header h1 { font-size: 3.8em; font-weight: 800; text-shadow: 2px 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px; letter-spacing: -1.5px; }
+        .header p { font-size: 1.5em; font-weight: 300; margin-bottom: 30px; opacity: 0.95; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); }
+        .badge, .version-badge { display: inline-block; background: rgba(255,255,255,0.98); color: #ff0844; padding: 12px 28px; border-radius: 30px; font-weight: 700; margin: 10px; font-size: 1em; box-shadow: 0 5px 20px rgba(0,0,0,0.25); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .badge:hover, .version-badge:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 25px rgba(0,0,0,0.35); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(550px, 1fr)); gap: 35px; margin-bottom: 50px; }
+        .card, .feature-card { background: #fff; border-radius: 20px; padding: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.2); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); animation: slideIn 0.6s ease-out; position: relative; overflow: hidden; }
+        .card::before, .feature-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #ff0844 0%, #ffb199 100%); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        .card:hover, .feature-card:hover { transform: translateY(-10px); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .card h3, .feature-card h3 { color: #ff0844; font-size: 2em; margin-bottom: 20px; font-weight: 800; display: flex; align-items: center; gap: 12px; }
+        .card > p, .feature-card > p { color: #555; font-size: 1.1em; margin-bottom: 25px; line-height: 1.8; }
+        .code, .code-block { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-left: 5px solid #ff0844; padding: 25px; border-radius: 10px; font-family: 'Monaco', 'Consolas', 'Courier New', monospace; font-size: 0.95em; margin: 20px 0; overflow-x: auto; color: #2d3748; line-height: 1.7; box-shadow: inset 0 2px 6px rgba(0,0,0,0.08); white-space: pre-wrap; }
+        .code-comment { color: #38a169; font-style: italic; }
+        .keyword { color: #9c27b0; font-weight: 600; }
+        .string { color: #d32f2f; }
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin: 25px 0; }
+        .before, .after, .old-way, .new-way, .platform-thread, .virtual-thread, .traditional, .enhanced { padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); transition: transform 0.3s ease; }
+        .before:hover, .after:hover, .old-way:hover, .new-way:hover, .platform-thread:hover, .virtual-thread:hover, .traditional:hover, .enhanced:hover { transform: scale(1.02); }
+        .before, .old-way, .platform-thread, .traditional { background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%); border: 3px solid #fc8181; }
+        .after, .new-way, .virtual-thread, .enhanced { background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); border: 3px solid #68d391; }
+        .before h4, .old-way h4, .platform-thread h4, .traditional h4 { color: #c53030; margin-bottom: 15px; font-size: 1.2em; font-weight: 700; }
+        .after h4, .new-way h4, .virtual-thread h4, .enhanced h4 { color: #2f855a; margin-bottom: 15px; font-size: 1.2em; font-weight: 700; }
+        .before .code, .after .code, .old-way .code-block, .new-way .code-block, .platform-thread .code-block, .virtual-thread .code-block { background: rgba(255,255,255,0.9); font-size: 0.9em; padding: 18px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 25px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+        th { background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); color: #fff; padding: 18px 15px; text-align: left; font-weight: 700; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.8px; }
+        td { padding: 16px 15px; border-bottom: 1px solid #e2e8f0; color: #4a5568; background: #fff; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f7fafc; }
+        .info-box, .note, .tips, .performance-tip, .tip-box, .benefit-box, .use-case-box { padding: 25px; border-radius: 15px; margin-top: 25px; border-left: 6px solid; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .info-box.tip, .tips, .performance-tip, .tip-box { background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%); border-color: #3182ce; }
+        .info-box.warning, .note { background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%); border-color: #dd6b20; }
+        .info-box.success, .benefit-box, .use-case-box { background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); border-color: #38a169; }
+        .info-box strong, .note strong, .tips strong, .benefit-box strong { display: block; margin-bottom: 12px; font-size: 1.15em; color: #2d3748; }
+        ul { margin-left: 25px; color: #4a5568; }
+        ul li { margin: 12px 0; line-height: 1.8; }
+        ul ul { margin-top: 10px; }
+        @media (max-width: 1200px) { .grid { grid-template-columns: 1fr; } .comparison { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { body { padding: 20px 10px; } .card, .feature-card { padding: 25px; } .header h1 { font-size: 2.5em; } .header p { font-size: 1.2em; } .code, .code-block { font-size: 0.85em; padding: 18px; } }
+    </style>
+</head>
+<body>
+<div class="grid">
+<div class="card"><h3>🎯 Statement vs Expression</h3><p>Switch evolved from a statement to an expression that returns values!</p>
+<div class="comparison">
+<div class="old"><h4>❌ Switch Statement (Old)</h4>
+<div class="code">String result;
+switch (day) {
+    case MONDAY:
+    case FRIDAY:
+        result = "Work day";
+        break;
+    case SATURDAY:
+    case SUNDAY:
+        result = "Weekend";
+        break;
+    default:
+        result = "Unknown";
+        break;
+}
+return result;</div></div>
+<div class="new"><h4>✅ Switch Expression (New)</h4>
+<div class="code">String result = switch (day) {
+    case MONDAY, FRIDAY -> "Work day";
+    case SATURDAY, SUNDAY -> "Weekend";
+    default -> "Unknown";
+};
+return result;</div></div>
+</div></div>
+
+<div class="card"><h3>➡️ Arrow Syntax</h3><p>Use -> to return values directly without break!</p>
+<div class="code">// Arrow syntax - no fall-through!
+int numLetters = switch (day) {
+    case MONDAY, FRIDAY, SUNDAY -> 6;
+    case TUESDAY -> 7;
+    case THURSDAY, SATURDAY -> 8;
+    case WEDNESDAY -> 9;
+};
+
+// Multiple labels per case
+String type = switch (month) {
+    case DECEMBER, JANUARY, FEBRUARY -> "Winter";
+    case MARCH, APRIL, MAY -> "Spring";
+    case JUNE, JULY, AUGUST -> "Summer";
+    case SEPTEMBER, OCTOBER, NOVEMBER -> "Fall";
+};
+
+// Can be used in return
+return switch (status) {
+    case 200, 201, 204 -> "Success";
+    case 400, 404 -> "Client Error";
+    case 500, 503 -> "Server Error";
+    default -> "Unknown";
+};</div></div>
+
+<div class="card"><h3>🎁 The yield Keyword</h3><p>Use <code>yield</code> to return values from blocks!</p>
+<div class="code">// Simple arrow
+String result = switch (val) {
+    case 1 -> "one";
+    case 2 -> "two";
+    default -> "other";
+};
+
+// Block with yield
+String result = switch (val) {
+    case 1 -> {
+        System.out.println("Processing one");
+        yield "one";
+    }
+    case 2 -> {
+        System.out.println("Processing two");
+        yield "two";
+    }
+    default -> {
+        String msg = "Unknown: " + val;
+        System.out.println(msg);
+        yield "other";
+    }
+};
+
+// Complex logic with yield
+int price = switch (product) {
+    case "laptop" -> {
+        int basePrice = 1000;
+        int tax = calculateTax(basePrice);
+        int shipping = 50;
+        yield basePrice + tax + shipping;
+    }
+    case "mouse" -> {
+        yield 25;
+    }
+    default -> 0;
+};</div></div>
+
+<div class="card"><h3>✅ Exhaustiveness Checking</h3><p>Compiler ensures all cases are covered!</p>
+<div class="code">// With enums - no default needed!
+enum Status { ACTIVE, INACTIVE, PENDING }
+
+String message = switch (status) {
+    case ACTIVE -> "Running";
+    case INACTIVE -> "Stopped";
+    case PENDING -> "Waiting";
+    // No default needed!
+    // Compiler knows all cases covered
+};
+
+// If you add new enum value:
+// enum Status { ACTIVE, INACTIVE, PENDING, DELETED }
+//
+// Compiler ERROR!
+// "Switch expression must be exhaustive"
+//
+// Forces you to handle new case!
+
+// With sealed types (Java 17+)
+sealed interface Result permits Success, Error {}
+record Success(String data) implements Result {}
+record Error(String msg) implements Result {}
+
+String handle(Result r) {
+    return switch (r) {
+        case Success(var data) -> "OK: " + data;
+        case Error(var msg) -> "Failed: " + msg;
+        // No default needed - exhaustive!
+    };
+}</div></div>
+
+<div class="card"><h3>🔢 Calculator Example</h3>
+<div class="code">class Calculator {
+    double calculate(char operator, double a, double b) {
+        return switch (operator) {
+            case '+' -> a + b;
+            case '-' -> a - b;
+            case '*' -> a * b;
+            case '/' -> {
+                if (b == 0) {
+                    throw new ArithmeticException("Divide by zero");
+                }
+                yield a / b;
+            }
+            case '%' -> a % b;
+            case '^' -> Math.pow(a, b);
+            default -> throw new IllegalArgumentException(
+                "Unknown operator: " + operator
+            );
+        };
+    }
+}
+
+// Usage:
+Calculator calc = new Calculator();
+double result = calc.calculate('*', 5, 3);  // 15.0</div></div>
+
+<div class="card"><h3>💼 HTTP Status Handler</h3>
+<div class="code">record Response(int status, String body) {}
+
+Response handleResponse(int statusCode, String body) {
+    String message = switch (statusCode) {
+        case 200 -> "OK";
+        case 201 -> "Created";
+        case 204 -> "No Content";
+        case 400 -> "Bad Request";
+        case 401 -> "Unauthorized";
+        case 403 -> "Forbidden";
+        case 404 -> "Not Found";
+        case 500 -> "Internal Server Error";
+        case 503 -> "Service Unavailable";
+        default -> {
+            System.err.println("Unknown status: " + statusCode);
+            yield "Unknown Status";
+        }
+    };
+    
+    return new Response(statusCode, message + ": " + body);
+}
+
+// Grouped by category
+String categorize(int status) {
+    return switch (status) {
+        case 200, 201, 202, 203, 204 -> "Success";
+        case 300, 301, 302, 303, 304, 307, 308 -> "Redirect";
+        case 400, 401, 403, 404, 405, 409 -> "Client Error";
+        case 500, 501, 502, 503, 504 -> "Server Error";
+        default -> "Unknown";
+    };
+}</div></div>
+
+<div class="card"><h3>🎮 State Machine Example</h3>
+<div class="code">enum State { IDLE, RUNNING, PAUSED, STOPPED }
+enum Event { START, PAUSE, RESUME, STOP }
+
+State transition(State current, Event event) {
+    return switch (current) {
+        case IDLE -> switch (event) {
+            case START -> State.RUNNING;
+            default -> current;
+        };
+        case RUNNING -> switch (event) {
+            case PAUSE -> State.PAUSED;
+            case STOP -> State.STOPPED;
+            default -> current;
+        };
+        case PAUSED -> switch (event) {
+            case RESUME -> State.RUNNING;
+            case STOP -> State.STOPPED;
+            default -> current;
+        };
+        case STOPPED -> State.STOPPED;
+    };
+}
+
+// Usage:
+State state = State.IDLE;
+state = transition(state, Event.START);   // RUNNING
+state = transition(state, Event.PAUSE);   // PAUSED
+state = transition(state, Event.RESUME);  // RUNNING
+state = transition(state, Event.STOP);    // STOPPED</div></div>
+
+<div class="card"><h3>✨ Benefits</h3>
+<ul style="line-height:2;color:#555">
+<li>✅ <strong>Returns values</strong> - Use as expression</li>
+<li>✅ <strong>No break</strong> - Cleaner syntax</li>
+<li>✅ <strong>No fall-through</strong> - Safer by default</li>
+<li>✅ <strong>Multiple labels</strong> - case A, B, C</li>
+<li>✅ <strong>Exhaustiveness</strong> - Compiler checks coverage</li>
+<li>✅ <strong>yield keyword</strong> - Complex logic in blocks</li>
+<li>✅ <strong>Null handling</strong> - case null supported</li>
+</ul>
+<div style="background:#e3f2fd;padding:15px;border-radius:8px;margin-top:15px">
+<strong>🎯 Use Cases:</strong> Configuration mapping, state machines, HTTP handlers, command routers, enum processing
+</div></div>
+</body>
+</html>

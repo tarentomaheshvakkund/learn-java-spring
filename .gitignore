@@ -37,3 +37,13 @@ build/
 
 ### Logs ###
 *.log
+
+### Frontend ###
+frontend/node_modules/
+frontend/dist/
+frontend/node/
+src/main/resources/static/
+*.md
+*.db
+*.json
+*.class

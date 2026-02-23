@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 3: Virtual Threads - Project Loom</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: #fff;
+            padding: 60px 20px 40px;
+            margin-bottom: 50px;
+            animation: fadeIn 0.8s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .header h1 {
+            font-size: 3.8em;
+            font-weight: 800;
+            text-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            letter-spacing: -1.5px;
+        }
+        .header p {
+            font-size: 1.5em;
+            font-weight: 300;
+            margin-bottom: 30px;
+            opacity: 0.95;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+        .badge, .version-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.98);
+            color: #00796b;
+            padding: 12px 28px;
+            border-radius: 30px;
+            font-weight: 700;
+            margin: 10px;
+            font-size: 1em;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .badge:hover, .version-badge:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(550px, 1fr));
+            gap: 35px;
+            margin-bottom: 50px;
+        }
+        .card, .feature-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideIn 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before, .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card:hover, .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .card h3, .feature-card h3 {
+            color: #00796b;
+            font-size: 2em;
+            margin-bottom: 20px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .card > p, .feature-card > p {
+            color: #555;
+            font-size: 1.1em;
+            margin-bottom: 25px;
+            line-height: 1.8;
+        }
+        .code, .code-block {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 5px solid #00796b;
+            padding: 25px;
+            border-radius: 10px;
+            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+            font-size: 0.95em;
+            margin: 20px 0;
+            overflow-x: auto;
+            color: #2d3748;
+            line-height: 1.7;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+            white-space: pre-wrap;
+        }
+        .code-comment {
+            color: #38a169;
+            font-style: italic;
+        }
+        .keyword {
+            color: #9c27b0;
+            font-weight: 600;
+        }
+        .string {
+            color: #d32f2f;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 25px 0;
+        }
+        .before, .after, .old-way, .new-way, .platform-thread, .virtual-thread, .traditional, .enhanced {
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            transition: transform 0.3s ease;
+        }
+        .before:hover, .after:hover, .old-way:hover, .new-way:hover, 
+        .platform-thread:hover, .virtual-thread:hover, .traditional:hover, .enhanced:hover {
+            transform: scale(1.02);
+        }
+        .before, .old-way, .platform-thread, .traditional {
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+            border: 3px solid #fc8181;
+        }
+        .after, .new-way, .virtual-thread, .enhanced {
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            border: 3px solid #68d391;
+        }
+        .before h4, .old-way h4, .platform-thread h4, .traditional h4 {
+            color: #c53030;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+        .after h4, .new-way h4, .virtual-thread h4, .enhanced h4 {
+            color: #2f855a;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+        .before .code, .after .code, .old-way .code-block, .new-way .code-block,
+        .platform-thread .code-block, .virtual-thread .code-block {
+            background: rgba(255,255,255,0.9);
+            font-size: 0.9em;
+            padding: 18px;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 25px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        th {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: #fff;
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.95em;
+            letter-spacing: 0.8px;
+        }
+        td {
+            padding: 16px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+            background: #fff;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover td {
+            background: #f7fafc;
+        }
+        .info-box, .note, .tips, .performance-tip, .tip-box, .benefit-box, .use-case-box {
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 25px;
+            border-left: 6px solid;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .info-box.tip, .tips, .performance-tip, .tip-box {
+            background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+            border-color: #3182ce;
+        }
+        .info-box.warning, .note {
+            background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%);
+            border-color: #dd6b20;
+        }
+        .info-box.success, .benefit-box, .use-case-box {
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            border-color: #38a169;
+        }
+        .info-box strong, .note strong, .tips strong, .benefit-box strong {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 1.15em;
+            color: #2d3748;
+        }
+        ul {
+            margin-left: 25px;
+            color: # 4a5568;
+        }
+        ul li {
+            margin: 12px 0;
+            line-height: 1.8;
+        }
+        ul ul {
+            margin-top: 10px;
+        }
+        @media (max-width: 1200px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 10px;
+            }
+            .card, .feature-card {
+                padding: 25px;
+            }
+            .header h1 {
+                font-size: 2.5em;
+            }
+            .header p {
+                font-size: 1.2em;
+            }
+            .code, .code-block {
+                font-size: 0.85em;
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧵 Virtual Threads - Project Loom</h1>
+            <p class="subtitle" style="font-size: 1.3em; color: #00796b;">Lightweight Concurrency Revolution</p>
+            <div>
+                <span class="version-badge">Java 21 (Standard)</span>
+                <span class="version-badge">Preview: Java 19-20</span>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- What are Virtual Threads -->
+            <div class="feature-card">
+                <h3><span class="icon">🎯</span> What are Virtual Threads?</h3>
+                <p>Virtual threads are lightweight threads managed by the JVM instead of the operating system. They enable massive concurrency with simple code!</p>
+                
+                <div class="stats-box">
+                    <div class="stat-item">
+                        <div class="stat-value">1,000,000+</div>
+                        <div class="stat-label">Virtual threads possible</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">~1 KB</div>
+                        <div class="stat-label">Memory per thread</div>
+                    </div>
+                </div>
+                
+                <div class="benefits">
+                    <h4>✨ Key Features</h4>
+                    <ul>
+                        <li><strong>Cheap to create</strong> - Create millions easily</li>
+                        <li><strong>Simple blocking code</strong> - No callbacks or reactive</li>
+                        <li><strong>JVM-managed</strong> - No OS thread overhead</li>
+                        <li><strong>Drop-in replacement</strong> - Compatible with existing code</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Creating Virtual Threads -->
+            <div class="feature-card">
+                <h3><span class="icon">🚀</span> Creating Virtual Threads</h3>
+                <p>Multiple ways to create and use virtual threads.</p>
+                
+                <div class="code-block">
+// Method 1: Thread.ofVirtual()
+Thread vThread = Thread.ofVirtual()
+    .name("my-virtual-thread")
+    .start(() -> {
+        System.out.println("Running in virtual thread!");
+    });
+
+// Method 2: Thread.startVirtualThread()
+Thread.startVirtualThread(() -> {
+    System.out.println("Quick virtual thread!");
+});
+
+// Method 3: Virtual Thread Executor
+try (var executor = Executors
+        .newVirtualThreadPerTaskExecutor()) {
+    
+    executor.submit(() -> {
+        System.out.println("Task 1");
+    });
+    
+    executor.submit(() -> {
+        System.out.println("Task 2");
+    });
+    
+    // Auto-closes and waits for completion
+}
+
+// Method 4: Thread.Builder
+Thread.Builder builder = Thread.ofVirtual()
+    .name("worker-", 0);
+    
+Thread t1 = builder.unstarted(() -> doWork(1));
+Thread t2 = builder.unstarted(() -> doWork(2));
+t1.start();
+t2.start();
+                </div>
+            </div>
+
+            <!-- Platform vs Virtual Comparison -->
+            <div class="feature-card">
+                <h3><span class="icon">⚖️</span> Platform vs Virtual Threads</h3>
+                
+                <div class="comparison">
+                    <div class="platform-thread">
+                        <h4>🐘 Platform Threads</h4>
+                        <div class="code-block">
+// Heavy - OS managed
+ExecutorService executor = 
+    Executors.newFixedThreadPool(200);
+
+// Limited pool size
+// Each thread = ~1-2 MB
+// Max ~few thousand threads
+// Context switching overhead
+
+executor.submit(() -> {
+    // Blocks OS thread
+    makeBlockingCall();
+});
+
+// Must manage pool carefully!
+                        </div>
+                        <strong>❌ Problems:</strong>
+                        <ul>
+                            <li>Limited scalability</li>
+                            <li>High memory usage</li>
+                            <li>Thread pool tuning needed</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="virtual-thread">
+                        <h4>🦋 Virtual Threads</h4>
+                        <div class="code-block">
+// Lightweight - JVM managed
+ExecutorService executor = 
+    Executors.newVirtualThreadPerTaskExecutor();
+
+// Unlimited tasks!
+// Each thread = ~1 KB
+// Millions of threads possible
+// No context switching overhead
+
+executor.submit(() -> {
+    // Doesn't block OS thread
+    makeBlockingCall();
+});
+
+// Just create threads freely!
+                        </div>
+                        <strong>✅ Benefits:</strong>
+                        <ul>
+                            <li>Massive scalability</li>
+                            <li>Minimal memory usage</li>
+                            <li>No pool management</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Example: Million Threads -->
+            <div class="feature-card">
+                <h3><span class="icon">💪</span> Million Threads Example</h3>
+                <p>Create a million tasks effortlessly!</p>
+                
+                <div class="code-block">
+// This would CRASH with platform threads!
+// But works perfectly with virtual threads
+
+try (var executor = Executors
+        .newVirtualThreadPerTaskExecutor()) {
+    
+    // Submit 1 MILLION tasks
+    IntStream.range(0, 1_000_000).forEach(i -> {
+        executor.submit(() -> {
+            try {
+                // Simulate I/O operation
+                Thread.sleep(Duration.ofSeconds(1));
+                return "Task " + i + " completed";
+            } catch (InterruptedException e) {
+                return "Task " + i + " interrupted";
+            }
+        });
+    });
+    
+    // All tasks run concurrently!
+    // Completes in ~1 second, not 277 hours!
+}
+
+System.out.println("All 1 million tasks completed!");
+
+// Platform threads: Would need 1 million OS threads
+//                   = ~1-2 TB of memory! 💥
+// Virtual threads:  Uses only a few MB of memory! ✅
+                </div>
+                
+                <div class="benefits">
+                    <h4>📊 Resource Comparison</h4>
+                    <ul>
+                        <li><strong>Platform threads:</strong> 1M × 2MB = 2 TB RAM ❌</li>
+                        <li><strong>Virtual threads:</strong> 1M × 1KB = 1 GB RAM ✅</li>
+                        <li><strong>Speedup:</strong> 2000× less memory!</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- HTTP Server Example -->
+            <div class="feature-card">
+                <h3><span class="icon">🌐</span> Web Server with Virtual Threads</h3>
+                <p>Handle thousands of concurrent requests effortlessly!</p>
+                
+                <div class="code-block">
+// Old way: Thread pool with limited threads
+ExecutorService executor = 
+    Executors.newFixedThreadPool(200);
+
+// Problem: Only 200 concurrent requests!
+// Request 201 must wait...
+
+server.setRequestHandler(request -> {
+    executor.submit(() -> {
+        handleRequest(request); // Blocks thread!
+    });
+});
+
+// =====================================
+
+// New way: Virtual threads per request
+ExecutorService executor = 
+    Executors.newVirtualThreadPerTaskExecutor();
+
+// Solution: Millions of concurrent requests!
+server.setRequestHandler(request -> {
+    executor.submit(() -> {
+        // Each request gets its own virtual thread
+        handleRequest(request); // No problem!
+    });
+});
+
+void handleRequest(Request req) {
+    // Simple blocking code!
+    String user = fetchFromDB(req.getUserId());
+    String data = callExternalAPI(user);
+    String result = processData(data);
+    sendResponse(result);
+    
+    // No callbacks, no reactive streams
+    // Just plain, readable code!
+}
+                </div>
+            </div>
+
+            <!-- Best Practices -->
+            <div class="feature-card">
+                <h3><span class="icon">✅</span> Best Practices</h3>
+                
+                <div class="code-block">
+// ✅ DO: Use for I/O-bound tasks
+try (var executor = Executors
+        .newVirtualThreadPerTaskExecutor()) {
+    
+    // Perfect for:
+    // - HTTP requests
+    // - Database queries
+    // - File I/O
+    // - Network operations
+    
+    executor.submit(() -> fetchFromDatabase());
+    executor.submit(() -> callExternalAPI());
+    executor.submit(() -> readFile());
+}
+
+// ❌ DON'T: Use for CPU-bound tasks
+// CPU-bound work should use platform threads
+// or parallel streams
+IntStream.range(0, 1000)
+    .parallel()  // Use this for CPU work
+    .map(this::heavyComputation)
+    .sum();
+
+// ⚠️ AVOID: ThreadLocal with many virtual threads
+// ThreadLocal allocates per-thread memory
+// With millions of threads, this adds up!
+
+// ⚠️ AVOID: Synchronized blocks
+// Can pin virtual threads to platform threads
+// Use ReentrantLock instead
+                </div>
+                
+                <div class="benefits">
+                    <h4>🎯 When to Use Virtual Threads</h4>
+                    <ul>
+                        <li>✅ High concurrency I/O operations</li>
+                        <li>✅ Web servers handling many requests</li>
+                        <li>✅ Microservices with many API calls</li>
+                        <li>✅ Database connection pools</li>
+                        <li>❌ CPU-intensive computations</li>
+                        <li>❌ Small number of long-running tasks</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- ThreadLocal Warning -->
+            <div class="feature-card">
+                <h3><span class="icon">⚠️</span> ThreadLocal Considerations</h3>
+                <p>ThreadLocal can be problematic with millions of virtual threads!</p>
+                
+                <div class="code-block">
+// ❌ AVOID: ThreadLocal with virtual threads
+class UserContext {
+    private static final ThreadLocal&lt;User&gt; current = 
+        new ThreadLocal&lt;&gt;();
+    
+    // Problem: With 1M virtual threads,
+    // this creates 1M User instances in memory!
+}
+
+// ✅ BETTER: Pass context explicitly
+void handleRequest(Request req, User user) {
+    processWithUser(user);
+}
+
+// ✅ BETTER: Use Scoped Values (Java 21+)
+class UserContext {
+    private static final ScopedValue&lt;User&gt; current = 
+        ScopedValue.newInstance();
+    
+    // More efficient for virtual threads
+    // Immutable and optimized
+}
+
+ScopedValue.where(UserContext.current, user)
+    .run(() -> processRequest());
+                </div>
+            </div>
+
+            <!-- Structured Concurrency Preview -->
+            <div class="feature-card">
+                <h3><span class="icon">🏗️</span> Structured Concurrency (Preview)</h3>
+                <p>Manage virtual threads lifecycle together - fail together, succeed together!</p>
+                
+                <div class="code-block">
+// Combine virtual threads with structured concurrency
+record UserData(String profile, List&lt;Order&gt; orders) {}
+
+UserData fetchUserData(int userId) 
+        throws InterruptedException, ExecutionException {
+    
+    try (var scope = new StructuredTaskScope
+            .ShutdownOnFailure()) {
+        
+        // Launch concurrent tasks
+        Future&lt;String&gt; profileFuture = 
+            scope.fork(() -> fetchProfile(userId));
+            
+        Future&lt;List&lt;Order&gt;&gt; ordersFuture = 
+            scope.fork(() -> fetchOrders(userId));
+        
+        // Wait for both (or fail if either fails)
+        scope.join();
+        scope.throwIfFailed();
+        
+        // Get results
+        return new UserData(
+            profileFuture.resultNow(),
+            ordersFuture.resultNow()
+        );
+    }
+}
+
+// Benefits:
+// - Automatic cancellation if one fails
+// - Clear lifecycle management
+// - No thread leaks
+// - Better error handling
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Diagram -->
+        <div class="visual-diagram">
+            <h2>🎨 Platform vs Virtual Threads Architecture</h2>
+            
+            <div class="thread-visual">
+                <div class="thread-model">
+                    <h3 style="color: #c62828;">Platform Threads</h3>
+                    <p style="margin: 10px 0;">1:1 mapping to OS threads</p>
+                    <div class="thread-box">OS Thread 1<br>~1-2 MB</div>
+                    <div class="thread-box">OS Thread 2<br>~1-2 MB</div>
+                    <div class="thread-box">OS Thread 3<br>~1-2 MB</div>
+                    <p style="margin: 10px 0; color: #c62828;">
+                        <strong>Limit: ~Few thousand</strong>
+                    </p>
+                </div>
+                
+                <div class="thread-model">
+                    <h3 style="color: #2e7d32;">Virtual Threads</h3>
+                    <p style="margin: 10px 0;">Many-to-few mapping</p>
+                    <div class="carrier">
+                        <strong>Carrier Thread (OS)</strong>
+                        <div class="virtual-box">Virtual 1 (~1 KB)</div>
+                        <div class="virtual-box">Virtual 2 (~1 KB)</div>
+                        <div class="virtual-box">Virtual 3 (~1 KB)</div>
+                        <div class="virtual-box">Virtual 4 (~1 KB)</div>
+                        <div class="virtual-box">... millions more</div>
+                    </div>
+                    <p style="margin: 10px 0; color: #2e7d32;">
+                        <strong>Limit: Millions!</strong>
+                    </p>
+                </div>
+            </div>
+            
+            <div style="background: #fff3e0; padding: 20px; border-radius: 10px; margin-top: 30px;">
+                <h3 style="color: #e65100; text-align: center;">🎯 Key Insight</h3>
+                <p style="text-align: center; font-size: 1.1em; color: #555;">
+                    Virtual threads are <strong>mounted</strong> on carrier threads only when they need CPU time.
+                    When they block (I/O wait), they <strong>unmount</strong>, freeing the carrier thread for others!
+                </p>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="visual-diagram">
+            <h2>📊 Performance Comparison</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #00796b; color: white;">
+                        <th style="padding: 15px; text-align: left;">Metric</th>
+                        <th style="padding: 15px; text-align: left;">Platform Threads</th>
+                        <th style="padding: 15px; text-align: left;">Virtual Threads</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: #f5f5f5;">
+                        <td style="padding: 15px;"><strong>Creation cost</strong></td>
+                        <td style="padding: 15px;">High (~1 ms)</td>
+                        <td style="padding: 15px;">Very low (~1 µs)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px;"><strong>Memory per thread</strong></td>
+                        <td style="padding: 15px;">~1-2 MB</td>
+                        <td style="padding: 15px;">~1 KB</td>
+                    </tr>
+                    <tr style="background: #f5f5f5;">
+                        <td style="padding: 15px;"><strong>Context switch</strong></td>
+                        <td style="padding: 15px;">OS-level (expensive)</td>
+                        <td style="padding: 15px;">JVM-level (cheap)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px;"><strong>Maximum count</strong></td>
+                        <td style="padding: 15px;">~Few thousand</td>
+                        <td style="padding: 15px;">Millions</td>
+                    </tr>
+                    <tr style="background: #f5f5f5;">
+                        <td style="padding: 15px;"><strong>Use case</strong></td>
+                        <td style="padding: 15px;">CPU-bound tasks</td>
+                        <td style="padding: 15px;">I/O-bound tasks</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px;"><strong>Pool management</strong></td>
+                        <td style="padding: 15px;">Required</td>
+                        <td style="padding: 15px;">Not needed</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
