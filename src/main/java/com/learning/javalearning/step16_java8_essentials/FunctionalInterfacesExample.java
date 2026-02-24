@@ -2,6 +2,7 @@ package com.learning.javalearning.step16_java8_essentials;
 
 import java.util.*;
 import java.util.function.*;
+import java.util.logging.Logger;
 
 /**
  * Step 16: Functional Interfaces - The Types Behind Lambdas
@@ -20,12 +21,19 @@ import java.util.function.*;
  * - BiPredicate<T,U>  → (T, U) → boolean  (test)
  * - BiConsumer<T,U>   → (T, U) → void     (accept)
  */
+@SuppressWarnings("java:S4276") // Intentional: Sections 1-7 teach generic functional interfaces; section 8 covers primitive specializations
 public class FunctionalInterfacesExample {
 
+    private static final Logger logger = Logger.getLogger(FunctionalInterfacesExample.class.getName());
+
+    private static final String HEADER_BORDER = "═══════════════════════════════════════════════";
+    private static final String SECTION_DIVIDER = "─────────────────────────────────";
+    private static final String HELLO = "hello";
+
     public static void main(String[] args) {
-        System.out.println("═══════════════════════════════════════════════");
-        System.out.println("  Step 16: Functional Interfaces Deep Dive    ");
-        System.out.println("═══════════════════════════════════════════════\n");
+        logger.info(HEADER_BORDER);
+        logger.info("  Step 16: Functional Interfaces Deep Dive    ");
+        logger.info(() -> HEADER_BORDER + "\n");
 
         predicateExamples();
         functionExamples();
