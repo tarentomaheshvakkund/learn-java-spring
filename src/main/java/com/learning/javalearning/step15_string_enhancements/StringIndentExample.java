@@ -18,6 +18,10 @@ import java.util.logging.Logger;
  */
 public class StringIndentExample {
 
+    private StringIndentExample() {
+        // Utility class - prevent instantiation
+    }
+
     private static final Logger logger = Logger.getLogger(StringIndentExample.class.getName());
     private static final String SEPARATOR = "=".repeat(50);
 
@@ -184,46 +188,5 @@ public class StringIndentExample {
 
         logger.info("Formatted JSON:");
         logger.info(json);
-    }
-
-    /**
-     * Practical utility methods
-     */
-    public static class IndentUtils {
-
-        /**
-         * Indent all lines by the specified amount
-         */
-        public static String indent(String text, int spaces) {
-            return text.indent(spaces);
-        }
-
-        /**
-         * Indent a block to match a specific depth level
-         */
-        public static String indentToLevel(String text, int level) {
-            return text.indent(level * 4); // 4 spaces per level
-        }
-
-        /**
-         * Remove all leading whitespace
-         */
-        public static String removeIndent(String text) {
-            // Find minimum indentation
-            int minIndent = text.lines()
-                .filter(line -> !line.isBlank())
-                .mapToInt(line -> line.length() - line.stripLeading().length())
-                .min()
-                .orElse(0);
-
-            return text.indent(-minIndent);
-        }
-
-        /**
-         * Normalize indentation to a specific width
-         */
-        public static String normalizeIndent(String text, int targetSpaces) {
-            return removeIndent(text).indent(targetSpaces);
-        }
     }
 }

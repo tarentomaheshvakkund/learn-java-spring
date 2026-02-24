@@ -1,6 +1,6 @@
 package com.learning.javalearning.step15_string_enhancements;
 
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.logging.Logger;
 
 /**
@@ -16,6 +16,10 @@ import java.util.logging.Logger;
  * - Functional programming style
  */
 public class StringTransformExample {
+
+    private StringTransformExample() {
+        // Utility class - prevent instantiation
+    }
 
     private static final Logger logger = Logger.getLogger(StringTransformExample.class.getName());
     private static final String ARROW = " \u2192 ";
@@ -102,10 +106,10 @@ public class StringTransformExample {
         logger.info("3. REUSABLE TRANSFORMERS");
 
         // Define reusable transformers
-        Function<String, String> normalize = s -> s.strip().toLowerCase();
-        Function<String, String> toSnakeCase = s -> s.replace(" ", "_");
-        Function<String, String> addPrefix = s -> "user_" + s;
-        Function<String, String> truncate = s -> s.length() > 10 ? s.substring(0, 10) + "..." : s;
+        UnaryOperator<String> normalize = s -> s.strip().toLowerCase();
+        UnaryOperator<String> toSnakeCase = s -> s.replace(" ", "_");
+        UnaryOperator<String> addPrefix = s -> "user_" + s;
+        UnaryOperator<String> truncate = s -> s.length() > 10 ? s.substring(0, 10) + "..." : s;
 
         String input1 = "  John Doe  ";
         String input2 = "  Jane Smith  ";
@@ -137,12 +141,12 @@ public class StringTransformExample {
     private static void conditionalTransform() {
         logger.info("4. CONDITIONAL TRANSFORM");
 
-        Function<String, String> sanitizeHtml = s ->
+        UnaryOperator<String> sanitizeHtml = s ->
             s.replace("<", "&lt;")
              .replace(">", "&gt;")
              .replace("&", "&amp;");
 
-        Function<String, String> conditionalSanitize = s ->
+        UnaryOperator<String> conditionalSanitize = s ->
             s.contains("<") || s.contains(">") ?
                 s.transform(sanitizeHtml) : s;
 
@@ -213,7 +217,7 @@ public class StringTransformExample {
         if (password.length() >= 12) score++;
         if (password.matches(".*[A-Z].*")) score++;
         if (password.matches(".*[a-z].*")) score++;
-        if (password.matches(".*[0-9].*")) score++;
+        if (password.matches(".*\\d.*")) score++;
         if (password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) score++;
 
         return switch (score) {
@@ -222,44 +226,6 @@ public class StringTransformExample {
             case 5, 6 -> "Strong";
             default -> "Very Strong";
         };
-    }
-
-    /**
-     * Transformation library - reusable transformers
-     */
-    public static class StringTransformers {
-
-        public static final Function<String, String> NORMALIZE =
-            s -> s.strip().toLowerCase();
-
-        public static final Function<String, String> TO_SNAKE_CASE =
-            s -> s.replaceAll("\\s+", "_").toLowerCase();
-
-        public static final Function<String, String> TO_KEBAB_CASE =
-            s -> s.replaceAll("\\s+", "-").toLowerCase();
-
-        public static final Function<String, String> TO_CAMEL_CASE = s -> {
-            String[] words = s.split("\\s+");
-            if (words.length == 0) return s;
-
-            StringBuilder result = new StringBuilder(words[0].toLowerCase());
-            for (int i = 1; i < words.length; i++) {
-                result.append(capitalize(words[i]));
-            }
-            return result.toString();
-        };
-
-        public static final Function<String, String> REMOVE_SPECIAL_CHARS =
-            s -> s.replaceAll("[^a-zA-Z0-9\\s]", "");
-
-        public static Function<String, String> truncate(int maxLength) {
-            return s -> s.length() > maxLength ?
-                s.substring(0, maxLength) + "..." : s;
-        }
-
-        public static Function<String, String> wrap(String prefix, String suffix) {
-            return s -> prefix + s + suffix;
-        }
     }
 
     /**
@@ -272,7 +238,7 @@ public class StringTransformExample {
             this.value = value;
         }
 
-        public StringProcessor apply(Function<String, String> transformer) {
+        public StringProcessor apply(UnaryOperator<String> transformer) {
             this.value = value.transform(transformer);
             return this;
         }
