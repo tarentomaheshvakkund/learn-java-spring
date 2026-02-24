@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 public class TeeingCollectorExample {
 
   private static final Logger logger = Logger.getLogger(TeeingCollectorExample.class.getName());
+  private static final String ENGINEERING = "Engineering";
 
   private TeeingCollectorExample() {
     // Private constructor to prevent instantiation
@@ -74,7 +75,7 @@ public class TeeingCollectorExample {
         .collect(Collectors.teeing(
             Collectors.filtering(n -> n % 2 == 0, Collectors.counting()),
             Collectors.filtering(n -> n % 2 != 0, Collectors.counting()),
-            (even, odd) -> new EvenOddCount(even, odd)
+            EvenOddCount::new
         ));
 
     logger.info(() -> "With teeing - " + result);
@@ -176,17 +177,17 @@ public class TeeingCollectorExample {
 
     // Use Case 1: Employee Performance Analysis
     List<Employee> employees = List.of(
-        new Employee("Alice", 85, "Engineering"),
-        new Employee("Bob", 92, "Engineering"),
+        new Employee("Alice", 85, ENGINEERING),
+        new Employee("Bob", 92, ENGINEERING),
         new Employee("Charlie", 78, "Sales"),
-        new Employee("Diana", 95, "Engineering"),
+        new Employee("Diana", 95, ENGINEERING),
         new Employee("Eve", 88, "Sales"),
         new Employee("Frank", 76, "HR"),
-        new Employee("Grace", 90, "Engineering")
+        new Employee("Grace", 90, ENGINEERING)
     );
 
     PerformanceReport report = employees.stream()
-        .filter(e -> "Engineering".equals(e.department()))
+        .filter(e -> ENGINEERING.equals(e.department()))
         .collect(Collectors.teeing(
             Collectors.averagingDouble(Employee::performanceScore),
             Collectors.collectingAndThen(

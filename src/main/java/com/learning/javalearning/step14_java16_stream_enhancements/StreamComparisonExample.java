@@ -36,6 +36,8 @@ import java.util.stream.Collectors;
 public class StreamComparisonExample {
 
   private static final Logger logger = Logger.getLogger(StreamComparisonExample.class.getName());
+  private static final String CREDIT = "CREDIT";
+  private static final String DEBIT = "DEBIT";
 
   private StreamComparisonExample() {
     // Private constructor to prevent instantiation
@@ -91,6 +93,7 @@ public class StreamComparisonExample {
    * 2. PERFORMANCE COMPARISON
    * Benchmarking different approaches
    */
+  @SuppressWarnings("java:S6204") // Intentionally comparing old vs new approach
   private static void demonstratePerformanceComparison() {
     logger.info("=== Performance Comparison ===");
 
@@ -132,7 +135,7 @@ public class StreamComparisonExample {
         ));
     long duration4 = (System.nanoTime() - start4) / 1_000_000;
 
-    logger.info(() -> String.format("\nMultiple passes: %d ms (even: %d, odd: %d)",
+    logger.info(() -> String.format("%nMultiple passes: %d ms (even: %d, odd: %d)",
         duration3, evenCount, oddCount));
     logger.info(() -> String.format("Teeing collector: %d ms (even: %d, odd: %d)",
         duration4, counts[0], counts[1]));
@@ -201,18 +204,14 @@ public class StreamComparisonExample {
     logger.info("=== Migration Strategies ===");
 
     List<Transaction> transactions = List.of(
-        new Transaction("2024-01-01", 1000.0, "CREDIT"),
-        new Transaction("2024-01-02", 500.0, "DEBIT"),
-        new Transaction("2024-01-03", 750.0, "CREDIT"),
-        new Transaction("2024-01-04", 250.0, "DEBIT")
+        new Transaction("2024-01-01", 1000.0, CREDIT),
+        new Transaction("2024-01-02", 500.0, DEBIT),
+        new Transaction("2024-01-03", 750.0, CREDIT),
+        new Transaction("2024-01-04", 250.0, DEBIT)
     );
 
     // Strategy 1: Direct replacement (immutable OK)
     logger.info("Strategy 1: Direct replacement");
-    // OLD:
-    List<String> datesOld = transactions.stream()
-        .map(Transaction::date)
-        .collect(Collectors.toList());
     // NEW:
     List<String> datesNew = transactions.stream()
         .map(Transaction::date)
@@ -234,14 +233,14 @@ public class StreamComparisonExample {
     TransactionSummary summary = transactions.stream()
         .collect(Collectors.teeing(
             Collectors.filtering(
-                t -> "CREDIT".equals(t.type()),
+                t -> CREDIT.equals(t.type()),
                 Collectors.summingDouble(Transaction::amount)
             ),
             Collectors.filtering(
-                t -> "DEBIT".equals(t.type()),
+                t -> DEBIT.equals(t.type()),
                 Collectors.summingDouble(Transaction::amount)
             ),
-            (credits, debits) -> new TransactionSummary(credits, debits)
+            TransactionSummary::new
         ));
     logger.info(() -> String.format("Credits: $%.2f, Debits: $%.2f, Balance: $%.2f",
         summary.totalCredits(), summary.totalDebits(), summary.balance()));

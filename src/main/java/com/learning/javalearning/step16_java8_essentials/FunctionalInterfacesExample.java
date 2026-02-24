@@ -29,6 +29,7 @@ public class FunctionalInterfacesExample {
     private static final String HEADER_BORDER = "═══════════════════════════════════════════════";
     private static final String SECTION_DIVIDER = "─────────────────────────────────";
     private static final String HELLO = "hello";
+    private static final String HELLO_CAPS = "Hello";
 
     public static void main(String[] args) {
         logger.info(HEADER_BORDER);
@@ -50,8 +51,8 @@ public class FunctionalInterfacesExample {
     // 1. Predicate<T> - Tests a condition, returns boolean
     // ============================================================
     static void predicateExamples() {
-        System.out.println("1️⃣ PREDICATE<T> → T → boolean");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("1️⃣ PREDICATE<T> → T → boolean");
+        logger.info(() -> SECTION_DIVIDER + "\n");
 
         Predicate<Integer> isEven = n -> n % 2 == 0;
         Predicate<Integer> isPositive = n -> n > 0;
@@ -59,40 +60,40 @@ public class FunctionalInterfacesExample {
         Predicate<String> startsWithJ = s -> s.startsWith("J");
 
         // Basic usage
-        System.out.println("   isEven(4): " + isEven.test(4));         // true
-        System.out.println("   isEven(7): " + isEven.test(7));         // false
-        System.out.println("   isNotEmpty(\"hi\"): " + isNotEmpty.test("hi")); // true
+        logger.info(() -> "   isEven(4): " + isEven.test(4));         // true
+        logger.info(() -> "   isEven(7): " + isEven.test(7));         // false
+        logger.info(() -> "   isNotEmpty(\"hi\"): " + isNotEmpty.test("hi")); // true
 
         // Combining predicates with and(), or(), negate()
         Predicate<Integer> isEvenAndPositive = isEven.and(isPositive);
         Predicate<Integer> isEvenOrPositive = isEven.or(isPositive);
         Predicate<Integer> isOdd = isEven.negate();
 
-        System.out.println("   isEvenAndPositive(4): " + isEvenAndPositive.test(4));   // true
-        System.out.println("   isEvenAndPositive(-4): " + isEvenAndPositive.test(-4)); // false
-        System.out.println("   isOdd(7): " + isOdd.test(7));                          // true
-        System.out.println("   isEvenOrPositive(3): " + isEvenOrPositive.test(3));    // true
+        logger.info(() -> "   isEvenAndPositive(4): " + isEvenAndPositive.test(4));   // true
+        logger.info(() -> "   isEvenAndPositive(-4): " + isEvenAndPositive.test(-4)); // false
+        logger.info(() -> "   isOdd(7): " + isOdd.test(7));                          // true
+        logger.info(() -> "   isEvenOrPositive(3): " + isEvenOrPositive.test(3));    // true
 
         // Predicate.isEqual() static method
         Predicate<String> isJava = Predicate.isEqual("Java");
-        System.out.println("   isJava(\"Java\"): " + isJava.test("Java"));   // true
-        System.out.println("   isJava(\"Python\"): " + isJava.test("Python")); // false
+        logger.info(() -> "   isJava(\"Java\"): " + isJava.test("Java"));   // true
+        logger.info(() -> "   isJava(\"Python\"): " + isJava.test("Python")); // false
 
         // Using with collections
         List<String> languages = Arrays.asList("Java", "JavaScript", "Python", "Jython", "C++");
         List<String> jLanguages = new ArrayList<>(languages);
         jLanguages.removeIf(startsWithJ.negate());
-        System.out.println("   J-languages: " + jLanguages);
+        logger.info(() -> "   J-languages: " + jLanguages);
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 2. Function<T, R> - Transforms input to output
     // ============================================================
     static void functionExamples() {
-        System.out.println("2️⃣ FUNCTION<T, R> → T → R");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("2️⃣ FUNCTION<T, R> → T → R");
+        logger.info(() -> SECTION_DIVIDER + "\n");
 
         Function<String, Integer> stringLength = String::length;
         Function<String, String> toUpper = String::toUpperCase;
@@ -100,21 +101,21 @@ public class FunctionalInterfacesExample {
         Function<String, String> addBrackets = s -> "[" + s + "]";
 
         // Basic usage
-        System.out.println("   length(\"hello\"): " + stringLength.apply("hello"));     // 5
-        System.out.println("   toUpper(\"hello\"): " + toUpper.apply("hello"));          // HELLO
-        System.out.println("   intToString(42): " + intToString.apply(42));              // Number: 42
+        logger.info(() -> "   length(\"hello\"): " + stringLength.apply(HELLO));     // 5
+        logger.info(() -> "   toUpper(\"hello\"): " + toUpper.apply(HELLO));          // HELLO
+        logger.info(() -> "   intToString(42): " + intToString.apply(42));              // Number: 42
 
         // andThen() - executes after
         Function<String, String> upperThenBrackets = toUpper.andThen(addBrackets);
-        System.out.println("   upperThenBrackets(\"hello\"): " + upperThenBrackets.apply("hello")); // [HELLO]
+        logger.info(() -> "   upperThenBrackets(\"hello\"): " + upperThenBrackets.apply(HELLO)); // [HELLO]
 
         // compose() - executes before
         Function<String, String> bracketsBeforeUpper = toUpper.compose(addBrackets);
-        System.out.println("   bracketsBeforeUpper(\"hello\"): " + bracketsBeforeUpper.apply("hello")); // [HELLO]
+        logger.info(() -> "   bracketsBeforeUpper(\"hello\"): " + bracketsBeforeUpper.apply(HELLO)); // [HELLO]
 
         // Function.identity() - returns input as-is
         Function<String, String> identity = Function.identity();
-        System.out.println("   identity(\"same\"): " + identity.apply("same")); // same
+        logger.info(() -> "   identity(\"same\"): " + identity.apply("same")); // same
 
         // Chaining functions
         Function<String, String> pipeline = ((Function<String, String>) String::trim)
@@ -122,20 +123,21 @@ public class FunctionalInterfacesExample {
                 .andThen(s -> s.replace(" ", "-"))
                 .andThen(s -> s + ".html");
 
-        System.out.println("   URL slug: " + pipeline.apply("  Hello World  ")); // hello-world.html
+        logger.info(() -> "   URL slug: " + pipeline.apply("  Hello World  ")); // hello-world.html
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 3. Consumer<T> - Accepts input, returns nothing
     // ============================================================
+    @SuppressWarnings("java:S2629") // Intentional: Demonstrating Consumer patterns with lambdas
     static void consumerExamples() {
-        System.out.println("3️⃣ CONSUMER<T> → T → void");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("3️⃣ CONSUMER<T> → T → void");
+        logger.info(() -> SECTION_DIVIDER + "\n");
 
-        Consumer<String> print = s -> System.out.println("   " + s);
-        Consumer<String> printUpper = s -> System.out.println("   " + s.toUpperCase());
+        Consumer<String> print = s -> logger.info("   " + s);
+        Consumer<String> printUpper = s -> logger.info("   " + s.toUpperCase());
         Consumer<List<String>> clearList = List::clear;
 
         // Basic usage
@@ -144,7 +146,7 @@ public class FunctionalInterfacesExample {
         // Using Consumer to mutate a list
         List<String> tempList = new ArrayList<>(Arrays.asList("x", "y", "z"));
         clearList.accept(tempList);
-        System.out.println("   After clearList, size: " + tempList.size()); // 0
+        logger.info(() -> "   After clearList, size: " + tempList.size()); // 0
 
         // andThen() - chain consumers
         Consumer<String> printBoth = print.andThen(printUpper);
@@ -155,9 +157,9 @@ public class FunctionalInterfacesExample {
 
         // BiConsumer - accepts two inputs
         BiConsumer<String, Integer> printRepeat = (s, n) -> {
-            System.out.print("   ");
-            for (int i = 0; i < n; i++) System.out.print(s + " ");
-            System.out.println();
+            StringBuilder sb = new StringBuilder("   ");
+            for (int i = 0; i < n; i++) sb.append(s).append(" ");
+            logger.info(sb.toString());
         };
         printRepeat.accept("⭐", 5);
 
@@ -167,18 +169,18 @@ public class FunctionalInterfacesExample {
         prices.put("Tea", 3.49);
         prices.put("Juice", 5.99);
 
-        System.out.println("   Price list:");
-        prices.forEach((item, price) -> System.out.printf("   %-10s $%.2f%n", item, price));
+        logger.info("   Price list:");
+        prices.forEach((item, price) -> logger.info(String.format("   %-10s $%.2f", item, price)));
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 4. Supplier<T> - Supplies a value, takes no input
     // ============================================================
     static void supplierExamples() {
-        System.out.println("4️⃣ SUPPLIER<T> → () → T");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("4️⃣ SUPPLIER<T> → () → T");
+        logger.info(() -> SECTION_DIVIDER + "\n");
 
         Supplier<String> helloSupplier = () -> "Hello from Supplier!";
         Supplier<Double> randomSupplier = Math::random;
@@ -186,19 +188,19 @@ public class FunctionalInterfacesExample {
         Supplier<UUID> uuidGenerator = UUID::randomUUID;
 
         // Basic usage
-        System.out.println("   " + helloSupplier.get());
-        System.out.println("   Random: " + randomSupplier.get());
-        System.out.println("   UUID: " + uuidGenerator.get());
+        logger.info(() -> "   " + helloSupplier.get());
+        logger.info(() -> "   Random: " + randomSupplier.get());
+        logger.info(() -> "   UUID: " + uuidGenerator.get());
 
         // Lazy evaluation - only computed when needed
-        System.out.println("   Lazy value: " + getOrDefault(null, FunctionalInterfacesExample::computeExpensiveValue));
-        System.out.println("   Cached value: " + getOrDefault("cached", FunctionalInterfacesExample::computeExpensiveValue));
+        logger.info(() -> "   Lazy value: " + getOrDefault(null, FunctionalInterfacesExample::computeExpensiveValue));
+        logger.info(() -> "   Cached value: " + getOrDefault("cached", FunctionalInterfacesExample::computeExpensiveValue));
 
         // Factory pattern
         List<String> newList = createIfNeeded(true, listFactory);
-        System.out.println("   Factory list created: " + (newList != null));
+        logger.info(() -> "   Factory list created: " + (newList != null));
 
-        System.out.println();
+        logger.info("");
     }
 
     static String computeExpensiveValue() {
@@ -218,53 +220,54 @@ public class FunctionalInterfacesExample {
     // 5. UnaryOperator & BinaryOperator
     // ============================================================
     static void operatorExamples() {
-        System.out.println("5️⃣ OPERATORS → Specialized Functions");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("5️⃣ OPERATORS → Specialized Functions");
+        logger.info(() -> SECTION_DIVIDER + "\n");
 
         // UnaryOperator<T> extends Function<T, T> - same input/output type
         UnaryOperator<String> shout = s -> s.toUpperCase() + "!!!";
         UnaryOperator<Integer> doubleIt = n -> n * 2;
         UnaryOperator<String> trim = String::trim;
 
-        System.out.println("   shout(\"hello\"): " + shout.apply("hello"));     // HELLO!!!
-        System.out.println("   doubleIt(21): " + doubleIt.apply(21));            // 42
-        System.out.println("   trim(\"  spaces  \"): \"" + trim.apply("  spaces  ") + "\"");
+        logger.info(() -> "   shout(\"hello\"): " + shout.apply(HELLO));     // HELLO!!!
+        logger.info(() -> "   doubleIt(21): " + doubleIt.apply(21));            // 42
+        logger.info(() -> "   trim(\"  spaces  \"): \"" + trim.apply("  spaces  ") + "\"");
 
         // BinaryOperator<T> extends BiFunction<T, T, T> - two inputs, same type output
         BinaryOperator<Integer> sum = Integer::sum;
         BinaryOperator<Integer> max = Integer::max;
         BinaryOperator<String> joinWithDash = (a, b) -> a + "-" + b;
 
-        System.out.println("   sum(5, 3): " + sum.apply(5, 3));                 // 8
-        System.out.println("   max(10, 20): " + max.apply(10, 20));             // 20
-        System.out.println("   join: " + joinWithDash.apply("Hello", "World")); // Hello-World
+        logger.info(() -> "   sum(5, 3): " + sum.apply(5, 3));                 // 8
+        logger.info(() -> "   max(10, 20): " + max.apply(10, 20));             // 20
+        logger.info(() -> "   join: " + joinWithDash.apply(HELLO_CAPS, "World")); // Hello-World
 
         // BinaryOperator.minBy() and maxBy()
         BinaryOperator<String> longestString = BinaryOperator.maxBy(Comparator.comparingInt(String::length));
-        System.out.println("   longer(\"hi\", \"hello\"): " + longestString.apply("hi", "hello")); // hello
+        logger.info(() -> "   longer(\"hi\", \"hello\"): " + longestString.apply("hi", HELLO)); // hello
 
         // Using UnaryOperator with replaceAll
         List<String> names = new ArrayList<>(Arrays.asList("alice", "bob", "charlie"));
         names.replaceAll(String::toUpperCase);
-        System.out.println("   replaceAll toUpper: " + names);
+        logger.info(() -> "   replaceAll toUpper: " + names);
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 6. Bi-Functions (Two-Parameter Versions)
     // ============================================================
+    @SuppressWarnings("java:S2629") // Intentional: Demonstrating BiConsumer patterns with lambdas
     static void biFunctionExamples() {
-        System.out.println("6️⃣ BI-FUNCTIONS (Two Parameters)");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("6️⃣ BI-FUNCTIONS (Two Parameters)");
+        logger.info(() -> SECTION_DIVIDER + "\n");
 
         BiFunction<String, Integer, String> repeat = String::repeat;
         BiPredicate<String, String> contains = String::contains;
         BiConsumer<String, String> greet = (name, lang) -> 
-            System.out.println("   " + (lang.equals("EN") ? "Hello" : "Hola") + ", " + name + "!");
+            logger.info("   " + (lang.equals("EN") ? HELLO_CAPS : "Hola") + ", " + name + "!");
 
-        System.out.println("   repeat(\"Ha\", 3): " + repeat.apply("Ha", 3));       // HaHaHa
-        System.out.println("   contains(\"Hello\", \"ell\"): " + contains.test("Hello", "ell")); // true
+        logger.info(() -> "   repeat(\"Ha\", 3): " + repeat.apply("Ha", 3));       // HaHaHa
+        logger.info(() -> "   contains(\"Hello\", \"ell\"): " + contains.test(HELLO_CAPS, "ell")); // true
 
         greet.accept("Alice", "EN");  // Hello, Alice!
         greet.accept("Carlos", "ES"); // Hola, Carlos!
@@ -274,17 +277,18 @@ public class FunctionalInterfacesExample {
         Function<Integer, String> format = n -> "Result: " + n;
 
         // BiFunction → andThen → Function
-        System.out.println("   " + add.andThen(format).apply(5, 3)); // Result: 8
+        logger.info(() -> "   " + add.andThen(format).apply(5, 3)); // Result: 8
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 7. Function Composition
     // ============================================================
+    @SuppressWarnings("java:S2629") // Intentional: Demonstrating Consumer chaining with lambdas
     static void compositionExamples() {
-        System.out.println("7️⃣ FUNCTION COMPOSITION");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("7️⃣ FUNCTION COMPOSITION");
+        logger.info(() -> SECTION_DIVIDER + "\n");
 
         // Build a data processing pipeline
         Function<String, String> normalizeEmail = 
@@ -292,7 +296,7 @@ public class FunctionalInterfacesExample {
             .andThen(String::toLowerCase)
             .andThen(s -> s.replaceAll("\\s+", ""));
 
-        System.out.println("   Normalized: " + normalizeEmail.apply("  User@Example.COM  "));
+        logger.info(() -> "   Normalized: " + normalizeEmail.apply("  User@Example.COM  "));
 
         // Predicate composition
         Predicate<Integer> between1And100 = 
@@ -300,34 +304,35 @@ public class FunctionalInterfacesExample {
         Predicate<Integer> isMultipleOf5 = n -> n % 5 == 0;
         Predicate<Integer> validScore = between1And100.and(isMultipleOf5);
 
-        System.out.println("   Valid score 50: " + validScore.test(50));   // true
-        System.out.println("   Valid score 13: " + validScore.test(13));   // false
-        System.out.println("   Valid score 150: " + validScore.test(150)); // false
+        logger.info(() -> "   Valid score 50: " + validScore.test(50));   // true
+        logger.info(() -> "   Valid score 13: " + validScore.test(13));   // false
+        logger.info(() -> "   Valid score 150: " + validScore.test(150)); // false
 
         // Consumer chaining
-        Consumer<String> logToConsole = s -> System.out.println("   [LOG] " + s);
-        Consumer<String> logTimestamp = s -> System.out.println("   [TIME] " + s + " @ " + System.currentTimeMillis());
+        Consumer<String> logToConsole = s -> logger.info("   [LOG] " + s);
+        Consumer<String> logTimestamp = s -> logger.info("   [TIME] " + s + " @ " + System.currentTimeMillis());
         Consumer<String> fullLogger = logToConsole.andThen(logTimestamp);
 
         fullLogger.accept("Application started");
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 8. Primitive Specializations
     // ============================================================
+    @SuppressWarnings({"java:S2629", "java:S2119"}) // Intentional: Demonstrating primitive specializations and IntConsumer patterns
     static void primitiveSpecializations() {
-        System.out.println("8️⃣ PRIMITIVE SPECIALIZATIONS (No Boxing!)");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("8️⃣ PRIMITIVE SPECIALIZATIONS (No Boxing!)");
+        logger.info(() -> SECTION_DIVIDER + "\n");
 
         // Avoid autoboxing overhead with specialized versions
         IntPredicate isEven = n -> n % 2 == 0;
         IntFunction<String> intToString = n -> "Value: " + n;
         IntUnaryOperator tripleIt = n -> n * 3;
         IntBinaryOperator intMax = Integer::max;
-        IntSupplier randomInt = () -> (int) (Math.random() * 100);
-        IntConsumer printInt = n -> System.out.println("   Int: " + n);
+        IntSupplier randomInt = () -> new Random().nextInt(100);
+        IntConsumer printInt = n -> logger.info("   Int: " + n);
 
         // LongXxx, DoubleXxx also available
         LongPredicate isLargeNumber = n -> n > 1_000_000L;
@@ -338,39 +343,41 @@ public class FunctionalInterfacesExample {
         ToIntFunction<String> strLen = String::length;
         ToDoubleFunction<String> parseDouble = Double::parseDouble;
 
-        System.out.println("   isEven(4): " + isEven.test(4));
-        System.out.println("   intToString(42): " + intToString.apply(42));
-        System.out.println("   tripleIt(7): " + tripleIt.applyAsInt(7));
-        System.out.println("   strLen(\"hello\"): " + strLen.applyAsInt("hello"));
-        System.out.println("   square(5.0): " + square.applyAsDouble(5.0));
-        System.out.println("   intMax(5, 10): " + intMax.applyAsInt(5, 10));
-        System.out.println("   randomInt: " + randomInt.getAsInt());
+        logger.info(() -> "   isEven(4): " + isEven.test(4));
+        logger.info(() -> "   intToString(42): " + intToString.apply(42));
+        logger.info(() -> "   tripleIt(7): " + tripleIt.applyAsInt(7));
+        logger.info(() -> "   strLen(\"hello\"): " + strLen.applyAsInt(HELLO));
+        logger.info(() -> "   square(5.0): " + square.applyAsDouble(5.0));
+        logger.info(() -> "   intMax(5, 10): " + intMax.applyAsInt(5, 10));
+        logger.info(() -> "   randomInt: " + randomInt.getAsInt());
         printInt.accept(99);
-        System.out.println("   isLargeNumber(2_000_000): " + isLargeNumber.test(2_000_000L));
-        System.out.println("   isFinite(3.14): " + isFinite.test(3.14));
-        System.out.println("   parseDouble(\"3.14\"): " + parseDouble.applyAsDouble("3.14"));
+        logger.info(() -> "   isLargeNumber(2_000_000): " + isLargeNumber.test(2_000_000L));
+        logger.info(() -> "   isFinite(3.14): " + isFinite.test(3.14));
+        logger.info(() -> "   parseDouble(\"3.14\"): " + parseDouble.applyAsDouble("3.14"));
 
-        System.out.println("\n   📋 Complete Specialization Table:");
-        System.out.println("   ┌────────────────────┬──────────┬──────────┬──────────┐");
-        System.out.println("   │  Interface          │  Int     │  Long    │  Double  │");
-        System.out.println("   ├────────────────────┼──────────┼──────────┼──────────┤");
-        System.out.println("   │  Predicate          │  ✅      │  ✅      │  ✅      │");
-        System.out.println("   │  Function           │  ✅      │  ✅      │  ✅      │");
-        System.out.println("   │  Consumer           │  ✅      │  ✅      │  ✅      │");
-        System.out.println("   │  Supplier           │  ✅      │  ✅      │  ✅      │");
-        System.out.println("   │  UnaryOperator      │  ✅      │  ✅      │  ✅      │");
-        System.out.println("   │  BinaryOperator     │  ✅      │  ✅      │  ✅      │");
-        System.out.println("   └────────────────────┴──────────┴──────────┴──────────┘");
+        logger.info("");
+        logger.info("   📋 Complete Specialization Table:");
+        logger.info("   ┌────────────────────┬──────────┬──────────┬──────────┐");
+        logger.info("   │  Interface          │  Int     │  Long    │  Double  │");
+        logger.info("   ├────────────────────┼──────────┼──────────┼──────────┤");
+        logger.info("   │  Predicate          │  ✅      │  ✅      │  ✅      │");
+        logger.info("   │  Function           │  ✅      │  ✅      │  ✅      │");
+        logger.info("   │  Consumer           │  ✅      │  ✅      │  ✅      │");
+        logger.info("   │  Supplier           │  ✅      │  ✅      │  ✅      │");
+        logger.info("   │  UnaryOperator      │  ✅      │  ✅      │  ✅      │");
+        logger.info("   │  BinaryOperator     │  ✅      │  ✅      │  ✅      │");
+        logger.info("   └────────────────────┴──────────┴──────────┴──────────┘");
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 9. Real-World Pipeline
     // ============================================================
+    @SuppressWarnings("java:S2629") // Intentional: Demonstrating Consumer patterns in real-world example
     static void realWorldPipeline() {
-        System.out.println("9️⃣ REAL-WORLD: Data Processing Pipeline");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("9️⃣ REAL-WORLD: Data Processing Pipeline");
+        logger.info(() -> SECTION_DIVIDER + "\n");
 
         // Simulate user registration validation
         record User(String name, String email, int age) {}
@@ -394,10 +401,10 @@ public class FunctionalInterfacesExample {
             String.format("%-10s %-25s age:%d", u.name(), u.email(), u.age());
 
         // Define output using Consumer
-        Consumer<String> logValid = s -> System.out.println("   ✅ " + s);
-        Consumer<String> logInvalid = s -> System.out.println("   ❌ " + s);
+        Consumer<String> logValid = s -> logger.info("   ✅ " + s);
+        Consumer<String> logInvalid = s -> logger.info("   ❌ " + s);
 
-        System.out.println("   User Validation Results:");
+        logger.info("   User Validation Results:");
         for (User user : users) {
             String formatted = formatUser.apply(user);
             if (isValid.test(user)) {
@@ -407,8 +414,9 @@ public class FunctionalInterfacesExample {
             }
         }
 
-        System.out.println("\n═══════════════════════════════════════════════");
-        System.out.println("  ✅ Functional Interfaces: Complete!         ");
-        System.out.println("═══════════════════════════════════════════════");
+        logger.info("");
+        logger.info(HEADER_BORDER);
+        logger.info("  ✅ Functional Interfaces: Complete!         ");
+        logger.info(HEADER_BORDER);
     }
 }

@@ -45,6 +45,7 @@ public class StreamToListExample {
    * 1. OLD WAY vs NEW WAY
    * Traditional collect() vs modern toList()
    */
+  @SuppressWarnings("java:S6204") // Intentionally demonstrating old way
   private static void demonstrateOldVsNewWay() {
     logger.info("=== OLD vs NEW Stream Collection ===");
 
@@ -105,6 +106,7 @@ public class StreamToListExample {
    * 3. PERFORMANCE
    * toList() is optimized for better performance
    */
+  @SuppressWarnings("java:S6204") // Intentionally demonstrating old way for performance comparison
   private static void demonstratePerformance() {
     logger.info("=== Performance Comparison ===");
 
