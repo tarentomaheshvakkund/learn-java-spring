@@ -2,6 +2,8 @@ package com.learning.javalearning.step16_java8_essentials;
 
 import java.util.*;
 import java.util.function.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.*;
 
 /**
@@ -16,10 +18,20 @@ import java.util.stream.*;
  */
 public class DefaultStaticInterfaceExample {
 
+    private static final Logger logger = Logger.getLogger(DefaultStaticInterfaceExample.class.getName());
+
+    // S1192: repeated string literals extracted as constants
+    private static final String SECTION_DIVIDER = "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500";
+    private static final String HEADER_BORDER   = "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550";
+    private static final String TABLE_BORDER    = "   +------------------+------------------+------------------+";
+    private static final String FMT_ONE_ARG     = "   {0}";
+    private static final String NAME_ALICE      = "Alice";
+    private static final String NAME_CHARLIE    = "Charlie";
+
     public static void main(String[] args) {
-        System.out.println("═══════════════════════════════════════════");
-        System.out.println("  Step 16: Default & Static Interfaces    ");
-        System.out.println("═══════════════════════════════════════════\n");
+        logger.info(HEADER_BORDER);
+        logger.info("  Step 16: Default & Static Interfaces    ");
+        logger.info(HEADER_BORDER);
 
         defaultMethodBasics();
         staticMethodBasics();
@@ -51,19 +63,21 @@ public class DefaultStaticInterfaceExample {
     }
 
     static void defaultMethodBasics() {
-        System.out.println("1️⃣ DEFAULT METHOD BASICS");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("1\uFE0F\u20E3 DEFAULT METHOD BASICS");
+        logger.info(SECTION_DIVIDER);
 
         // Implement only the abstract method - get defaults for free
         Greeter formal = name -> "Good day, " + name;
         Greeter casual = name -> "Hey " + name;
 
-        System.out.println("   " + formal.greet("Alice"));
-        System.out.println("   " + casual.greet("Bob"));
+        // S2629: use JUL parameterised form so the argument is never evaluated
+        // unconditionally - the logger checks the level first
+        logger.log(Level.INFO, FMT_ONE_ARG, formal.greet(NAME_ALICE));
+        logger.log(Level.INFO, FMT_ONE_ARG, casual.greet("Bob"));
 
         // Default methods work automatically
-        System.out.println("   " + formal.greetAll("Alice", "Bob", "Charlie"));
-        System.out.println("   " + casual.shout("World"));
+        logger.log(Level.INFO, FMT_ONE_ARG, formal.greetAll(NAME_ALICE, "Bob", NAME_CHARLIE));
+        logger.log(Level.INFO, FMT_ONE_ARG, casual.shout("World"));
 
         // Override default method
         Greeter enthusiastic = new Greeter() {
@@ -74,12 +88,12 @@ public class DefaultStaticInterfaceExample {
 
             @Override
             public String shout(String name) {
-                return "🎉 " + greet(name).toUpperCase() + " 🎉";
+                return "\uD83C\uDF89 " + greet(name).toUpperCase() + " \uD83C\uDF89";
             }
         };
-        System.out.println("   " + enthusiastic.shout("Java"));
+        logger.log(Level.INFO, FMT_ONE_ARG, enthusiastic.shout("Java"));
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
@@ -115,41 +129,40 @@ public class DefaultStaticInterfaceExample {
     }
 
     static void staticMethodBasics() {
-        System.out.println("2️⃣ STATIC INTERFACE METHODS");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("2\uFE0F\u20E3 STATIC INTERFACE METHODS");
+        logger.info(SECTION_DIVIDER);
 
         // Call static methods on the interface
-        System.out.println("   add(3, 5): " + MathUtils.add(3, 5));
-        System.out.println("   multiply(4, 7): " + MathUtils.multiply(4, 7));
-        System.out.println("   isEven(6): " + MathUtils.isEven(6));
+        logger.log(Level.INFO, "   add(3, 5): {0}", MathUtils.add(3, 5));
+        logger.log(Level.INFO, "   multiply(4, 7): {0}", MathUtils.multiply(4, 7));
+        logger.log(Level.INFO, "   isEven(6): {0}", MathUtils.isEven(6));
 
         // Unlike default methods, static methods are NOT inherited
-        // class MyMath implements MathUtils { }
-        // MyMath.add(1, 2); // ❌ WON'T COMPILE - static methods not inherited
+        // (MyMath.add(1,2) would not compile - static methods not inherited)
 
         // String utilities
-        System.out.println("   capitalize(\"hello\"): " + StringUtils.capitalize("hello"));
-        System.out.println("   isNullOrEmpty(\"\"): " + StringUtils.isNullOrEmpty(""));
-        System.out.println("   isNullOrEmpty(\"hi\"): " + StringUtils.isNullOrEmpty("hi"));
+        logger.log(Level.INFO, "   capitalize(\"hello\"): {0}", StringUtils.capitalize("hello"));
+        logger.log(Level.INFO, "   isNullOrEmpty(\"\"): {0}", StringUtils.isNullOrEmpty(""));
+        logger.log(Level.INFO, "   isNullOrEmpty(\"hi\"): {0}", StringUtils.isNullOrEmpty("hi"));
 
         // Factory method pattern
-        List<String> names = List.of("Charlie", "alice", "Bob");
+        List<String> names = List.of(NAME_CHARLIE, "alice", "Bob");
         List<String> sorted = names.stream()
                 .sorted(MathUtils.caseInsensitiveComparator())
                 .toList();
-        System.out.println("   Sorted case-insensitive: " + sorted);
+        logger.log(Level.INFO, "   Sorted case-insensitive: {0}", sorted);
 
-        System.out.println("\n   📋 Static vs Default Methods:");
-        System.out.println("   ┌─────────────────┬──────────────────┬──────────────────┐");
-        System.out.println("   │ Feature         │ default          │ static           │");
-        System.out.println("   ├─────────────────┼──────────────────┼──────────────────┤");
-        System.out.println("   │ Inherited?      │ ✅ Yes           │ ❌ No            │");
-        System.out.println("   │ Override?       │ ✅ Yes           │ ❌ No            │");
-        System.out.println("   │ Access 'this'?  │ ✅ Yes           │ ❌ No            │");
-        System.out.println("   │ Called via       │ instance.method  │ Interface.method │");
-        System.out.println("   └─────────────────┴──────────────────┴──────────────────┘");
+        logger.info("   Static vs Default Methods:");
+        logger.info(TABLE_BORDER);
+        logger.info("   | Feature          | default          | static           |");
+        logger.info(TABLE_BORDER);
+        logger.info("   | Inherited?       | Yes              | No               |");
+        logger.info("   | Override?        | Yes              | No               |");
+        logger.info("   | Access 'this'?   | Yes              | No               |");
+        logger.info("   | Called via       | instance.method  | Interface.method |");
+        logger.info(TABLE_BORDER);
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
@@ -160,7 +173,7 @@ public class DefaultStaticInterfaceExample {
     interface CollectionV1 {
         void add(Object item);
         int size();
-        // If we add stream() here, ALL existing classes break! 😱
+        // If we add stream() here, ALL existing classes break!
     }
 
     // After Java 8: default methods let us evolve interfaces safely
@@ -178,43 +191,43 @@ public class DefaultStaticInterfaceExample {
     }
 
     static void interfaceEvolution() {
-        System.out.println("3️⃣ INTERFACE EVOLUTION (Why Default Methods Exist)");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("3\uFE0F\u20E3 INTERFACE EVOLUTION (Why Default Methods Exist)");
+        logger.info(SECTION_DIVIDER);
 
-        System.out.println("   The Problem (Pre-Java 8):");
-        System.out.println("   • Adding a method to java.util.List would break");
-        System.out.println("     EVERY class implementing List worldwide!");
-        System.out.println();
-        System.out.println("   The Solution (Java 8+):");
-        System.out.println("   • default methods provide implementation");
-        System.out.println("   • Existing classes inherit them automatically");
-        System.out.println();
-        System.out.println("   Real methods added via default in Java 8:");
-        System.out.println("   • Iterable.forEach(Consumer)");
-        System.out.println("   • Collection.stream()");
-        System.out.println("   • Collection.removeIf(Predicate)");
-        System.out.println("   • List.sort(Comparator)");
-        System.out.println("   • List.replaceAll(UnaryOperator)");
-        System.out.println("   • Map.forEach(BiConsumer)");
-        System.out.println("   • Map.getOrDefault(key, defaultValue)");
-        System.out.println("   • Map.putIfAbsent(key, value)");
-        System.out.println("   • Map.computeIfAbsent/Present/compute");
-        System.out.println("   • Comparator.thenComparing(...)");
+        logger.info("   The Problem (Pre-Java 8):");
+        logger.info("   - Adding a method to java.util.List would break");
+        logger.info("     EVERY class implementing List worldwide!");
+        logger.info("");
+        logger.info("   The Solution (Java 8+):");
+        logger.info("   - default methods provide implementation");
+        logger.info("   - Existing classes inherit them automatically");
+        logger.info("");
+        logger.info("   Real methods added via default in Java 8:");
+        logger.info("   - Iterable.forEach(Consumer)");
+        logger.info("   - Collection.stream()");
+        logger.info("   - Collection.removeIf(Predicate)");
+        logger.info("   - List.sort(Comparator)");
+        logger.info("   - List.replaceAll(UnaryOperator)");
+        logger.info("   - Map.forEach(BiConsumer)");
+        logger.info("   - Map.getOrDefault(key, defaultValue)");
+        logger.info("   - Map.putIfAbsent(key, value)");
+        logger.info("   - Map.computeIfAbsent/Present/compute");
+        logger.info("   - Comparator.thenComparing(...)");
 
         // Demonstrate some
         Map<String, Integer> map = new HashMap<>();
         map.put("a", 1);
-        map.putIfAbsent("b", 2);     // default method
+        map.putIfAbsent("b", 2);          // default method
         map.computeIfAbsent("c", k -> 3); // default method
         int val = map.getOrDefault("z", 0); // default method
-        System.out.println("\n   Map with defaults: " + map + ", getOrDefault(z): " + val);
+        logger.log(Level.INFO, "   Map with defaults: {0}, getOrDefault(z): {1}", new Object[]{map, val});
 
         List<String> list = new ArrayList<>(List.of("banana", "apple", "cherry"));
         list.sort(Comparator.naturalOrder()); // default method on List
         list.replaceAll(String::toUpperCase); // default method on List
-        System.out.println("   List after sort+replaceAll: " + list);
+        logger.log(Level.INFO, "   List after sort+replaceAll: {0}", list);
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
@@ -231,7 +244,7 @@ public class DefaultStaticInterfaceExample {
         default String describe() { return "I can swim"; }
     }
 
-    // When implementing two interfaces with same default method → MUST override
+    // When implementing two interfaces with same default method - MUST override
     static class Duck implements Flyable, Swimmable {
         @Override
         public String move() {
@@ -260,81 +273,85 @@ public class DefaultStaticInterfaceExample {
     }
 
     static void multipleInheritanceDiamond() {
-        System.out.println("4️⃣ DIAMOND PROBLEM (Multiple Inheritance)");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("4\uFE0F\u20E3 DIAMOND PROBLEM (Multiple Inheritance)");
+        logger.info(SECTION_DIVIDER);
 
         Duck duck = new Duck();
-        System.out.println("   Duck.move(): " + duck.move());
-        System.out.println("   Duck.describe(): " + duck.describe());
+        logger.log(Level.INFO, "   Duck.move(): {0}", duck.move());
+        logger.log(Level.INFO, "   Duck.describe(): {0}", duck.describe());
 
         Human human = new Human();
-        System.out.println("   Human.move(): " + human.move());
-        System.out.println("   Human.terrain(): " + human.terrain());
+        logger.log(Level.INFO, "   Human.move(): {0}", human.move());
+        logger.log(Level.INFO, "   Human.terrain(): {0}", human.terrain());
 
-        System.out.println("\n   📋 Diamond Problem Resolution Rules:");
-        System.out.println("   1. Class methods always win over interface defaults");
-        System.out.println("   2. More specific interface wins (sub-interface > parent)");
-        System.out.println("   3. If ambiguous, class MUST override and choose");
-        System.out.println("   4. Use InterfaceName.super.method() to call specific parent");
+        logger.info("   Diamond Problem Resolution Rules:");
+        logger.info("   1. Class methods always win over interface defaults");
+        logger.info("   2. More specific interface wins (sub-interface > parent)");
+        logger.info("   3. If ambiguous, class MUST override and choose");
+        logger.info("   4. Use InterfaceName.super.method() to call specific parent");
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 5. Functional Interface Default Methods
     // ============================================================
+    @SuppressWarnings("java:S4276") // Section intentionally uses boxed Predicate<Integer> and
+    // Function<String,String> to demonstrate default-method composition (.and/.or/.negate,
+    // .andThen/.compose) - switching to IntPredicate/UnaryOperator would remove .compose demo
     static void functionalInterfaceDefaults() {
-        System.out.println("5️⃣ FUNCTIONAL INTERFACE DEFAULTS");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("5\uFE0F\u20E3 FUNCTIONAL INTERFACE DEFAULTS");
+        logger.info(SECTION_DIVIDER);
 
         // Predicate combining with default methods
         Predicate<Integer> isEven = n -> n % 2 == 0;
         Predicate<Integer> isPositive = n -> n > 0;
         Predicate<Integer> isSmall = n -> n < 100;
 
-        Predicate<Integer> isEvenAndPositive = isEven.and(isPositive);
-        Predicate<Integer> isEvenOrPositive = isEven.or(isPositive);
-        Predicate<Integer> isOdd = isEven.negate();
+        Predicate<Integer> isEvenAndPositive   = isEven.and(isPositive);
+        Predicate<Integer> isEvenOrPositive    = isEven.or(isPositive);
+        Predicate<Integer> isOdd               = isEven.negate();
         Predicate<Integer> isEvenPositiveSmall = isEven.and(isPositive).and(isSmall);
 
         List<Integer> numbers = List.of(-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 200);
 
-        System.out.println("   Even AND Positive: " + filter(numbers, isEvenAndPositive));
-        System.out.println("   Even OR Positive: " + filter(numbers, isEvenOrPositive));
-        System.out.println("   Odd: " + filter(numbers, isOdd));
-        System.out.println("   Even+Positive+Small: " + filter(numbers, isEvenPositiveSmall));
+        logger.log(Level.INFO, "   Even AND Positive: {0}", filter(numbers, isEvenAndPositive));
+        logger.log(Level.INFO, "   Even OR Positive: {0}",  filter(numbers, isEvenOrPositive));
+        logger.log(Level.INFO, "   Odd: {0}",               filter(numbers, isOdd));
+        logger.log(Level.INFO, "   Even+Positive+Small: {0}", filter(numbers, isEvenPositiveSmall));
 
         // Function composition with default methods
-        Function<String, String> trim = String::trim;
-        Function<String, String> lower = String::toLowerCase;
+        // Function<String,String> used deliberately (not UnaryOperator) to show .compose()
+        Function<String, String> trim    = String::trim;
+        Function<String, String> lower   = String::toLowerCase;
         Function<String, String> exclaim = s -> s + "!";
 
         Function<String, String> pipeline = trim.andThen(lower).andThen(exclaim);
-        System.out.println("\n   Pipeline(\"  HELLO  \"): " + pipeline.apply("  HELLO  "));
+        logger.log(Level.INFO, "   Pipeline(\"  HELLO  \"): {0}", pipeline.apply("  HELLO  "));
 
-        // compose vs andThen
+        // compose vs andThen - Function used to show both directions
         Function<Integer, Integer> multiplyBy2 = x -> x * 2;
-        Function<Integer, Integer> add10 = x -> x + 10;
+        Function<Integer, Integer> add10       = x -> x + 10;
 
-        System.out.println("   andThen: multiply then add: " + multiplyBy2.andThen(add10).apply(5)); // (5*2)+10=20
-        System.out.println("   compose: add then multiply: " + multiplyBy2.compose(add10).apply(5)); // (5+10)*2=30
+        logger.log(Level.INFO, "   andThen: multiply then add: {0}", multiplyBy2.andThen(add10).apply(5)); // (5*2)+10=20
+        logger.log(Level.INFO, "   compose: add then multiply: {0}", multiplyBy2.compose(add10).apply(5)); // (5+10)*2=30
 
         // Consumer chaining
-        Consumer<String> print = s -> System.out.print("   → " + s);
-        Consumer<String> println = s -> System.out.println(" (length: " + s.length() + ")");
+        Consumer<String> print           = s -> logger.log(Level.INFO, "   -> {0}", s);
+        Consumer<String> println         = s -> logger.log(Level.INFO, " (length: {0})", s.length());
         Consumer<String> printWithLength = print.andThen(println);
 
         printWithLength.accept("Hello");
         printWithLength.accept("Java 8");
 
         // Comparator chaining with default methods
-        System.out.println();
+        logger.info("");
         record Student(String name, int grade, double gpa) {}
         List<Student> students = List.of(
-            new Student("Alice", 12, 3.8),
-            new Student("Bob", 11, 3.9),
-            new Student("Charlie", 12, 3.8),
-            new Student("Diana", 11, 3.7)
+            new Student(NAME_ALICE,   12, 3.8),
+            new Student("Bob",        11, 3.9),
+            new Student(NAME_CHARLIE, 12, 3.8),
+            new Student("Diana",      11, 3.7)
         );
 
         List<Student> sorted = students.stream()
@@ -342,11 +359,11 @@ public class DefaultStaticInterfaceExample {
                         .thenComparing(Student::gpa, Comparator.reverseOrder())
                         .thenComparing(Student::name))
                 .toList();
-        System.out.println("   Sorted students (grade → GPA desc → name):");
-        sorted.forEach(s -> System.out.printf("   %s: Grade %d, GPA %.1f%n",
-            s.name(), s.grade(), s.gpa()));
+        logger.info("   Sorted students (grade -> GPA desc -> name):");
+        sorted.forEach(s -> logger.log(Level.INFO, "   {0}: Grade {1}, GPA {2}",
+            new Object[]{s.name(), s.grade(), s.gpa()}));
 
-        System.out.println();
+        logger.info("");
     }
 
     static <T> List<T> filter(List<T> list, Predicate<T> predicate) {
@@ -402,36 +419,36 @@ public class DefaultStaticInterfaceExample {
     }
 
     static void compositionWithDefaults() {
-        System.out.println("6️⃣ BUILDING COMPOSABLE APIs WITH DEFAULTS");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("6\uFE0F\u20E3 BUILDING COMPOSABLE APIs WITH DEFAULTS");
+        logger.info(SECTION_DIVIDER);
 
         // Composable validators
-        Validator<String> notEmpty = s -> !s.isEmpty();
-        Validator<String> hasAt = s -> s.contains("@");
-        Validator<String> hasDot = s -> s.contains(".");
-        Validator<String> noSpaces = s -> !s.contains(" ");
+        Validator<String> notEmpty  = s -> !s.isEmpty();
+        Validator<String> hasAt     = s -> s.contains("@");
+        Validator<String> hasDot    = s -> s.contains(".");
+        Validator<String> noSpaces  = s -> !s.contains(" ");
 
         Validator<String> emailValidator = notEmpty.and(hasAt).and(hasDot).and(noSpaces);
 
         List<String> emails = List.of("good@email.com", "bad", "no@dot", "has @space.com", "");
-        emails.forEach(e -> System.out.println("   " + e + " → " +
-            (emailValidator.validate(e) ? "✅ valid" : "❌ invalid")));
+        emails.forEach(e -> logger.log(Level.INFO, "   {0} -> {1}",
+            new Object[]{e, emailValidator.validate(e) ? "valid" : "invalid"}));
 
         // Composable transformers
-        System.out.println();
-        Transformer<String> trim = String::trim;
-        Transformer<String> lower = String::toLowerCase;
+        logger.info("");
+        Transformer<String> trim          = String::trim;
+        Transformer<String> lower         = String::toLowerCase;
         Transformer<String> removeSpecial = s -> s.replaceAll("[^a-z0-9]", "");
 
         Transformer<String> slugify = trim.andThen(lower).andThen(removeSpecial);
-        System.out.println("   Slugify(\"  Hello World! \"): " + slugify.transform("  Hello World! "));
+        logger.log(Level.INFO, "   Slugify(\"  Hello World! \"): {0}", slugify.transform("  Hello World! "));
 
         // Chain from list
         List<Transformer<String>> transforms = List.of(trim, lower, s -> s.replace(" ", "-"));
         Transformer<String> pipeline = Transformer.chain(transforms);
-        System.out.println("   Pipeline(\"  Hello World \"): " + pipeline.transform("  Hello World "));
+        logger.log(Level.INFO, "   Pipeline(\"  Hello World \"): {0}", pipeline.transform("  Hello World "));
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
@@ -478,25 +495,25 @@ public class DefaultStaticInterfaceExample {
     }
 
     static void realWorldExamples() {
-        System.out.println("7️⃣ REAL-WORLD EXAMPLES");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("7\uFE0F\u20E3 REAL-WORLD EXAMPLES");
+        logger.info(SECTION_DIVIDER);
 
         // Plugin system
-        System.out.println("   📌 Plugin System:");
-        Plugin logger = Plugin.simple("Logger",
-            ctx -> System.out.println("   [LOG] Processing: " + ctx));
+        logger.info("   Plugin System:");
+        Plugin loggingPlugin = Plugin.simple("Logger",
+            ctx -> logger.log(Level.INFO, "   [LOG] Processing: {0}", ctx));
 
         Plugin timer = new Plugin() {
             @Override public String name() { return "Timer"; }
             @Override public int priority() { return 10; } // Override default
             @Override public void execute(Map<String, Object> ctx) {
                 long start = System.nanoTime();
-                System.out.println("   [TIMER] Execution tracked");
+                logger.info("   [TIMER] Execution tracked");
                 ctx.put("elapsed_ns", System.nanoTime() - start);
             }
         };
 
-        List<Plugin> plugins = List.of(logger, timer);
+        List<Plugin> plugins = List.of(loggingPlugin, timer);
         Map<String, Object> context = new HashMap<>(Map.of("data", "test"));
 
         // Execute plugins sorted by priority (using default priority)
@@ -504,12 +521,13 @@ public class DefaultStaticInterfaceExample {
                 .filter(Plugin::isEnabled) // default method
                 .sorted(Comparator.comparing(Plugin::priority))
                 .forEach(p -> {
-                    System.out.println("   Running: " + p.name() + " (priority: " + p.priority() + ")");
+                    logger.log(Level.INFO, "   Running: {0} (priority: {1})",
+                        new Object[]{p.name(), p.priority()});
                     p.execute(context);
                 });
 
         // Builder pattern with interface defaults
-        System.out.println("\n   📌 Fluent API with Defaults:");
+        logger.info("   Fluent API with Defaults:");
         interface Configurable<T> {
             T withConfig(String key, String value);
             default T withName(String name) { return withConfig("name", name); }
@@ -517,26 +535,23 @@ public class DefaultStaticInterfaceExample {
             default T enabled() { return withConfig("enabled", "true"); }
         }
 
-        System.out.println("   (Configurable interface supports fluent API with defaults)");
+        logger.info("   (Configurable interface supports fluent API with defaults)");
 
         // Summary
-        System.out.println("\n   📋 Default & Static Interface Methods Summary:");
-        System.out.println("   ┌─────────────────────────────────────────────────────────┐");
-        System.out.println("   │ Default Methods:                                        │");
-        System.out.println("   │ • Enable interface evolution without breaking code       │");
-        System.out.println("   │ • Provide shared behavior across implementations        │");
-        System.out.println("   │ • Support composition (and, or, andThen, compose)       │");
-        System.out.println("   │ • Can be overridden by implementing classes             │");
-        System.out.println("   │                                                         │");
-        System.out.println("   │ Static Methods:                                         │");
-        System.out.println("   │ • Replace utility classes (Collections → Collection)    │");
-        System.out.println("   │ • Factory methods (Comparator.comparing())              │");
-        System.out.println("   │ • Helper/validation methods                             │");
-        System.out.println("   │ • NOT inherited by implementing classes                 │");
-        System.out.println("   └─────────────────────────────────────────────────────────┘");
+        logger.info("   Default & Static Interface Methods Summary:");
+        logger.info("   Default Methods:");
+        logger.info("   - Enable interface evolution without breaking code");
+        logger.info("   - Provide shared behavior across implementations");
+        logger.info("   - Support composition (and, or, andThen, compose)");
+        logger.info("   - Can be overridden by implementing classes");
+        logger.info("   Static Methods:");
+        logger.info("   - Replace utility classes (Collections -> Collection)");
+        logger.info("   - Factory methods (Comparator.comparing())");
+        logger.info("   - Helper/validation methods");
+        logger.info("   - NOT inherited by implementing classes");
 
-        System.out.println("\n═══════════════════════════════════════════");
-        System.out.println("  ✅ Default & Static Interfaces: Complete!");
-        System.out.println("═══════════════════════════════════════════");
+        logger.info(HEADER_BORDER);
+        logger.info("  Default & Static Interfaces: Complete!");
+        logger.info(HEADER_BORDER);
     }
 }

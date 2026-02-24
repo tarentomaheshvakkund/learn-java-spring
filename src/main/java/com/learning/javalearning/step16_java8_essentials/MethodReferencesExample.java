@@ -3,13 +3,14 @@ package com.learning.javalearning.step16_java8_essentials;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
+import java.util.logging.Logger;
 
 /**
  * Step 16: Method References - Shorthand for Lambda Expressions
- * 
+ *
  * Method references are a compact way to refer to an existing method.
  * They replace simple lambdas that only call a single method.
- * 
+ *
  * Four types:
  * 1. Static method:     ClassName::staticMethod
  * 2. Instance method:   instance::instanceMethod
@@ -18,10 +19,16 @@ import java.util.stream.*;
  */
 public class MethodReferencesExample {
 
+    private static final Logger logger = Logger.getLogger(MethodReferencesExample.class.getName());
+    private static final String SECTION_SEP = "─────────────────────────────────\n";
+    private static final String LAMBDA_RESULT = "   (lambda result): ";
+    private static final String NAME_ALICE       = "Alice";
+    private static final String CAT_ELECTRONICS  = "Electronics";
+
     public static void main(String[] args) {
-        System.out.println("═══════════════════════════════════════════");
-        System.out.println("  Step 16: Method References              ");
-        System.out.println("═══════════════════════════════════════════\n");
+        logger.info("═══════════════════════════════════════════");
+        logger.info("  Step 16: Method References              ");
+        logger.info("═══════════════════════════════════════════\n");
 
         staticMethodRef();
         instanceMethodRef();
@@ -35,17 +42,20 @@ public class MethodReferencesExample {
     // ============================================================
     // 1. Static Method Reference (ClassName::staticMethod)
     // ============================================================
+    // S1612/S4276: lambdas and boxed types kept intentionally to contrast lambda vs method reference
+    @SuppressWarnings({"java:S1612", "java:S4276"})
     static void staticMethodRef() {
-        System.out.println("1️⃣ STATIC METHOD REFERENCE (ClassName::staticMethod)");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("1️⃣ STATIC METHOD REFERENCE (ClassName::staticMethod)");
+        logger.info(SECTION_SEP);
 
         // Lambda vs Method Reference
         // ❌ Lambda
         Function<String, Integer> parseIntLambda = s -> Integer.parseInt(s);
+        logger.info(() -> LAMBDA_RESULT + parseIntLambda.apply("42"));
         // ✅ Method Reference
         Function<String, Integer> parseIntRef = Integer::parseInt;
 
-        System.out.println("   parseInt(\"42\"): " + parseIntRef.apply("42"));
+        logger.info(() -> "   parseInt(\"42\"): " + parseIntRef.apply("42"));
 
         // More examples
         List<String> numbers = List.of("1", "2", "3", "4", "5");
@@ -54,30 +64,32 @@ public class MethodReferencesExample {
         List<Integer> parsed1 = numbers.stream()
                 .map(s -> Integer.parseInt(s))
                 .toList();
+        logger.info(() -> LAMBDA_RESULT + parsed1);
 
         // Method Reference (cleaner)
         List<Integer> parsed2 = numbers.stream()
                 .map(Integer::parseInt)
                 .toList();
 
-        System.out.println("   Parsed numbers: " + parsed2);
+        logger.info(() -> "   Parsed numbers: " + parsed2);
 
         // Math static methods
         List<Double> values = List.of(-3.5, 2.1, -1.7, 4.9);
         List<Double> absolutes = values.stream().map(Math::abs).toList();
-        System.out.println("   Absolutes: " + absolutes);
+        logger.info(() -> "   Absolutes: " + absolutes);
 
         // Static method with two args
         BinaryOperator<Integer> maxLambda = (a, b) -> Integer.max(a, b);
+        logger.info(() -> LAMBDA_RESULT + maxLambda.apply(10, 20));
         BinaryOperator<Integer> maxRef = Integer::max;
-        System.out.println("   max(10, 20): " + maxRef.apply(10, 20));
+        logger.info(() -> "   max(10, 20): " + maxRef.apply(10, 20));
 
         // Custom static method
         List<String> names = List.of("alice", "bob", "charlie");
         List<String> upper = names.stream().map(MethodReferencesExample::toUpperCase).toList();
-        System.out.println("   Uppercased: " + upper);
+        logger.info(() -> "   Uppercased: " + upper);
 
-        System.out.println();
+        logger.info("");
     }
 
     static String toUpperCase(String s) {
@@ -87,44 +99,47 @@ public class MethodReferencesExample {
     // ============================================================
     // 2. Instance Method Reference (instance::method)
     // ============================================================
+    // S1612/S4276: lambdas and boxed types kept intentionally to contrast lambda vs method reference
+    @SuppressWarnings({"java:S1612", "java:S4276"})
     static void instanceMethodRef() {
-        System.out.println("2️⃣ INSTANCE METHOD REFERENCE (instance::method)");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("2️⃣ INSTANCE METHOD REFERENCE (instance::method)");
+        logger.info(SECTION_SEP);
 
         // Reference to a specific instance's method
         String prefix = "Hello, ";
 
         // Lambda
         Function<String, String> greeterLambda = name -> prefix.concat(name);
+        logger.info(() -> LAMBDA_RESULT + greeterLambda.apply("World"));
         // Method Reference
         Function<String, String> greeterRef = prefix::concat;
 
-        System.out.println("   " + greeterRef.apply("World"));
+        logger.info(() -> "   " + greeterRef.apply("World"));
 
         // Printer example
         List<String> fruits = List.of("Apple", "Banana", "Cherry");
 
         // Lambda
-        fruits.forEach(f -> System.out.println("   Lambda: " + f));
+        fruits.forEach(f -> logger.info(() -> "   Lambda: " + f));
 
-        // Method Reference on PrintStream instance
-        // System.out is the instance, println is the method
-        System.out.print("   Method ref: ");
-        fruits.forEach(System.out::println); // tricky - prints on new lines
+        // Method Reference on logger instance
+        // logger is the instance, info is the method
+        logger.info("   Method ref (via logger::info method reference):");
+        fruits.forEach(logger::info);  // logger::info is a method reference!
 
         // Custom instance
         StringProcessor processor = new StringProcessor(">>>");
         List<String> processed = fruits.stream()
                 .map(processor::process)
                 .toList();
-        System.out.println("   Processed: " + processed);
+        logger.info(() -> "   Processed: " + processed);
 
         // Instance method on a captured variable
         Comparator<String> comp = String.CASE_INSENSITIVE_ORDER;
         List<String> sorted = fruits.stream().sorted(comp::compare).toList();
-        System.out.println("   Sorted: " + sorted);
+        logger.info(() -> "   Sorted: " + sorted);
 
-        System.out.println();
+        logger.info("");
     }
 
     static class StringProcessor {
@@ -142,9 +157,10 @@ public class MethodReferencesExample {
     // ============================================================
     // 3. Arbitrary Object Instance Method (ClassName::instanceMethod)
     // ============================================================
+    @SuppressWarnings("java:S1612") // lambda kept intentionally to contrast with method reference
     static void arbitraryObjectMethodRef() {
-        System.out.println("3️⃣ ARBITRARY OBJECT METHOD REF (ClassName::instanceMethod)");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("3️⃣ ARBITRARY OBJECT METHOD REF (ClassName::instanceMethod)");
+        logger.info(SECTION_SEP);
 
         // The first parameter becomes the object the method is called on
         // String::toLowerCase is equivalent to (String s) -> s.toLowerCase()
@@ -153,43 +169,45 @@ public class MethodReferencesExample {
 
         // Lambda
         List<String> lower1 = names.stream().map(s -> s.toLowerCase()).toList();
+        logger.info(() -> LAMBDA_RESULT + lower1);
         // Method Reference - called on each element
         List<String> lower2 = names.stream().map(String::toLowerCase).toList();
-        System.out.println("   Lowercased: " + lower2);
+        logger.info(() -> "   Lowercased: " + lower2);
 
         // String::length as Function<String, Integer>
         List<Integer> lengths = names.stream().map(String::length).toList();
-        System.out.println("   Lengths: " + lengths);
+        logger.info(() -> "   Lengths: " + lengths);
 
         // String::compareTo as Comparator
         // (s1, s2) -> s1.compareTo(s2)  →  String::compareTo
         List<String> sorted = names.stream().sorted(String::compareTo).toList();
-        System.out.println("   Sorted: " + sorted);
+        logger.info(() -> "   Sorted: " + sorted);
 
         // String::isEmpty as Predicate<String>
         List<String> mixed = List.of("hello", "", "world", "", "!");
         List<String> nonEmpty = mixed.stream().filter(Predicate.not(String::isEmpty)).toList();
-        System.out.println("   Non-empty: " + nonEmpty);
+        logger.info(() -> "   Non-empty: " + nonEmpty);
 
         // Understanding the difference:
-        System.out.println("\n   📋 Instance vs Arbitrary Object:");
-        System.out.println("   ┌───────────────────────┬────────────────────────────────┐");
-        System.out.println("   │ instance::method      │ Bound to specific instance     │");
-        System.out.println("   │                       │ e.g., str::length              │");
-        System.out.println("   ├───────────────────────┼────────────────────────────────┤");
-        System.out.println("   │ ClassName::method     │ Called on first parameter      │");
-        System.out.println("   │                       │ e.g., String::length           │");
-        System.out.println("   └───────────────────────┴────────────────────────────────┘");
+        logger.info("\n   📋 Instance vs Arbitrary Object:");
+        logger.info("   ┌───────────────────────┬────────────────────────────────┐");
+        logger.info("   │ instance::method      │ Bound to specific instance     │");
+        logger.info("   │                       │ e.g., str::length              │");
+        logger.info("   ├───────────────────────┼────────────────────────────────┤");
+        logger.info("   │ ClassName::method     │ Called on first parameter      │");
+        logger.info("   │                       │ e.g., String::length           │");
+        logger.info("   └───────────────────────┴────────────────────────────────┘");
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 4. Constructor Reference (ClassName::new)
     // ============================================================
+    @SuppressWarnings("java:S1612") // lambda kept intentionally to contrast with constructor reference
     static void constructorRef() {
-        System.out.println("4️⃣ CONSTRUCTOR REFERENCE (ClassName::new)");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("4️⃣ CONSTRUCTOR REFERENCE (ClassName::new)");
+        logger.info(SECTION_SEP);
 
         // Lambda vs Constructor Reference
         // ❌ Lambda
@@ -199,133 +217,135 @@ public class MethodReferencesExample {
 
         List<String> newList = listRef.get();
         newList.add("Hello");
-        System.out.println("   Created list: " + newList);
+        logger.info(() -> "   Created list: " + newList);
+        logger.info(() -> "   (lambda also creates list): " + listLambda.get());
 
         // With parameters
         // Function<String, StringBuilder>
         Function<String, StringBuilder> sbCreator = StringBuilder::new;
         StringBuilder sb = sbCreator.apply("Initial");
-        System.out.println("   StringBuilder: " + sb);
+        logger.info(() -> "   StringBuilder: " + sb);
 
         // Convert strings to records
         record Person(String name) {}
 
-        List<String> names = List.of("Alice", "Bob", "Charlie");
+        List<String> names = List.of(NAME_ALICE, "Bob", "Charlie");
 
         // Lambda
         List<Person> people1 = names.stream().map(n -> new Person(n)).toList();
+        logger.info(() -> "   (lambda people): " + people1);
         // Constructor Reference
         List<Person> people2 = names.stream().map(Person::new).toList();
-        System.out.println("   People: " + people2);
+        logger.info(() -> "   People: " + people2);
 
         // Array constructor reference
         // IntFunction<String[]> creates array of given size
         String[] nameArray = names.stream().toArray(String[]::new);
-        System.out.println("   Array: " + Arrays.toString(nameArray));
+        logger.info(() -> "   Array: " + Arrays.toString(nameArray));
 
         // Two-arg constructor
         record Employee(String name, String dept) {}
         BiFunction<String, String, Employee> empCreator = Employee::new;
-        Employee emp = empCreator.apply("Alice", "Engineering");
-        System.out.println("   Employee: " + emp);
+        Employee emp = empCreator.apply(NAME_ALICE, "Engineering");
+        logger.info(() -> "   Employee: " + emp);
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 5. Method References with Streams
     // ============================================================
     static void methodRefWithStreams() {
-        System.out.println("5️⃣ METHOD REFERENCES WITH STREAMS");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("5️⃣ METHOD REFERENCES WITH STREAMS");
+        logger.info(SECTION_SEP);
 
         record Product(String name, double price, String category) {}
 
         List<Product> products = List.of(
-            new Product("Laptop", 999.99, "Electronics"),
+            new Product("Laptop", 999.99, CAT_ELECTRONICS),
             new Product("Book", 29.99, "Education"),
-            new Product("Phone", 699.99, "Electronics"),
+            new Product("Phone", 699.99, CAT_ELECTRONICS),
             new Product("Pen", 2.99, "Office"),
-            new Product("Tablet", 449.99, "Electronics")
+            new Product("Tablet", 449.99, CAT_ELECTRONICS)
         );
 
         // map with method refs
         List<String> names = products.stream().map(Product::name).toList();
-        System.out.println("   Product names: " + names);
+        logger.info(() -> "   Product names: " + names);
 
         // Sorting with method ref comparator
         List<Product> byPrice = products.stream()
                 .sorted(Comparator.comparing(Product::price))
                 .toList();
-        System.out.println("   By price: " + byPrice.stream().map(Product::name).toList());
+        logger.info(() -> "   By price: " + byPrice.stream().map(Product::name).toList());
 
         // Grouping
         Map<String, List<Product>> byCategory = products.stream()
                 .collect(Collectors.groupingBy(Product::category));
         byCategory.forEach((cat, prods) ->
-            System.out.println("   " + cat + ": " + prods.stream().map(Product::name).toList()));
+            logger.info(() -> "   " + cat + ": " + prods.stream().map(Product::name).toList()));
 
         // Statistics
         DoubleSummaryStatistics stats = products.stream()
                 .mapToDouble(Product::price)
                 .summaryStatistics();
-        System.out.printf("   Price stats: min=%.2f, max=%.2f, avg=%.2f%n",
-            stats.getMin(), stats.getMax(), stats.getAverage());
+        logger.info(() -> String.format("   Price stats: min=%.2f, max=%.2f, avg=%.2f",
+            stats.getMin(), stats.getMax(), stats.getAverage()));
 
         // Chaining
         String catalog = products.stream()
                 .sorted(Comparator.comparing(Product::price).reversed())
                 .map(Product::name)
                 .collect(Collectors.joining(", "));
-        System.out.println("   Catalog (expensive first): " + catalog);
+        logger.info(() -> "   Catalog (expensive first): " + catalog);
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 6. When to Use Method References
     // ============================================================
     static void whenToUseMethodRefs() {
-        System.out.println("6️⃣ WHEN TO USE (and NOT use) METHOD REFS");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("6️⃣ WHEN TO USE (and NOT use) METHOD REFS");
+        logger.info(SECTION_SEP);
 
         // ✅ USE: Simple, single-method lambdas
-        System.out.println("   ✅ USE when lambda just delegates to a single method:");
-        System.out.println("      s -> s.toLowerCase()       →  String::toLowerCase");
-        System.out.println("      s -> Integer.parseInt(s)   →  Integer::parseInt");
-        System.out.println("      () -> new ArrayList<>()    →  ArrayList::new");
-        System.out.println("      s -> System.out.println(s) →  System.out::println");
+        logger.info("   ✅ USE when lambda just delegates to a single method:");
+        logger.info("      s -> s.toLowerCase()       →  String::toLowerCase");
+        logger.info("      s -> Integer.parseInt(s)   →  Integer::parseInt");
+        logger.info("      () -> new ArrayList<>()    →  ArrayList::new");
+        logger.info("      s -> System.out.println(s) →  System.out::println");
 
         // ❌ DON'T USE: Complex logic, multiple operations
-        System.out.println("\n   ❌ DON'T USE when lambda has logic:");
-        System.out.println("      s -> s.trim().toLowerCase()        (multiple calls)");
-        System.out.println("      s -> s.length() > 5                (comparison)");
-        System.out.println("      (a, b) -> a + \"-\" + b             (concatenation)");
-        System.out.println("      s -> { log(s); return process(s); } (multi-statement)");
+        logger.info("\n   ❌ DON'T USE when lambda has logic:");
+        logger.info("      s -> s.trim().toLowerCase()        (multiple calls)");
+        logger.info("      s -> s.length() > 5                (comparison)");
+        logger.info("      (a, b) -> a + \"-\" + b             (concatenation)");
+        logger.info("      s -> { log(s); return process(s); } (multi-statement)");
 
         // Quick reference
-        System.out.println("\n   📋 Complete Reference:");
-        System.out.println("   ┌────────────────────┬───────────────────────┬──────────────────────┐");
-        System.out.println("   │ Type               │ Lambda                │ Method Reference     │");
-        System.out.println("   ├────────────────────┼───────────────────────┼──────────────────────┤");
-        System.out.println("   │ Static method      │ x -> Class.method(x) │ Class::method        │");
-        System.out.println("   │ Bound instance     │ x -> obj.method(x)   │ obj::method          │");
-        System.out.println("   │ Unbound instance   │ x -> x.method()      │ Class::method        │");
-        System.out.println("   │ Constructor        │ x -> new Class(x)    │ Class::new           │");
-        System.out.println("   └────────────────────┴───────────────────────┴──────────────────────┘");
+        logger.info("\n   📋 Complete Reference:");
+        logger.info("   ┌────────────────────┬───────────────────────┬──────────────────────┐");
+        logger.info("   │ Type               │ Lambda                │ Method Reference     │");
+        logger.info("   ├────────────────────┼───────────────────────┼──────────────────────┤");
+        logger.info("   │ Static method      │ x -> Class.method(x) │ Class::method        │");
+        logger.info("   │ Bound instance     │ x -> obj.method(x)   │ obj::method          │");
+        logger.info("   │ Unbound instance   │ x -> x.method()      │ Class::method        │");
+        logger.info("   │ Constructor        │ x -> new Class(x)    │ Class::new           │");
+        logger.info("   └────────────────────┴───────────────────────┴──────────────────────┘");
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 7. Real-World Examples
     // ============================================================
     static void realWorldExamples() {
-        System.out.println("7️⃣ REAL-WORLD METHOD REFERENCE EXAMPLES");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("7️⃣ REAL-WORLD METHOD REFERENCE EXAMPLES");
+        logger.info(SECTION_SEP);
 
         // Example 1: Event handler registration
-        System.out.println("   📌 Event Handler Pattern:");
+        logger.info("   📌 Event Handler Pattern:");
         EventBus bus = new EventBus();
         bus.register("click", MethodReferencesExample::handleClick);
         bus.register("hover", MethodReferencesExample::handleHover);
@@ -333,40 +353,40 @@ public class MethodReferencesExample {
         bus.emit("hover", "menu-item");
 
         // Example 2: Validation pipeline
-        System.out.println("\n   📌 Validation Pipeline:");
+        logger.info("\n   📌 Validation Pipeline:");
         List<String> emails = List.of("alice@example.com", "", "invalid", "bob@test.com", null);
         List<String> valid = emails.stream()
                 .filter(Objects::nonNull)
                 .filter(Predicate.not(String::isEmpty))
                 .filter(MethodReferencesExample::isValidEmail)
                 .toList();
-        System.out.println("   Valid emails: " + valid);
+        logger.info(() -> "   Valid emails: " + valid);
 
         // Example 3: Map operations
-        System.out.println("\n   📌 Map Operations:");
-        Map<String, Integer> scores = Map.of("Alice", 95, "Bob", 82, "Charlie", 91);
+        logger.info("\n   📌 Map Operations:");
+        Map<String, Integer> scores = Map.of(NAME_ALICE, 95, "Bob", 82, "Charlie", 91);
         scores.forEach((name, score) ->
-            System.out.printf("   %s: %d (%s)%n", name, score, score >= 90 ? "A" : "B"));
+            logger.info(() -> String.format("   %s: %d (%s)", name, score, score >= 90 ? "A" : "B")));
 
         // Example 4: Collector to custom type
-        System.out.println("\n   📌 Collecting to Custom Types:");
+        logger.info("\n   📌 Collecting to Custom Types:");
         List<String> words = List.of("hello", "world", "java", "rocks");
         String result = words.stream()
                 .map(String::toUpperCase)
                 .collect(Collectors.joining(" | "));
-        System.out.println("   Result: " + result);
+        logger.info(() -> "   Result: " + result);
 
-        System.out.println("\n═══════════════════════════════════════════");
-        System.out.println("  ✅ Method References: Complete!          ");
-        System.out.println("═══════════════════════════════════════════");
+        logger.info("\n═══════════════════════════════════════════");
+        logger.info("  ✅ Method References: Complete!          ");
+        logger.info("═══════════════════════════════════════════");
     }
 
     static void handleClick(String target) {
-        System.out.println("   Clicked: " + target);
+        logger.info(() -> "   Clicked: " + target);
     }
 
     static void handleHover(String target) {
-        System.out.println("   Hovered: " + target);
+        logger.info(() -> "   Hovered: " + target);
     }
 
     static boolean isValidEmail(String email) {

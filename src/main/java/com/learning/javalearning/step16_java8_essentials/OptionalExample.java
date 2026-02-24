@@ -1,15 +1,16 @@
 package com.learning.javalearning.step16_java8_essentials;
 
 import java.util.*;
-import java.util.stream.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Step 16: Optional - Null-Safe Programming
- * 
+ *
  * Optional<T> is a container that may or may not contain a non-null value.
  * It forces you to think about the absent case and provides fluent API
  * to handle nullable values without NullPointerException.
- * 
+ *
  * Key rules:
  * - NEVER use Optional for fields or method parameters
  * - USE Optional for method return values when result might be absent
@@ -18,13 +19,23 @@ import java.util.stream.*;
  */
 public class OptionalExample {
 
+    private static final Logger logger = Logger.getLogger(OptionalExample.class.getName());
+
+    private static final String SEPARATOR = "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n";
+    private static final String GREETING_HELLO = "Hello";
+    private static final String DEFAULT_UNKNOWN = "unknown";
+    private static final String CONFIG_DB_URL   = "DB_URL";
+    private static final String CONFIG_DB_DOT_URL = "db.url";
+    private static final String CONFIG_DATABASE_URL = "database.url";
+    private static final String NAME_ALICE      = "Alice";
+
     record User(String name, String email, Optional<String> phone, Optional<Address> address) {}
     record Address(String street, String city, Optional<String> zipCode) {}
 
     public static void main(String[] args) {
-        System.out.println("═══════════════════════════════════════════");
-        System.out.println("  Step 16: Optional - Null-Safe Java      ");
-        System.out.println("═══════════════════════════════════════════\n");
+        logger.info("\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
+        logger.info("  Step 16: Optional - Null-Safe Java      ");
+        logger.info("\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n");
 
         creatingOptionals();
         checkingValues();
@@ -40,93 +51,96 @@ public class OptionalExample {
     // 1. Creating Optionals
     // ============================================================
     static void creatingOptionals() {
-        System.out.println("1️⃣ CREATING OPTIONALS");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("1\uFE0F\u20E3 CREATING OPTIONALS");
+        logger.info(SEPARATOR);
 
         // Optional.of() - value MUST be non-null
-        Optional<String> present = Optional.of("Hello");
-        System.out.println("   Optional.of(\"Hello\"): " + present);
+        Optional<String> present = Optional.of(GREETING_HELLO);
+        logger.log(Level.INFO, "   Optional.of(\"Hello\"): {0}", present);
 
         // Optional.empty() - represents absent value
         Optional<String> empty = Optional.empty();
-        System.out.println("   Optional.empty(): " + empty);
+        logger.log(Level.INFO, "   Optional.empty(): {0}", empty);
 
         // Optional.ofNullable() - handles both null and non-null
         String name = "Java";
         String nullName = null;
-        Optional<String> withValue = Optional.ofNullable(name);
+        Optional<String> withValue    = Optional.ofNullable(name);
         Optional<String> withoutValue = Optional.ofNullable(nullName);
-        System.out.println("   ofNullable(\"Java\"): " + withValue);
-        System.out.println("   ofNullable(null): " + withoutValue);
+        logger.log(Level.INFO, "   ofNullable(\"Java\"): {0}", withValue);
+        logger.log(Level.INFO, "   ofNullable(null): {0}", withoutValue);
 
         // ⚠️ Optional.of(null) throws NullPointerException!
         try {
             Optional<String> willFail = Optional.of(null);
+            // This line is never reached; willFail exists to satisfy the compiler
+            logger.log(Level.INFO, "   (unexpected value: {0})", willFail);
         } catch (NullPointerException e) {
-            System.out.println("   ⚠️ Optional.of(null) → NullPointerException!");
+            logger.info("   \u26A0\uFE0F Optional.of(null) \u2192 NullPointerException!");
         }
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 2. Checking and Extracting Values
     // ============================================================
     static void checkingValues() {
-        System.out.println("2️⃣ CHECKING AND EXTRACTING VALUES");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("2\uFE0F\u20E3 CHECKING AND EXTRACTING VALUES");
+        logger.info(SEPARATOR);
 
-        Optional<String> present = Optional.of("Hello");
+        Optional<String> present = Optional.of(GREETING_HELLO);
         Optional<String> empty = Optional.empty();
 
         // isPresent() / isEmpty() (isEmpty added in Java 11)
-        System.out.println("   present.isPresent(): " + present.isPresent());   // true
-        System.out.println("   empty.isPresent(): " + empty.isPresent());       // false
-        System.out.println("   empty.isEmpty(): " + empty.isEmpty());           // true
+        logger.log(Level.INFO, "   present.isPresent(): {0}", present.isPresent());   // true
+        logger.log(Level.INFO, "   empty.isPresent(): {0}",   empty.isPresent());     // false
+        logger.log(Level.INFO, "   empty.isEmpty(): {0}",     empty.isEmpty());       // true
 
         // get() - ⚠️ throws NoSuchElementException if empty
-        System.out.println("   present.get(): " + present.get());
+        logger.log(Level.INFO, "   present.get(): {0}", present.get());
         // empty.get(); // Would throw NoSuchElementException!
 
         // orElse() - provide default value
-        System.out.println("   empty.orElse(\"Default\"): " + empty.orElse("Default"));
+        logger.log(Level.INFO, "   empty.orElse(\"Default\"): {0}", empty.orElse("Default"));
 
         // orElseGet() - provide default via Supplier (lazy)
-        System.out.println("   empty.orElseGet(() → computed): " + 
+        logger.log(Level.INFO, "   empty.orElseGet(() \u2192 computed): {0}",
             empty.orElseGet(() -> "Computed at " + System.currentTimeMillis()));
 
         // orElseThrow() - throw custom exception if empty
         try {
             empty.orElseThrow(() -> new IllegalArgumentException("Value required!"));
         } catch (IllegalArgumentException e) {
-            System.out.println("   orElseThrow: " + e.getMessage());
+            logger.log(Level.INFO, "   orElseThrow: {0}", e.getMessage());
         }
 
         // orElseThrow() - no-arg version (Java 10+)
         try {
             empty.orElseThrow();
         } catch (NoSuchElementException e) {
-            System.out.println("   orElseThrow(): NoSuchElementException");
+            logger.info("   orElseThrow(): NoSuchElementException");
         }
 
         // or() - return another Optional (Java 9+)
         Optional<String> result = empty.or(() -> Optional.of("Fallback"));
-        System.out.println("   empty.or(fallback): " + result);
+        logger.log(Level.INFO, "   empty.or(fallback): {0}", result);
 
         // ⚠️ orElse vs orElseGet - IMPORTANT DIFFERENCE
-        System.out.println("\n   ⚠️ orElse vs orElseGet:");
+        logger.info("\n   \u26A0\uFE0F orElse vs orElseGet:");
         Optional<String> value = Optional.of("Exists");
-        // orElse ALWAYS evaluates the default
+        // orElse ALWAYS evaluates the default — assign to show the side-effect output
         String r1 = value.orElse(expensiveComputation("orElse"));
-        // orElseGet ONLY evaluates if empty
+        // orElseGet ONLY evaluates if empty — assign to show the side-effect output
         String r2 = value.orElseGet(() -> expensiveComputation("orElseGet"));
-        System.out.println("   (Notice orElse was called even though value exists!)");
+        logger.log(Level.INFO, "   (orElse returned: {0}, orElseGet returned: {1})", new Object[]{r1, r2});
+        logger.info("   (Notice orElse was called even though value exists!)");
 
-        System.out.println();
+        logger.info("");
     }
 
     static String expensiveComputation(String source) {
-        System.out.println("   💰 Expensive computation called from " + source);
+        logger.log(Level.INFO, "   \uD83D\uDCB0 Expensive computation called from {0}", source);
         return "Default";
     }
 
@@ -134,51 +148,51 @@ public class OptionalExample {
     // 3. Transforming Optionals
     // ============================================================
     static void transformingOptionals() {
-        System.out.println("3️⃣ TRANSFORMING OPTIONALS");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("3\uFE0F\u20E3 TRANSFORMING OPTIONALS");
+        logger.info(SEPARATOR);
 
-        Optional<String> name = Optional.of("  Java Programming  ");
+        Optional<String> name  = Optional.of("  Java Programming  ");
         Optional<String> empty = Optional.empty();
 
         // map() - transform the value if present
         Optional<String> trimmed = name.map(String::trim);
-        System.out.println("   map(trim): " + trimmed);
+        logger.log(Level.INFO, "   map(trim): {0}", trimmed);
 
         Optional<Integer> length = name.map(String::trim).map(String::length);
-        System.out.println("   map(trim).map(length): " + length);
+        logger.log(Level.INFO, "   map(trim).map(length): {0}", length);
 
         Optional<Integer> emptyLength = empty.map(String::length);
-        System.out.println("   empty.map(length): " + emptyLength); // Optional.empty
+        logger.log(Level.INFO, "   empty.map(length): {0}", emptyLength); // Optional.empty
 
         // filter() - keep value only if condition matches
-        Optional<String> longName = name.map(String::trim).filter(n -> n.length() > 10);
+        Optional<String> longName  = name.map(String::trim).filter(n -> n.length() > 10);
         Optional<String> shortName = name.map(String::trim).filter(n -> n.length() < 5);
-        System.out.println("   filter(length > 10): " + longName);
-        System.out.println("   filter(length < 5): " + shortName);  // empty
+        logger.log(Level.INFO, "   filter(length > 10): {0}", longName);
+        logger.log(Level.INFO, "   filter(length < 5): {0}",  shortName); // empty
 
         // ifPresent() - execute action if value exists
-        name.map(String::trim).ifPresent(n -> System.out.println("   ifPresent: " + n));
-        empty.ifPresent(n -> System.out.println("   This won't print"));
+        name.map(String::trim).ifPresent(n -> logger.log(Level.INFO, "   ifPresent: {0}", n));
+        empty.ifPresent(n -> logger.log(Level.INFO, "   This won''t print: {0}", n));
 
         // ifPresentOrElse() - handle both cases (Java 9+)
         name.ifPresentOrElse(
-            n -> System.out.println("   ifPresentOrElse present: " + n.trim()),
-            () -> System.out.println("   ifPresentOrElse absent")
+            n -> logger.log(Level.INFO, "   ifPresentOrElse present: {0}", n.trim()),
+            () -> logger.info("   ifPresentOrElse absent")
         );
         empty.ifPresentOrElse(
-            n -> System.out.println("   Present"),
-            () -> System.out.println("   ifPresentOrElse absent: empty value")
+            n -> logger.log(Level.INFO, "   Present: {0}", n),
+            () -> logger.info("   ifPresentOrElse absent: empty value")
         );
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 4. Chaining Operations
     // ============================================================
     static void chainingOperations() {
-        System.out.println("4️⃣ CHAINING OPTIONAL OPERATIONS");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("4\uFE0F\u20E3 CHAINING OPTIONAL OPERATIONS");
+        logger.info(SEPARATOR);
 
         // Complex pipeline
         Optional<String> input = Optional.of("   hello@example.com   ");
@@ -188,29 +202,29 @@ public class OptionalExample {
                 .filter(s -> s.contains("@"))
                 .map(String::toLowerCase)
                 .map(s -> s.split("@")[0])
-                .orElse("unknown");
-        System.out.println("   Email → username: " + result);
+                .orElse(DEFAULT_UNKNOWN);
+        logger.log(Level.INFO, "   Email \u2192 username: {0}", result);
 
         // Pipeline with empty
         String noResult = Optional.<String>empty()
                 .map(String::trim)
                 .filter(s -> s.contains("@"))
                 .map(String::toLowerCase)
-                .orElse("unknown");
-        System.out.println("   Empty → username: " + noResult);
+                .orElse(DEFAULT_UNKNOWN);
+        logger.log(Level.INFO, "   Empty \u2192 username: {0}", noResult);
 
         // Chaining lookups
-        Optional<String> config = findConfig("db.url")
-                .or(() -> findConfig("database.url"))
-                .or(() -> findConfig("DB_URL"))
+        Optional<String> config = findConfig(CONFIG_DB_DOT_URL)
+                .or(() -> findConfig(CONFIG_DATABASE_URL))
+                .or(() -> findConfig(CONFIG_DB_URL))
                 .or(() -> Optional.of("jdbc:h2:mem:default"));
-        System.out.println("   Config chain: " + config.get());
+        logger.log(Level.INFO, "   Config chain: {0}", config.orElse(DEFAULT_UNKNOWN));
 
-        System.out.println();
+        logger.info("");
     }
 
     static Optional<String> findConfig(String key) {
-        Map<String, String> configs = Map.of("DB_URL", "jdbc:mysql://localhost/mydb");
+        Map<String, String> configs = Map.of(CONFIG_DB_URL, "jdbc:mysql://localhost/mydb");
         return Optional.ofNullable(configs.get(key));
     }
 
@@ -218,10 +232,10 @@ public class OptionalExample {
     // 5. FlatMap vs Map
     // ============================================================
     static void flatMapVsMap() {
-        System.out.println("5️⃣ FLATMAP vs MAP - Avoiding Optional<Optional<>>");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("5\uFE0F\u20E3 FLATMAP vs MAP - Avoiding Optional<Optional<>>");
+        logger.info(SEPARATOR);
 
-        User user = new User("Alice", "alice@example.com",
+        User user = new User(NAME_ALICE, "alice@example.com",
                 Optional.of("555-1234"),
                 Optional.of(new Address("123 Main St", "Springfield", Optional.of("62701"))));
 
@@ -231,23 +245,23 @@ public class OptionalExample {
 
         // ❌ map() produces Optional<Optional<String>> - bad!
         Optional<Optional<String>> nestedPhone = Optional.of(user).map(User::phone);
-        System.out.println("   map → nested: " + nestedPhone);  // Optional[Optional[555-1234]]
+        logger.log(Level.INFO, "   map \u2192 nested: {0}", nestedPhone); // Optional[Optional[555-1234]]
 
         // ✅ flatMap() flattens to Optional<String> - good!
         Optional<String> phone = Optional.of(user).flatMap(User::phone);
-        System.out.println("   flatMap → flat: " + phone);      // Optional[555-1234]
+        logger.log(Level.INFO, "   flatMap \u2192 flat: {0}", phone);     // Optional[555-1234]
 
         // Deep nested access with flatMap chain
         Optional<String> zipCode = Optional.of(user)
                 .flatMap(User::address)
                 .flatMap(Address::zipCode);
-        System.out.println("   User → Address → Zip: " + zipCode);
+        logger.log(Level.INFO, "   User \u2192 Address \u2192 Zip: {0}", zipCode);
 
         // Same chain with absent data
         Optional<String> noZip = Optional.of(noPhone)
                 .flatMap(User::address)
                 .flatMap(Address::zipCode);
-        System.out.println("   NoPhone → Address → Zip: " + noZip); // empty
+        logger.log(Level.INFO, "   NoPhone \u2192 Address \u2192 Zip: {0}", noZip); // empty
 
         // Real-world: build display string
         String display = Optional.of(user)
@@ -258,20 +272,20 @@ public class OptionalExample {
                             .map(a -> a.city() + " " + a.zipCode().orElse(""))
                             .orElse("No address"))
                 .orElse("Unknown user");
-        System.out.println("   Display: " + display);
+        logger.log(Level.INFO, "   Display: {0}", display);
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 6. Optional with Streams
     // ============================================================
     static void optionalWithStreams() {
-        System.out.println("6️⃣ OPTIONAL WITH STREAMS");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("6\uFE0F\u20E3 OPTIONAL WITH STREAMS");
+        logger.info(SEPARATOR);
 
         List<Optional<String>> optionals = List.of(
-            Optional.of("Alice"),
+            Optional.of(NAME_ALICE),
             Optional.empty(),
             Optional.of("Charlie"),
             Optional.empty(),
@@ -282,131 +296,140 @@ public class OptionalExample {
         List<String> presentValues = optionals.stream()
                 .flatMap(Optional::stream)  // Java 9+
                 .toList();
-        System.out.println("   Present values: " + presentValues);
+        logger.log(Level.INFO, "   Present values: {0}", presentValues);
 
         // Pre-Java 9 way
         List<String> presentOldWay = optionals.stream()
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .toList();
-        System.out.println("   Present (old way): " + presentOldWay);
+        logger.log(Level.INFO, "   Present (old way): {0}", presentOldWay);
 
         // Find first user by name
-        List<String> userNames = List.of("Alice", "Bob", "Charlie");
+        List<String> userNames = List.of(NAME_ALICE, "Bob", "Charlie");
         Optional<String> found = userNames.stream()
                 .filter(n -> n.startsWith("B"))
                 .findFirst();
-        System.out.println("   findFirst(B*): " + found);
+        logger.log(Level.INFO, "   findFirst(B*): {0}", found);
 
         // Convert stream result to Optional
         OptionalInt maxLength = userNames.stream()
                 .mapToInt(String::length)
                 .max();
-        System.out.println("   Max name length: " + maxLength.orElse(0));
+        logger.log(Level.INFO, "   Max name length: {0}", maxLength.orElse(0));
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 7. Anti-Patterns to Avoid
     // ============================================================
     static void antiPatterns() {
-        System.out.println("7️⃣ ANTI-PATTERNS ❌ vs BEST PRACTICES ✅");
-        System.out.println("─────────────────────────────────\n");
-
-        Optional<String> opt = Optional.of("Hello");
-        Optional<String> empty = Optional.empty();
+        logger.info("7\uFE0F\u20E3 ANTI-PATTERNS \u274C vs BEST PRACTICES \u2705");
+        logger.info(SEPARATOR);
 
         // ❌ Anti-pattern 1: isPresent() + get()
-        System.out.println("   ❌ if (opt.isPresent()) opt.get()");
-        System.out.println("   ✅ opt.ifPresent(action) or opt.orElse(default)");
+        logger.info("   \u274C if (opt.isPresent()) opt.get()");
+        logger.info("   \u2705 opt.ifPresent(action) or opt.orElse(default)");
 
         // ❌ Anti-pattern 2: Optional.of(value) == null check
-        System.out.println("   ❌ Optional.of(value) != null");
-        System.out.println("   ✅ Optional.ofNullable(value)");
+        logger.info("   \u274C Optional.of(value) != null");
+        logger.info("   \u2705 Optional.ofNullable(value)");
 
         // ❌ Anti-pattern 3: Returning null instead of Optional.empty()
-        System.out.println("   ❌ return null");
-        System.out.println("   ✅ return Optional.empty()");
+        logger.info("   \u274C return null");
+        logger.info("   \u2705 return Optional.empty()");
 
         // ❌ Anti-pattern 4: Optional as field/parameter
-        System.out.println("   ❌ private Optional<String> name;");
-        System.out.println("   ✅ private String name; // nullable");
+        logger.info("   \u274C private Optional<String> name;");
+        logger.info("   \u2705 private String name; // nullable");
 
         // ❌ Anti-pattern 5: Optional for collections
-        System.out.println("   ❌ Optional<List<String>> items");
-        System.out.println("   ✅ List<String> items = Collections.emptyList()");
+        logger.info("   \u274C Optional<List<String>> items");
+        logger.info("   \u2705 List<String> items = Collections.emptyList()");
 
         // ❌ Anti-pattern 6: Nested Optional
-        System.out.println("   ❌ Optional<Optional<String>>");
-        System.out.println("   ✅ Use flatMap() to flatten");
+        logger.info("   \u274C Optional<Optional<String>>");
+        logger.info("   \u2705 Use flatMap() to flatten");
 
-        System.out.println("\n   📋 When to Use Optional:");
-        System.out.println("   ┌────────────────────────────────────────────────┐");
-        System.out.println("   │ ✅ Method return type (value might be absent)  │");
-        System.out.println("   │ ✅ Stream terminal operations (findFirst, etc) │");
-        System.out.println("   │ ❌ Method parameters                           │");
-        System.out.println("   │ ❌ Class fields                                │");
-        System.out.println("   │ ❌ Collections (use empty collection instead)  │");
-        System.out.println("   │ ❌ Serialization (not serializable)            │");
-        System.out.println("   └────────────────────────────────────────────────┘");
+        logger.info("\n   \uD83D\uDCCB When to Use Optional:");
+        logger.info("   \u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510");
+        logger.info("   \u2502 \u2705 Method return type (value might be absent)  \u2502");
+        logger.info("   \u2502 \u2705 Stream terminal operations (findFirst, etc) \u2502");
+        logger.info("   \u2502 \u274C Method parameters                           \u2502");
+        logger.info("   \u2502 \u274C Class fields                                \u2502");
+        logger.info("   \u2502 \u274C Collections (use empty collection instead)  \u2502");
+        logger.info("   \u2502 \u274C Serialization (not serializable)            \u2502");
+        logger.info("   \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518");
 
-        System.out.println();
+        logger.info("");
     }
 
     // ============================================================
     // 8. Real-World Examples
     // ============================================================
     static void realWorldExamples() {
-        System.out.println("8️⃣ REAL-WORLD OPTIONAL EXAMPLES");
-        System.out.println("─────────────────────────────────\n");
+        logger.info("8\uFE0F\u20E3 REAL-WORLD OPTIONAL EXAMPLES");
+        logger.info(SEPARATOR);
 
         // Example 1: Config lookup chain
-        System.out.println("   📌 Config Lookup Chain:");
-        String dbUrl = getEnvVar("DB_URL")
-                .or(() -> getSystemProperty("db.url"))
-                .or(() -> getConfigFile("database.url"))
+        logger.info("   \uD83D\uDCCC Config Lookup Chain:");
+        String dbUrl = getEnvVar(CONFIG_DB_URL)
+                .or(() -> getSystemProperty(CONFIG_DB_DOT_URL))
+                .or(() -> getConfigFile(CONFIG_DATABASE_URL))
                 .orElse("jdbc:h2:mem:default");
-        System.out.println("   DB URL: " + dbUrl);
+        logger.log(Level.INFO, "   DB URL: {0}", dbUrl);
 
         // Example 2: User profile display
-        System.out.println("\n   📌 User Profile Display:");
-        displayUserProfile("Alice", Optional.of("alice@dev.com"), Optional.of("555-0100"));
+        logger.info("\n   \uD83D\uDCCC User Profile Display:");
+        displayUserProfile(NAME_ALICE, Optional.of("alice@dev.com"), Optional.of("555-0100"));
         displayUserProfile("Bob", Optional.empty(), Optional.empty());
 
         // Example 3: Safe parsing
-        System.out.println("\n   📌 Safe Number Parsing:");
-        System.out.println("   parse(\"123\"): " + safeParseInt("123"));
-        System.out.println("   parse(\"abc\"): " + safeParseInt("abc"));
-        System.out.println("   parse(null): " + safeParseInt(null));
+        logger.info("\n   \uD83D\uDCCC Safe Number Parsing:");
+        logger.log(Level.INFO, "   parse(\"123\"): {0}", safeParseInt("123"));
+        logger.log(Level.INFO, "   parse(\"abc\"): {0}", safeParseInt("abc"));
+        logger.log(Level.INFO, "   parse(null): {0}",  safeParseInt(null));
 
         // Example 4: Default value computation
-        System.out.println("\n   📌 Order Processing:");
+        logger.info("\n   \uD83D\uDCCC Order Processing:");
         double price = getDiscount("VIP")
                 .map(discount -> 100.0 * (1 - discount))
                 .orElse(100.0);
-        System.out.printf("   VIP price: $%.2f%n", price);
+        logger.log(Level.INFO, "   VIP price: ${0,number,0.00}", price);
 
         double regularPrice = getDiscount("REGULAR")
                 .map(discount -> 100.0 * (1 - discount))
                 .orElse(100.0);
-        System.out.printf("   Regular price: $%.2f%n", regularPrice);
+        logger.log(Level.INFO, "   Regular price: ${0,number,0.00}", regularPrice);
 
-        System.out.println("\n═══════════════════════════════════════════");
-        System.out.println("  ✅ Optional: Complete!                  ");
-        System.out.println("═══════════════════════════════════════════");
+        logger.info("\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
+        logger.info("  \u2705 Optional: Complete!                  ");
+        logger.info("\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
     }
 
-    static Optional<String> getEnvVar(String key) { return Optional.empty(); }
-    static Optional<String> getSystemProperty(String key) { return Optional.empty(); }
+    static Optional<String> getEnvVar(String key) {
+        // Simulate environment variable lookup
+        Map<String, String> envVars = Map.of();
+        return Optional.ofNullable(envVars.get(key));
+    }
+    static Optional<String> getSystemProperty(String key) {
+        // Simulate system property lookup
+        Map<String, String> sysProps = Map.of();
+        return Optional.ofNullable(sysProps.get(key));
+    }
     static Optional<String> getConfigFile(String key) {
-        return Optional.of("jdbc:mysql://localhost:3306/mydb");
+        // Simulate config file lookup
+        Map<String, String> configEntries = Map.of(
+            CONFIG_DATABASE_URL, "jdbc:mysql://localhost:3306/mydb"
+        );
+        return Optional.ofNullable(configEntries.get(key));
     }
 
     static void displayUserProfile(String name, Optional<String> email, Optional<String> phone) {
-        System.out.println("   Name: " + name);
-        System.out.println("   Email: " + email.orElse("(not provided)"));
-        System.out.println("   Phone: " + phone.orElse("(not provided)"));
+        logger.log(Level.INFO, "   Name: {0}",  name);
+        logger.log(Level.INFO, "   Email: {0}", email.orElse("(not provided)"));
+        logger.log(Level.INFO, "   Phone: {0}", phone.orElse("(not provided)"));
     }
 
     static Optional<Integer> safeParseInt(String value) {
@@ -419,9 +442,9 @@ public class OptionalExample {
 
     static Optional<Double> getDiscount(String customerType) {
         return switch (customerType) {
-            case "VIP" -> Optional.of(0.2);
+            case "VIP"     -> Optional.of(0.2);
             case "PREMIUM" -> Optional.of(0.1);
-            default -> Optional.empty();
+            default        -> Optional.empty();
         };
     }
 }
