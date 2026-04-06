@@ -1,0 +1,3192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostgreSQL Architecture — Traditional vs PG 18</title>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface2: #e2e8f0;
+            --border: #cbd5e1;
+            --text: #1e293b;
+            --text-dim: #64748b;
+            --accent: #0284c7;
+            --accent2: #6366f1;
+            --green: #16a34a;
+            --orange: #ea580c;
+            --red: #dc2626;
+            --pink: #db2777;
+            --yellow: #ca8a04;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 2rem;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #0284c7, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-dim);
+            font-size: 1.05rem;
+            margin-bottom: 1rem;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        /* ══════════════════ TAB NAVIGATION ══════════════════ */
+        .tab-container {
+            margin-bottom: 2rem;
+        }
+        .tab-nav {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--surface2);
+            margin-bottom: 1.5rem;
+        }
+        .tab-btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .tab-btn:hover {
+            color: var(--accent);
+            background: rgba(2, 132, 199, 0.05);
+        }
+        .tab-btn.active {
+            color: var(--accent);
+        }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 3px 3px 0 0;
+        }
+        .tab-btn .badge {
+            background: linear-gradient(135deg, var(--green), #22c55e);
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            animation: pulse 2s infinite;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        /* ══════════════════ ANIMATIONS ══════════════════ */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(2, 132, 199, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(2, 132, 199, 0.6), 0 0 30px rgba(99, 102, 241, 0.4); }
+        }
+        @keyframes flowRight {
+            0% { transform: translateX(-100%); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateX(100%); opacity: 0; }
+        }
+        @keyframes flowDown {
+            0% { transform: translateY(-100%); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(100%); opacity: 0; }
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes typewriter {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--accent);
+            margin: 2.5rem 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h3 { color: var(--accent2); margin: 1.5rem 0 0.75rem; font-size: 1.15rem; }
+
+        p, li { color: var(--text); margin-bottom: 0.6rem; }
+
+        /* ── Architecture Diagram ── */
+        .arch-diagram {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .arch-title {
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .arch-layers {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .arch-layer {
+            display: flex;
+            align-items: stretch;
+            gap: 1rem;
+        }
+
+        .layer-label {
+            width: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            text-align: center;
+            padding: 0.5rem;
+            flex-shrink: 0;
+        }
+        .layer-label.green { background: var(--green); }
+        .layer-label.orange { background: var(--orange); }
+        .layer-label.purple { background: var(--accent2); }
+        .layer-label.pink { background: var(--pink); }
+        .layer-label.yellow { background: var(--yellow); }
+
+        .layer-content {
+            flex: 1;
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .component {
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            text-align: center;
+            min-width: 120px;
+            flex: 1;
+        }
+        .component.highlight {
+            background: #dbeafe;
+            border-color: var(--accent);
+        }
+        .component.new {
+            background: #dcfce7;
+            border-color: var(--green);
+            position: relative;
+        }
+        .component.new::after {
+            content: 'NEW';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--green);
+            color: #fff;
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+        .component .name { font-weight: 600; }
+        .component .desc { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
+
+        /* ── Connector Lines ── */
+        .connector {
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--accent);
+            padding: 0.25rem 0;
+        }
+
+        /* ── Comparison Grid ── */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .version-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .version-box.old { border-top: 4px solid var(--orange); }
+        .version-box.new { border-top: 4px solid var(--green); }
+
+        .version-box h3 {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .version-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+        .version-badge.old { background: #fed7aa; color: #9a3412; }
+        .version-badge.new { background: #bbf7d0; color: #166534; }
+
+        /* ── Info Box ── */
+        .info-box {
+            background: linear-gradient(135deg, rgba(2,132,199,0.08), rgba(99,102,241,0.08));
+            border: 1px solid rgba(2,132,199,0.3);
+            border-radius: 10px;
+            padding: 1.2rem 1.5rem;
+            margin: 1.5rem 0;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .info-box .icon { font-size: 1.5rem; flex-shrink: 0; }
+        .info-box .content { font-size: 0.92rem; }
+
+        /* ── Process Flow ── */
+        .process-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+        .process-box {
+            background: #f1f5f9;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 0.8rem 1.2rem;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        .process-box.active {
+            background: #dbeafe;
+            border-color: var(--accent);
+        }
+        .process-arrow {
+            font-size: 1.3rem;
+            color: var(--accent);
+        }
+
+        /* ── Table ── */
+        .arch-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        .arch-table th {
+            background: #e2e8f0;
+            color: var(--text);
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+        }
+        .arch-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        .arch-table code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Cascadia Code', monospace;
+            font-size: 0.8rem;
+            color: var(--pink);
+        }
+
+        /* ── Storage Diagram ── */
+        .storage-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        .storage-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .storage-label {
+            width: 100px;
+            font-size: 0.8rem;
+            text-align: right;
+            color: var(--text-dim);
+        }
+        .storage-bar {
+            flex: 1;
+            height: 30px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        ul { padding-left: 1.5rem; }
+        li { margin-bottom: 0.4rem; }
+
+        .highlight-text { color: var(--accent); font-weight: 600; }
+        .green-text { color: var(--green); font-weight: 600; }
+
+        /* ══════════════════ INTERACTIVE JOURNEY STYLES ══════════════════ */
+        
+        /* Step Navigation */
+        .journey-nav {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        .journey-step-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid var(--border);
+            background: var(--surface);
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .journey-step-btn:hover {
+            border-color: var(--accent);
+            transform: scale(1.1);
+        }
+        .journey-step-btn.active {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: white;
+            border-color: transparent;
+            animation: glow 2s infinite;
+        }
+        .journey-step-btn.completed {
+            background: var(--green);
+            color: white;
+            border-color: transparent;
+        }
+        .journey-step-btn.completed::after {
+            content: '✓';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: white;
+            color: var(--green);
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .step-connector {
+            width: 30px;
+            height: 3px;
+            background: var(--border);
+            align-self: center;
+        }
+        .step-connector.completed {
+            background: var(--green);
+        }
+
+        /* Journey Step Content */
+        .journey-step {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        .journey-step.active {
+            display: block;
+        }
+        .step-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .step-number {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .step-title {
+            font-size: 1.8rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+        .step-description {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+        }
+
+        /* Animated Diagram */
+        .animated-diagram {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+            min-height: 400px;
+        }
+
+        /* Client Animation */
+        .client-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            animation: bounce 2s infinite;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Server Icon */
+        .server-icon {
+            width: 100px;
+            height: 120px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        .server-icon .lights {
+            display: flex;
+            gap: 4px;
+        }
+        .server-icon .light {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #fbbf24;
+            animation: blink 1s infinite;
+        }
+        .server-icon .light:nth-child(2) { animation-delay: 0.3s; }
+        .server-icon .light:nth-child(3) { animation-delay: 0.6s; }
+
+        /* Data Packet Animation */
+        .data-packet {
+            position: absolute;
+            width: 30px;
+            height: 20px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: white;
+            animation: flowRight 2s linear infinite;
+        }
+        .data-packet.reverse {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            animation-direction: reverse;
+        }
+
+        /* Process Box */
+        .anim-process {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .anim-process:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border-color: var(--accent);
+        }
+        .anim-process.highlight {
+            border-color: var(--accent);
+            background: rgba(2, 132, 199, 0.05);
+            animation: glow 2s infinite;
+        }
+        .anim-process .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .anim-process .label {
+            font-weight: 600;
+            color: var(--text);
+        }
+        .anim-process .sublabel {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        /* Flow Arrow */
+        .flow-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--accent);
+            position: relative;
+            min-width: 60px;
+        }
+        .flow-arrow::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            border-radius: 2px;
+            animation: pulse 1.5s infinite;
+        }
+        .flow-arrow-icon {
+            position: relative;
+            z-index: 1;
+            animation: slideInRight 1s infinite;
+        }
+
+        /* Memory Block */
+        .memory-block {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+            padding: 1rem;
+            background: #1e293b;
+            border-radius: 12px;
+        }
+        .memory-cell {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .memory-cell.empty { background: #374151; }
+        .memory-cell.data { background: #3b82f6; animation: pulse 2s infinite; }
+        .memory-cell.dirty { background: #f59e0b; animation: shake 0.5s infinite; }
+        .memory-cell.wal { background: #10b981; }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--accent), var(--accent2));
+            border-radius: 2px;
+        }
+        .timeline-item {
+            position: relative;
+            padding: 1rem 0;
+            animation: slideInLeft 0.5s ease;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -31px;
+            top: 1.5rem;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border: 4px solid var(--accent);
+            border-radius: 50%;
+        }
+        .timeline-item.active::before {
+            background: var(--accent);
+            animation: ripple 1s infinite;
+        }
+
+        /* Comparison Side by Side */
+        .side-by-side {
+            display: grid;
+            grid-template-columns: 1fr 80px 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+        .side-panel {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .side-panel.old {
+            border: 2px solid var(--orange);
+        }
+        .side-panel.new {
+            border: 2px solid var(--green);
+        }
+        .vs-badge {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ef4444, #f97316);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            animation: pulse 2s infinite;
+        }
+
+        /* Performance Meter */
+        .perf-meter {
+            height: 24px;
+            background: #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        .perf-fill {
+            height: 100%;
+            border-radius: 12px;
+            transition: width 1s ease;
+            position: relative;
+        }
+        .perf-fill.slow {
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+        }
+        .perf-fill.fast {
+            background: linear-gradient(90deg, #10b981, #22c55e);
+        }
+        .perf-label {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        /* Explanation Card */
+        .explain-card {
+            background: linear-gradient(135deg, rgba(2,132,199,0.1), rgba(99,102,241,0.1));
+            border-left: 4px solid var(--accent);
+            border-radius: 0 12px 12px 0;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .explain-card h4 {
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Navigation Buttons */
+        .journey-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+        .journey-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .journey-btn.prev {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            color: var(--text);
+        }
+        .journey-btn.prev:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .journey-btn.next {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: white;
+        }
+        .journey-btn.next:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+        }
+        .journey-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Interactive Demo */
+        .demo-container {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        .demo-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1rem;
+        }
+        .demo-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .demo-dot.red { background: #ef4444; }
+        .demo-dot.yellow { background: #fbbf24; }
+        .demo-dot.green { background: #22c55e; }
+        .demo-code {
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+        .demo-code .keyword { color: #c084fc; }
+        .demo-code .function { color: #60a5fa; }
+        .demo-code .string { color: #4ade80; }
+        .demo-code .comment { color: #64748b; }
+        .demo-code .highlight-line {
+            background: rgba(59, 130, 246, 0.2);
+            display: block;
+            padding: 2px 8px;
+            margin: 0 -8px;
+            border-left: 3px solid #3b82f6;
+        }
+
+        /* Spinning Loader */
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--surface2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-grid { grid-template-columns: 1fr; }
+            .arch-layer { flex-direction: column; }
+            .layer-label { width: 100%; }
+            .side-by-side { grid-template-columns: 1fr; }
+            .vs-badge { margin: 1rem auto; }
+            .tab-btn { padding: 0.75rem 1rem; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>PostgreSQL Architecture Deep Dive</h1>
+    <p class="subtitle">
+        Understanding the internal architecture of PostgreSQL — from traditional design through PostgreSQL 18 enhancements
+    </p>
+
+    <!-- ══════════════════ TAB NAVIGATION ══════════════════ -->
+    <div class="tab-container">
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('reference')">
+                📚 Reference Guide
+            </button>
+            <button class="tab-btn" onclick="switchTab('journey')">
+                🎯 Interactive Journey <span class="badge">NEW</span>
+            </button>
+        </div>
+
+        <!-- ══════════════════ REFERENCE TAB (Original Content) ══════════════════ -->
+        <div id="tab-reference" class="tab-content active">
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <h2>🏗️ PostgreSQL Core Architecture (All Versions)</h2>
+
+    <p>PostgreSQL follows a <strong>process-per-connection</strong> model with shared memory. Every client connection spawns a dedicated backend process.</p>
+
+    <div class="arch-diagram">
+        <div class="arch-title">PostgreSQL Server Architecture</div>
+        
+        <div class="arch-layers">
+            <!-- Client Layer -->
+            <div class="arch-layer">
+                <div class="layer-label">CLIENT<br>LAYER</div>
+                <div class="layer-content">
+                    <div class="component">
+                        <div class="name">📱 Application</div>
+                        <div class="desc">Your Java/Python/etc app</div>
+                    </div>
+                    <div class="component">
+                        <div class="name">🔌 libpq</div>
+                        <div class="desc">PostgreSQL client library</div>
+                    </div>
+                    <div class="component">
+                        <div class="name">🔁 Connection Pool</div>
+                        <div class="desc">PgBouncer / HikariCP</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector">↓ TCP/IP or Unix Socket ↓</div>
+
+            <!-- Postmaster -->
+            <div class="arch-layer">
+                <div class="layer-label orange">POSTMASTER</div>
+                <div class="layer-content">
+                    <div class="component highlight" style="flex: 2;">
+                        <div class="name">👑 Postmaster (PID 1)</div>
+                        <div class="desc">Main supervisor process. Listens for connections, forks backend processes, manages crashes.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector">↓ fork() per connection ↓</div>
+
+            <!-- Backend Processes -->
+            <div class="arch-layer">
+                <div class="layer-label purple">BACKEND<br>PROCESSES</div>
+                <div class="layer-content">
+                    <div class="component highlight">
+                        <div class="name">🔷 Backend 1</div>
+                        <div class="desc">Client session</div>
+                    </div>
+                    <div class="component highlight">
+                        <div class="name">🔷 Backend 2</div>
+                        <div class="desc">Client session</div>
+                    </div>
+                    <div class="component highlight">
+                        <div class="name">🔷 Backend N</div>
+                        <div class="desc">Client session</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector">↕ Shared Memory Access ↕</div>
+
+            <!-- Shared Memory -->
+            <div class="arch-layer">
+                <div class="layer-label green">SHARED<br>MEMORY</div>
+                <div class="layer-content">
+                    <div class="component">
+                        <div class="name">📦 Shared Buffers</div>
+                        <div class="desc">Page cache (8KB blocks)</div>
+                    </div>
+                    <div class="component">
+                        <div class="name">📝 WAL Buffers</div>
+                        <div class="desc">Write-ahead log cache</div>
+                    </div>
+                    <div class="component">
+                        <div class="name">🔒 Lock Tables</div>
+                        <div class="desc">Row/table locks</div>
+                    </div>
+                    <div class="component">
+                        <div class="name">📊 CLOG</div>
+                        <div class="desc">Transaction status</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector">↓ Background Workers ↓</div>
+
+            <!-- Background Processes -->
+            <div class="arch-layer">
+                <div class="layer-label pink">BACKGROUND<br>PROCESSES</div>
+                <div class="layer-content">
+                    <div class="component">
+                        <div class="name">✍️ WAL Writer</div>
+                        <div class="desc">Flushes WAL to disk</div>
+                    </div>
+                    <div class="component">
+                        <div class="name">📤 BGWriter</div>
+                        <div class="desc">Writes dirty buffers</div>
+                    </div>
+                    <div class="component">
+                        <div class="name">✅ Checkpointer</div>
+                        <div class="desc">Periodic checkpoints</div>
+                    </div>
+                    <div class="component">
+                        <div class="name">🧹 Autovacuum</div>
+                        <div class="desc">Cleans dead tuples</div>
+                    </div>
+                    <div class="component">
+                        <div class="name">📊 Stats Collector</div>
+                        <div class="desc">Gathers statistics</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector">↓ read() / write() ↓</div>
+
+            <!-- Storage -->
+            <div class="arch-layer">
+                <div class="layer-label yellow">STORAGE<br>LAYER</div>
+                <div class="layer-content">
+                    <div class="component">
+                        <div class="name">💾 Data Files</div>
+                        <div class="desc">base/OID/relfilenode</div>
+                    </div>
+                    <div class="component">
+                        <div class="name">📜 WAL Files</div>
+                        <div class="desc">pg_wal/ directory</div>
+                    </div>
+                    <div class="component">
+                        <div class="name">📋 CLOG Files</div>
+                        <div class="desc">pg_xact/</div>
+                    </div>
+                    <div class="component">
+                        <div class="name">⚙️ Config Files</div>
+                        <div class="desc">postgresql.conf, pg_hba.conf</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <h2>� Component Deep Dive — Every Part Explained</h2>
+
+    <h3>🔌 Client Layer Components</h3>
+    
+    <div class="info-box" style="flex-direction: column; gap: 1rem;">
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">📱</span>
+            <div class="content">
+                <strong>Application</strong><br>
+                Your Java, Python, Node.js, or any other application that needs to store/retrieve data. 
+                It communicates with PostgreSQL using a database driver (JDBC for Java, psycopg2 for Python, etc.).
+                The application sends SQL queries and receives result sets.
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">🔌</span>
+            <div class="content">
+                <strong>libpq (PostgreSQL Client Library)</strong><br>
+                The official C library that handles the PostgreSQL wire protocol. All drivers (JDBC, psycopg2, node-postgres) 
+                ultimately use libpq or implement its protocol. It handles:
+                <ul>
+                    <li>Connection establishment and authentication</li>
+                    <li>Query transmission and result parsing</li>
+                    <li>SSL/TLS encryption</li>
+                    <li>Error handling and notification listening</li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">🔁</span>
+            <div class="content">
+                <strong>Connection Pool (PgBouncer / HikariCP)</strong><br>
+                Since PostgreSQL forks a new process per connection (~2-5MB RAM each), connection pooling is critical.
+                <ul>
+                    <li><strong>PgBouncer:</strong> Lightweight external pooler (sits between app and PG)</li>
+                    <li><strong>HikariCP:</strong> Java-side pool (used with Spring Boot)</li>
+                    <li>Pools reuse connections instead of creating/destroying them per request</li>
+                    <li>Typical production setup: 100+ app threads share 20-50 actual PG connections</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <h3>👑 Postmaster Process</h3>
+    
+    <div class="info-box">
+        <span class="icon">👑</span>
+        <div class="content">
+            <strong>Postmaster (Main Supervisor Process)</strong><br>
+            The first process started when you run <code>pg_ctl start</code>. It's the parent of all other PostgreSQL processes.
+            <ul>
+                <li><strong>Listens on port 5432</strong> (or configured port) for incoming connections</li>
+                <li><strong>Forks a backend process</strong> for each new client connection</li>
+                <li><strong>Manages shared memory</strong> initialization at startup</li>
+                <li><strong>Spawns background workers</strong> (WAL writer, autovacuum, etc.)</li>
+                <li><strong>Handles crashes:</strong> If any backend crashes, postmaster terminates ALL backends and restarts (to ensure shared memory consistency)</li>
+                <li><strong>Signal handling:</strong> Receives SIGHUP for config reload, SIGTERM for shutdown</li>
+            </ul>
+            <p style="margin-top: 0.5rem; color: var(--text-dim);">
+                <em>Fun fact:</em> Named "postmaster" because PostgreSQL was originally called Postgres (post-Ingres), 
+                and the supervisor was the "master" of the "post" system.
+            </p>
+        </div>
+    </div>
+
+    <h3>�🔷 Backend Processes</h3>
+    
+    <div class="info-box">
+        <span class="icon">🔷</span>
+        <div class="content">
+            <strong>Backend Process (One Per Client Connection)</strong><br>
+            Each client connection gets its own dedicated Unix process (not a thread!). This is the "process-per-connection" model.
+            <ul>
+                <li><strong>Complete isolation:</strong> One backend crashing doesn't directly affect others</li>
+                <li><strong>Memory:</strong> Each backend uses ~2-5MB base + query-dependent work_mem</li>
+                <li><strong>Handles entire query lifecycle:</strong> Parse → Plan → Execute → Return results</li>
+                <li><strong>Accesses shared memory</strong> for buffer pool, locks, transaction status</li>
+                <li><strong>Has private memory</strong> for query plans, sort operations, hash tables</li>
+                <li><strong>Stateful:</strong> Maintains session variables, prepared statements, temp tables</li>
+            </ul>
+            <p style="margin-top: 0.5rem; color: var(--orange); font-weight: 600;">
+                ⚠️ Why connection pooling matters: 1000 concurrent connections = 1000 processes = 2-5GB RAM just for backends!
+            </p>
+        </div>
+    </div>
+
+    <h3>🧠 Shared Memory Components</h3>
+    
+    <div class="info-box" style="flex-direction: column; gap: 1rem;">
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">📦</span>
+            <div class="content">
+                <strong>Shared Buffers (Buffer Pool)</strong><br>
+                The most critical performance component — an in-memory cache of database pages (8KB each).
+                <ul>
+                    <li><strong>Purpose:</strong> Avoid reading from disk on every query</li>
+                    <li><strong>Size:</strong> Set via <code>shared_buffers</code> (recommended: 25% of RAM)</li>
+                    <li><strong>How it works:</strong> When a page is needed, check buffer pool first → if found ("buffer hit"), use it; if not ("buffer miss"), read from disk and cache it</li>
+                    <li><strong>Dirty pages:</strong> Modified pages are marked "dirty" and written to disk later by BGWriter/Checkpointer</li>
+                    <li><strong>Buffer replacement:</strong> Uses clock-sweep algorithm (similar to LRU) to evict cold pages</li>
+                </ul>
+                <p style="margin-top: 0.5rem;"><code>EXPLAIN (BUFFERS)</code> shows: <code>shared hit=1234 read=56</code> — hits are fast, reads are slow!</p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">📝</span>
+            <div class="content">
+                <strong>WAL Buffers</strong><br>
+                In-memory buffer for Write-Ahead Log records before they're flushed to disk.
+                <ul>
+                    <li><strong>Purpose:</strong> Batch WAL writes for efficiency</li>
+                    <li><strong>Size:</strong> Set via <code>wal_buffers</code> (default: ~3% of shared_buffers, min 64KB)</li>
+                    <li><strong>Flow:</strong> Backend writes WAL record to buffer → WAL Writer flushes to pg_wal/ files</li>
+                    <li><strong>Commit behavior:</strong> On COMMIT, WAL must be flushed to disk (fsync) for durability</li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">🔒</span>
+            <div class="content">
+                <strong>Lock Tables</strong><br>
+                Shared memory structures tracking all locks held by transactions.
+                <ul>
+                    <li><strong>Lock types:</strong> Row locks, table locks, advisory locks, relation extension locks</li>
+                    <li><strong>Lock modes:</strong> ACCESS SHARE, ROW SHARE, ROW EXCLUSIVE, SHARE, SHARE ROW EXCLUSIVE, EXCLUSIVE, ACCESS EXCLUSIVE</li>
+                    <li><strong>Deadlock detection:</strong> PostgreSQL runs deadlock detector every <code>deadlock_timeout</code> (default 1s)</li>
+                    <li><strong>View locks:</strong> <code>SELECT * FROM pg_locks;</code></li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">📊</span>
+            <div class="content">
+                <strong>CLOG (Commit Log / Transaction Status)</strong><br>
+                Tracks the commit status of every transaction using just 2 bits per transaction.
+                <ul>
+                    <li><strong>States:</strong> IN_PROGRESS, COMMITTED, ABORTED, SUB_COMMITTED</li>
+                    <li><strong>Purpose:</strong> MVCC visibility checks — "Is transaction 12345 committed?"</li>
+                    <li><strong>Location:</strong> <code>pg_xact/</code> directory (was pg_clog/ in older versions)</li>
+                    <li><strong>Size:</strong> Very compact — 4 transactions per byte</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <h3>⚙️ Background Processes</h3>
+    
+    <div class="info-box" style="flex-direction: column; gap: 1rem;">
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">✍️</span>
+            <div class="content">
+                <strong>WAL Writer</strong><br>
+                Background process that flushes WAL buffers to disk files in <code>pg_wal/</code>.
+                <ul>
+                    <li><strong>Runs every:</strong> <code>wal_writer_delay</code> (default 200ms)</li>
+                    <li><strong>Also triggered:</strong> When WAL buffers fill up, or on COMMIT (if synchronous_commit=on)</li>
+                    <li><strong>Critical for:</strong> Durability — WAL must hit disk before transaction is considered committed</li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">📤</span>
+            <div class="content">
+                <strong>Background Writer (BGWriter)</strong><br>
+                Writes "dirty" pages from shared buffers to data files on disk.
+                <ul>
+                    <li><strong>Purpose:</strong> Spread out I/O over time instead of big bursts at checkpoint</li>
+                    <li><strong>Runs continuously:</strong> Scans buffer pool, writes dirty pages with low urgency</li>
+                    <li><strong>Tuning:</strong> <code>bgwriter_delay</code>, <code>bgwriter_lru_maxpages</code></li>
+                    <li><strong>Benefit:</strong> Reduces checkpoint I/O spikes, keeps some clean buffers available</li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">✅</span>
+            <div class="content">
+                <strong>Checkpointer</strong><br>
+                Periodically creates "checkpoints" — consistent snapshots where all dirty data is written to disk.
+                <ul>
+                    <li><strong>Triggers:</strong> Every <code>checkpoint_timeout</code> (default 5min) OR when <code>max_wal_size</code> is reached</li>
+                    <li><strong>What it does:</strong> Flushes ALL dirty buffers, writes checkpoint record to WAL, updates <code>pg_control</code></li>
+                    <li><strong>Why it matters:</strong> Recovery only needs to replay WAL from last checkpoint (not from beginning of time)</li>
+                    <li><strong>Spread:</strong> <code>checkpoint_completion_target</code> (default 0.9) spreads writes over 90% of checkpoint interval</li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">🧹</span>
+            <div class="content">
+                <strong>Autovacuum</strong><br>
+                Automatically runs VACUUM and ANALYZE to maintain database health.
+                <ul>
+                    <li><strong>VACUUM:</strong> Removes dead tuples (from UPDATE/DELETE), frees space for reuse</li>
+                    <li><strong>ANALYZE:</strong> Updates table statistics for the query planner</li>
+                    <li><strong>Prevents:</strong> Table bloat, transaction ID wraparound (critical!)</li>
+                    <li><strong>Launcher + Workers:</strong> One launcher process spawns up to <code>autovacuum_max_workers</code> (default 3)</li>
+                    <li><strong>Thresholds:</strong> Triggers when dead tuples > <code>autovacuum_vacuum_threshold</code> + <code>autovacuum_vacuum_scale_factor</code> × table size</li>
+                </ul>
+                <p style="margin-top: 0.5rem; color: var(--red); font-weight: 600;">
+                    ⚠️ Never disable autovacuum in production! Transaction ID wraparound can cause data loss.
+                </p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">📊</span>
+            <div class="content">
+                <strong>Stats Collector</strong><br>
+                Gathers runtime statistics about database activity.
+                <ul>
+                    <li><strong>Collects:</strong> Table access counts, index usage, block reads/writes, sequential vs index scans</li>
+                    <li><strong>Stores in:</strong> <code>pg_stat_*</code> views (pg_stat_user_tables, pg_stat_activity, etc.)</li>
+                    <li><strong>Used by:</strong> Autovacuum (to decide what to vacuum), DBAs (for monitoring)</li>
+                    <li><strong>PG 15+:</strong> Rewritten to use shared memory instead of file-based collector (much faster)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <h3>💾 Storage Layer Components</h3>
+    
+    <div class="info-box" style="flex-direction: column; gap: 1rem;">
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">💾</span>
+            <div class="content">
+                <strong>Data Files (Heap Files)</strong><br>
+                The actual files storing your table data on disk.
+                <ul>
+                    <li><strong>Location:</strong> <code>$PGDATA/base/{database_oid}/{relfilenode}</code></li>
+                    <li><strong>Structure:</strong> 8KB pages containing tuple data</li>
+                    <li><strong>Max file size:</strong> 1GB (larger tables span multiple files: relfilenode, relfilenode.1, relfilenode.2, ...)</li>
+                    <li><strong>Page layout:</strong> Header → Item pointers → Free space → Tuples (grow from end)</li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">📜</span>
+            <div class="content">
+                <strong>WAL Files (Write-Ahead Log)</strong><br>
+                Sequential log of all changes made to the database.
+                <ul>
+                    <li><strong>Location:</strong> <code>$PGDATA/pg_wal/</code></li>
+                    <li><strong>File size:</strong> 16MB each (configurable)</li>
+                    <li><strong>Naming:</strong> <code>000000010000000000000001</code> (timeline + segment number)</li>
+                    <li><strong>Purpose:</strong> Crash recovery, replication, point-in-time recovery (PITR)</li>
+                    <li><strong>Guarantee:</strong> Changes logged to WAL BEFORE data file modification (hence "write-ahead")</li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">📋</span>
+            <div class="content">
+                <strong>CLOG Files (pg_xact/)</strong><br>
+                On-disk persistence of transaction commit status.
+                <ul>
+                    <li><strong>Location:</strong> <code>$PGDATA/pg_xact/</code></li>
+                    <li><strong>Size:</strong> ~256KB per 1 billion transactions (very compact)</li>
+                    <li><strong>Cleanup:</strong> Old segments removed after all transactions referencing them are gone</li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">⚙️</span>
+            <div class="content">
+                <strong>Configuration Files</strong><br>
+                <ul>
+                    <li><strong>postgresql.conf:</strong> Main config — shared_buffers, work_mem, max_connections, etc.</li>
+                    <li><strong>pg_hba.conf:</strong> Host-Based Authentication — who can connect from where, using what auth method</li>
+                    <li><strong>pg_ident.conf:</strong> Username mapping for ident/peer authentication</li>
+                    <li><strong>Reload:</strong> Most settings reload with <code>pg_ctl reload</code> or <code>SELECT pg_reload_conf();</code></li>
+                    <li><strong>Restart required:</strong> Some settings (like shared_buffers) need full restart</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <h2>�📚 Query Processing Pipeline</h2>
+
+    <p>Every SQL query goes through these stages inside the backend process:</p>
+
+    <div class="process-flow">
+        <div class="process-box">
+            <strong>1. Parser</strong><br>
+            <small>SQL → Parse Tree</small>
+        </div>
+        <span class="process-arrow">→</span>
+        <div class="process-box">
+            <strong>2. Analyzer</strong><br>
+            <small>Resolve names, types</small>
+        </div>
+        <span class="process-arrow">→</span>
+        <div class="process-box">
+            <strong>3. Rewriter</strong><br>
+            <small>Apply rules/views</small>
+        </div>
+        <span class="process-arrow">→</span>
+        <div class="process-box active">
+            <strong>4. Planner</strong><br>
+            <small>Generate query plan</small>
+        </div>
+        <span class="process-arrow">→</span>
+        <div class="process-box active">
+            <strong>5. Executor</strong><br>
+            <small>Run the plan</small>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <span class="icon">💡</span>
+        <div class="content">
+            The <strong>Planner</strong> is where PostgreSQL shines — it uses cost-based optimization,
+            considers indexes, joins, parallelism, and generates the most efficient execution plan.
+            This is what <code>EXPLAIN</code> shows you.
+        </div>
+    </div>
+
+    <h3>🔍 Query Pipeline Stages Explained</h3>
+    
+    <div class="info-box" style="flex-direction: column; gap: 1rem;">
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">1️⃣</span>
+            <div class="content">
+                <strong>Parser</strong><br>
+                Converts raw SQL text into a parse tree (internal data structure).
+                <ul>
+                    <li><strong>Lexical analysis:</strong> Breaks SQL into tokens (keywords, identifiers, literals)</li>
+                    <li><strong>Syntax check:</strong> Validates SQL grammar (catches typos like <code>SELEC</code> instead of <code>SELECT</code>)</li>
+                    <li><strong>Output:</strong> Raw parse tree — knows structure but NOT whether tables/columns exist</li>
+                    <li><strong>Error example:</strong> <code>syntax error at or near "..."</code></li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">2️⃣</span>
+            <div class="content">
+                <strong>Analyzer (Semantic Analysis)</strong><br>
+                Transforms parse tree into a query tree with resolved references.
+                <ul>
+                    <li><strong>Name resolution:</strong> Looks up table names, column names in system catalogs</li>
+                    <li><strong>Type checking:</strong> Ensures operations are valid (can't add INTEGER + TEXT)</li>
+                    <li><strong>Implicit casts:</strong> Adds type coercions where needed</li>
+                    <li><strong>Error example:</strong> <code>relation "users" does not exist</code>, <code>column "naame" does not exist</code></li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">3️⃣</span>
+            <div class="content">
+                <strong>Rewriter (Rule System)</strong><br>
+                Applies transformation rules to the query tree.
+                <ul>
+                    <li><strong>View expansion:</strong> Replaces view references with their underlying queries</li>
+                    <li><strong>Rules:</strong> User-defined rewrite rules (CREATE RULE)</li>
+                    <li><strong>Updatable views:</strong> Transforms UPDATE on view to UPDATE on base table</li>
+                    <li><strong>Example:</strong> <code>SELECT * FROM my_view</code> → <code>SELECT ... FROM base_table WHERE ...</code></li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">4️⃣</span>
+            <div class="content">
+                <strong>Planner / Optimizer</strong><br>
+                The brain of PostgreSQL — generates the most efficient execution plan.
+                <ul>
+                    <li><strong>Cost estimation:</strong> Estimates I/O + CPU cost for each possible plan</li>
+                    <li><strong>Access paths:</strong> Sequential scan, index scan, bitmap scan, index-only scan</li>
+                    <li><strong>Join strategies:</strong> Nested loop, hash join, merge join</li>
+                    <li><strong>Statistics:</strong> Uses pg_statistic data (from ANALYZE) for row estimates</li>
+                    <li><strong>Parallelism:</strong> Decides whether to use parallel workers</li>
+                    <li><strong>Output:</strong> Execution plan tree (what <code>EXPLAIN</code> shows)</li>
+                </ul>
+                <p style="margin-top: 0.5rem; color: var(--accent);">
+                    💡 This is why <code>ANALYZE</code> is critical — stale statistics lead to bad plans!
+                </p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">5️⃣</span>
+            <div class="content">
+                <strong>Executor</strong><br>
+                Actually runs the plan and produces results.
+                <ul>
+                    <li><strong>Volcano model:</strong> Each plan node is an iterator (open → next → close)</li>
+                    <li><strong>Pipelining:</strong> Results flow up the tree, one tuple at a time</li>
+                    <li><strong>Buffer access:</strong> Reads pages from shared buffers (or disk)</li>
+                    <li><strong>Parallel execution:</strong> Spawns parallel workers if plan says so</li>
+                    <li><strong>Output:</strong> Result tuples sent back to client</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <h2>💾 Storage Architecture (MVCC)</h2>
+
+    <p>PostgreSQL uses <strong>MVCC (Multi-Version Concurrency Control)</strong> — it keeps multiple versions of each row for concurrent access without locking readers.</p>
+
+    <div class="storage-visual">
+        <div class="storage-row">
+            <span class="storage-label">Heap File</span>
+            <div class="storage-bar" style="background: linear-gradient(90deg, #0284c7, #38bdf8);">
+                Pages (8KB each) containing tuples
+            </div>
+        </div>
+        <div class="storage-row">
+            <span class="storage-label">Index File</span>
+            <div class="storage-bar" style="background: linear-gradient(90deg, #16a34a, #4ade80);">
+                B-tree / GIN / GiST pointing to heap TIDs
+            </div>
+        </div>
+        <div class="storage-row">
+            <span class="storage-label">TOAST</span>
+            <div class="storage-bar" style="background: linear-gradient(90deg, #6366f1, #a5b4fc); width: 60%;">
+                Oversized values (> 2KB compressed)
+            </div>
+        </div>
+        <div class="storage-row">
+            <span class="storage-label">FSM</span>
+            <div class="storage-bar" style="background: linear-gradient(90deg, #ea580c, #fb923c); width: 20%;">
+                Free space map
+            </div>
+        </div>
+        <div class="storage-row">
+            <span class="storage-label">VM</span>
+            <div class="storage-bar" style="background: linear-gradient(90deg, #db2777, #f472b6); width: 15%;">
+                Visibility map
+            </div>
+        </div>
+    </div>
+
+    <table class="arch-table">
+        <tr>
+            <th>Component</th>
+            <th>Purpose</th>
+            <th>Key Point</th>
+        </tr>
+        <tr>
+            <td><strong>Heap</strong></td>
+            <td>Stores actual row data (tuples)</td>
+            <td>Unordered; rows have <code>xmin</code>/<code>xmax</code> for MVCC</td>
+        </tr>
+        <tr>
+            <td><strong>Index</strong></td>
+            <td>Fast lookup via B-tree, GIN, etc.</td>
+            <td>Points to TID (page#, offset)</td>
+        </tr>
+        <tr>
+            <td><strong>WAL</strong></td>
+            <td>Write-ahead log for durability</td>
+            <td>All changes logged BEFORE data file write</td>
+        </tr>
+        <tr>
+            <td><strong>CLOG</strong></td>
+            <td>Commit status of transactions</td>
+            <td>2 bits per txn: in-progress, committed, aborted</td>
+        </tr>
+        <tr>
+            <td><strong>TOAST</strong></td>
+            <td>Stores large values out-of-line</td>
+            <td>Auto-compresses values > 2KB</td>
+        </tr>
+        <tr>
+            <td><strong>FSM</strong></td>
+            <td>Tracks free space per page</td>
+            <td>Used by INSERT to find space</td>
+        </tr>
+        <tr>
+            <td><strong>VM</strong></td>
+            <td>Tracks all-visible pages</td>
+            <td>Speeds up index-only scans & VACUUM</td>
+        </tr>
+    </table>
+
+    <h3>🔍 MVCC Deep Dive — How Concurrency Works</h3>
+    
+    <div class="info-box" style="flex-direction: column; gap: 1rem;">
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">📝</span>
+            <div class="content">
+                <strong>What is MVCC?</strong><br>
+                Multi-Version Concurrency Control allows multiple transactions to see different versions of the same row simultaneously.
+                <ul>
+                    <li><strong>Readers don't block writers:</strong> A SELECT doesn't wait for an UPDATE to finish</li>
+                    <li><strong>Writers don't block readers:</strong> An UPDATE doesn't wait for a SELECT to finish</li>
+                    <li><strong>Only writers block writers:</strong> Two concurrent UPDATEs on the same row must wait</li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">🏷️</span>
+            <div class="content">
+                <strong>Tuple Headers (xmin / xmax)</strong><br>
+                Every row (tuple) has hidden system columns that track its lifecycle:
+                <ul>
+                    <li><strong>xmin:</strong> Transaction ID that created this row version (INSERT or UPDATE)</li>
+                    <li><strong>xmax:</strong> Transaction ID that deleted/updated this row (0 if still valid)</li>
+                    <li><strong>ctid:</strong> Physical location (page#, offset) — the TID</li>
+                    <li><strong>Visibility check:</strong> "Is xmin committed AND (xmax=0 OR xmax not committed)?"</li>
+                </ul>
+                <p style="margin-top: 0.5rem;">
+                    <code>SELECT xmin, xmax, ctid, * FROM your_table;</code> — shows hidden columns!
+                </p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">🔄</span>
+            <div class="content">
+                <strong>UPDATE Creates New Row Version</strong><br>
+                PostgreSQL UPDATE doesn't modify in-place — it creates a NEW tuple:
+                <ol>
+                    <li>Old tuple: xmax set to current transaction ID</li>
+                    <li>New tuple: created with xmin = current transaction ID</li>
+                    <li>Result: Both versions exist until VACUUM cleans up</li>
+                </ol>
+                <p style="margin-top: 0.5rem; color: var(--orange);">
+                    ⚠️ This is why UPDATE-heavy tables bloat and need regular VACUUM!
+                </p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">👁️</span>
+            <div class="content">
+                <strong>Snapshot Isolation</strong><br>
+                Each transaction sees a consistent "snapshot" of the database:
+                <ul>
+                    <li><strong>READ COMMITTED:</strong> New snapshot at start of each statement</li>
+                    <li><strong>REPEATABLE READ:</strong> Single snapshot for entire transaction</li>
+                    <li><strong>SERIALIZABLE:</strong> Like REPEATABLE READ + conflict detection</li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">🧹</span>
+            <div class="content">
+                <strong>Dead Tuples & VACUUM</strong><br>
+                Old row versions ("dead tuples") must be cleaned up:
+                <ul>
+                    <li><strong>Dead tuple:</strong> A row version no longer visible to ANY active transaction</li>
+                    <li><strong>VACUUM:</strong> Marks space as reusable (doesn't return to OS)</li>
+                    <li><strong>VACUUM FULL:</strong> Rewrites entire table, returns space to OS (locks table!)</li>
+                    <li><strong>Autovacuum:</strong> Automatically runs VACUUM based on dead tuple thresholds</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <h2>🔄 Traditional I/O Path (Pre-PG 18)</h2>
+
+    <div class="version-box old">
+        <h3><span class="version-badge old">PG ≤ 17</span> Synchronous I/O Model</h3>
+        
+        <div class="process-flow">
+            <div class="process-box">
+                <strong>Backend</strong><br>
+                <small>Issues read()</small>
+            </div>
+            <span class="process-arrow">→</span>
+            <div class="process-box" style="background: #fee2e2; border-color: #dc2626;">
+                <strong>⏳ WAIT</strong><br>
+                <small>Blocks until done</small>
+            </div>
+            <span class="process-arrow">→</span>
+            <div class="process-box">
+                <strong>Kernel</strong><br>
+                <small>Reads from disk</small>
+            </div>
+            <span class="process-arrow">→</span>
+            <div class="process-box">
+                <strong>Backend</strong><br>
+                <small>Processes data</small>
+            </div>
+        </div>
+
+        <ul>
+            <li><strong>Problem:</strong> Backend process blocks during disk I/O</li>
+            <li>Each read/write is synchronous — CPU sits idle waiting for disk</li>
+            <li><code>effective_io_concurrency</code> only hinted prefetching, didn't truly parallelize</li>
+            <li>Sequential scans on large tables were I/O-bound</li>
+        </ul>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <h2>⚡ PostgreSQL 18: Async I/O Architecture</h2>
+
+    <div class="version-box new">
+        <h3><span class="version-badge new">PG 18</span> Asynchronous I/O Model</h3>
+        
+        <div class="arch-diagram" style="background: #f0fdf4;">
+            <div class="arch-layers">
+                <div class="arch-layer">
+                    <div class="layer-label">BACKEND</div>
+                    <div class="layer-content">
+                        <div class="component highlight">
+                            <div class="name">🔷 Backend Process</div>
+                            <div class="desc">Issues async I/O request → continues processing!</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="connector" style="color: var(--green);">↓ Non-blocking request ↓</div>
+
+                <div class="arch-layer">
+                    <div class="layer-label green">I/O LAYER<br>(NEW)</div>
+                    <div class="layer-content">
+                        <div class="component new">
+                            <div class="name">🔧 I/O Workers</div>
+                            <div class="desc">io_method = worker</div>
+                        </div>
+                        <div class="component new">
+                            <div class="name">⚡ io_uring</div>
+                            <div class="desc">io_method = io_uring (Linux)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="connector" style="color: var(--green);">↓ Actual disk I/O ↓</div>
+
+                <div class="arch-layer">
+                    <div class="layer-label yellow">DISK</div>
+                    <div class="layer-content">
+                        <div class="component" style="flex: 2;">
+                            <div class="name">💾 Storage (SSD/NVMe)</div>
+                            <div class="desc">Multiple concurrent I/O operations in flight</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3>How It Works</h3>
+        <ol>
+            <li>Backend needs to read page 1000, 1001, 1002...</li>
+            <li>Instead of blocking on each read, it submits ALL requests</li>
+            <li>I/O workers (or io_uring) handle the actual disk reads</li>
+            <li>Backend continues CPU work while I/O happens in parallel</li>
+            <li>When data arrives, backend processes it immediately</li>
+        </ol>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <h2>📊 Side-by-Side: Old vs New I/O</h2>
+
+    <div class="comparison-grid">
+        <div class="version-box old">
+            <h3><span class="version-badge old">Sync I/O (PG ≤ 17)</span></h3>
+            <table class="arch-table">
+                <tr><td><strong>io_method</strong></td><td><code>sync</code> only</td></tr>
+                <tr><td><strong>Blocking</strong></td><td>Yes — CPU waits for disk</td></tr>
+                <tr><td><strong>Sequential Scan</strong></td><td>Read page → wait → process → repeat</td></tr>
+                <tr><td><strong>Prefetch</strong></td><td>Limited hinting via OS</td></tr>
+                <tr><td><strong>SSD Utilization</strong></td><td>Poor — can't saturate IOPS</td></tr>
+            </table>
+        </div>
+
+        <div class="version-box new">
+            <h3><span class="version-badge new">Async I/O (PG 18)</span></h3>
+            <table class="arch-table">
+                <tr><td><strong>io_method</strong></td><td><code>worker</code> or <code>io_uring</code></td></tr>
+                <tr><td><strong>Blocking</strong></td><td>No — CPU continues working</td></tr>
+                <tr><td><strong>Sequential Scan</strong></td><td>Submit many reads → process as they complete</td></tr>
+                <tr><td><strong>Prefetch</strong></td><td>True concurrent I/O</td></tr>
+                <tr><td><strong>SSD Utilization</strong></td><td>Excellent — saturates queue depth</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <h2>🆕 Other PostgreSQL 18 Architecture Additions</h2>
+
+    <div class="arch-diagram">
+        <div class="arch-title">New PG 18 Components</div>
+        <div class="arch-layers">
+            <div class="arch-layer">
+                <div class="layer-label green">NEW<br>FEATURES</div>
+                <div class="layer-content">
+                    <div class="component new">
+                        <div class="name">📜 WAL Summarizer</div>
+                        <div class="desc">Tracks block changes for incremental backups</div>
+                    </div>
+                    <div class="component new">
+                        <div class="name">🔧 I/O Workers</div>
+                        <div class="desc">Background async I/O handlers</div>
+                    </div>
+                    <div class="component new">
+                        <div class="name">📊 pg_stat_io</div>
+                        <div class="desc">Enhanced I/O monitoring</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table class="arch-table">
+        <tr>
+            <th>New in PG 18</th>
+            <th>What It Does</th>
+            <th>Why It Matters</th>
+        </tr>
+        <tr>
+            <td><strong>Async I/O</strong></td>
+            <td>Non-blocking disk reads/writes</td>
+            <td>2-3x faster sequential scans on SSDs</td>
+        </tr>
+        <tr>
+            <td><strong>WAL Summarizer</strong></td>
+            <td>Background process tracks which blocks changed</td>
+            <td>Enables incremental backups (80-95% smaller)</td>
+        </tr>
+        <tr>
+            <td><strong>I/O Workers</strong></td>
+            <td>Dedicated processes for async I/O</td>
+            <td>Offloads disk wait from backends</td>
+        </tr>
+        <tr>
+            <td><strong>Virtual Generated Columns</strong></td>
+            <td>Computed columns without storage</td>
+            <td>Saves disk space, computed on read</td>
+        </tr>
+        <tr>
+            <td><strong>OAuth/OIDC Auth</strong></td>
+            <td>Native OpenID Connect support</td>
+            <td>Enterprise SSO without extensions</td>
+        </tr>
+        <tr>
+            <td><strong>Sequence Replication</strong></td>
+            <td>Logical replication includes sequences</td>
+            <td>Fix long-standing limitation for failover</td>
+        </tr>
+    </table>
+
+    <h3>🔍 PG 18 New Components Explained</h3>
+    
+    <div class="info-box" style="flex-direction: column; gap: 1rem;">
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">⚡</span>
+            <div class="content">
+                <strong>Async I/O (io_method = worker | io_uring)</strong><br>
+                The biggest architectural change in PG 18 — fundamentally changes how PostgreSQL reads/writes data.
+                <ul>
+                    <li><strong>Worker mode:</strong> Background processes handle I/O requests; backend continues CPU work</li>
+                    <li><strong>io_uring mode:</strong> Linux kernel feature for true zero-copy async I/O (fastest)</li>
+                    <li><strong>Benefits:</strong> Sequential scans 2-3x faster, VACUUM faster, index builds faster</li>
+                    <li><strong>Settings:</strong> <code>io_method</code>, <code>io_workers</code>, <code>effective_io_concurrency</code></li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">🔧</span>
+            <div class="content">
+                <strong>I/O Workers</strong><br>
+                New background process type dedicated to handling async I/O operations.
+                <ul>
+                    <li><strong>Count:</strong> Controlled by <code>io_workers</code> (default: 3)</li>
+                    <li><strong>Role:</strong> Receive I/O requests from backends, execute them, signal completion</li>
+                    <li><strong>Shared memory:</strong> Use ring buffers to communicate with backends</li>
+                    <li><strong>Benefit:</strong> Backends never block on disk; I/O workers absorb the wait time</li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">📜</span>
+            <div class="content">
+                <strong>WAL Summarizer</strong><br>
+                New background process that summarizes WAL to track which data blocks changed.
+                <ul>
+                    <li><strong>Purpose:</strong> Enable incremental backups (only backup changed blocks)</li>
+                    <li><strong>Setting:</strong> <code>summarize_wal = on</code> (default in PG 18)</li>
+                    <li><strong>Output:</strong> WAL summaries stored in <code>pg_wal/summaries/</code></li>
+                    <li><strong>Used by:</strong> <code>pg_basebackup --incremental</code></li>
+                    <li><strong>Backup size reduction:</strong> 80-95% smaller than full backups</li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">📊</span>
+            <div class="content">
+                <strong>Enhanced pg_stat_io</strong><br>
+                System view providing detailed I/O statistics by backend type and I/O context.
+                <ul>
+                    <li><strong>Dimensions:</strong> backend_type × object × context</li>
+                    <li><strong>Metrics:</strong> reads, read_bytes, read_time, writes, write_bytes, write_time, fsyncs</li>
+                    <li><strong>Use case:</strong> Identify I/O bottlenecks, tune buffer pool, validate async I/O benefit</li>
+                    <li><strong>Query:</strong> <code>SELECT * FROM pg_stat_io WHERE reads > 0;</code></li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">🧮</span>
+            <div class="content">
+                <strong>Virtual Generated Columns</strong><br>
+                Computed columns that don't store data — value is calculated at read time.
+                <ul>
+                    <li><strong>Syntax:</strong> <code>column_name type GENERATED ALWAYS AS (expression) VIRTUAL</code></li>
+                    <li><strong>vs STORED:</strong> STORED columns occupy disk; VIRTUAL columns don't</li>
+                    <li><strong>Trade-off:</strong> Saves storage but costs CPU on every read</li>
+                    <li><strong>Best for:</strong> Simple expressions read infrequently, derived values</li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">🔐</span>
+            <div class="content">
+                <strong>OAuth/OIDC Authentication</strong><br>
+                Native support for OpenID Connect authentication without third-party extensions.
+                <ul>
+                    <li><strong>Flow:</strong> Client gets token from IdP → sends to PostgreSQL → PG validates token</li>
+                    <li><strong>Providers:</strong> Works with Okta, Auth0, Keycloak, Azure AD, etc.</li>
+                    <li><strong>Configuration:</strong> New <code>oauth</code> auth method in pg_hba.conf</li>
+                    <li><strong>Benefit:</strong> Enterprise SSO, centralized user management, no password storage</li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">🔢</span>
+            <div class="content">
+                <strong>Logical Replication of Sequences</strong><br>
+                Sequences can now be replicated via logical replication (previously impossible).
+                <ul>
+                    <li><strong>Problem before:</strong> After failover, sequences on replica didn't match primary</li>
+                    <li><strong>Risk:</strong> Duplicate primary key errors after failover</li>
+                    <li><strong>Solution:</strong> PG 18 includes sequence values in logical replication stream</li>
+                    <li><strong>Use case:</strong> High-availability setups, blue-green deployments</li>
+                </ul>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span class="icon">💾</span>
+            <div class="content">
+                <strong>Incremental Backups</strong><br>
+                <code>pg_basebackup --incremental</code> creates backups containing only changed blocks.
+                <ul>
+                    <li><strong>Requires:</strong> <code>summarize_wal = on</code></li>
+                    <li><strong>Reference:</strong> Uses backup_manifest from previous backup</li>
+                    <li><strong>Restore:</strong> Use <code>pg_combinebackup</code> to merge full + incrementals</li>
+                    <li><strong>Benefit:</strong> Faster backups, less storage, less network bandwidth</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <h2>🔑 Key Concepts Summary</h2>
+
+    <div class="info-box">
+        <span class="icon">📌</span>
+        <div class="content">
+            <strong>Remember these fundamentals:</strong>
+            <ul style="margin-top: 0.5rem;">
+                <li><strong>Process-per-connection:</strong> Each client gets its own backend process</li>
+                <li><strong>Shared buffers:</strong> The in-memory page cache (set to 25% of RAM)</li>
+                <li><strong>WAL:</strong> Write-ahead logging ensures durability (write log first, then data)</li>
+                <li><strong>MVCC:</strong> Multiple row versions allow concurrent access without read locks</li>
+                <li><strong>Vacuum:</strong> Cleans up dead tuples left by MVCC</li>
+                <li><strong>Cost-based planner:</strong> Chooses best execution path based on statistics</li>
+                <li><strong>PG 18 Async I/O:</strong> Overlaps disk wait with CPU work — huge win for I/O-bound queries</li>
+            </ul>
+        </div>
+    </div>
+
+        </div><!-- End Reference Tab -->
+
+        <!-- ══════════════════ INTERACTIVE JOURNEY TAB ══════════════════ -->
+        <div id="tab-journey" class="tab-content">
+            
+            <div style="text-align: center; margin-bottom: 1rem;">
+                <h2 style="margin: 0;">🎯 Interactive Architecture Journey</h2>
+                <p style="color: var(--text-dim);">Step through PostgreSQL architecture with animations and visualizations</p>
+            </div>
+
+            <!-- Step Navigation -->
+            <div class="journey-nav">
+                <button class="journey-step-btn active" onclick="goToStep(1)">1</button>
+                <div class="step-connector"></div>
+                <button class="journey-step-btn" onclick="goToStep(2)">2</button>
+                <div class="step-connector"></div>
+                <button class="journey-step-btn" onclick="goToStep(3)">3</button>
+                <div class="step-connector"></div>
+                <button class="journey-step-btn" onclick="goToStep(4)">4</button>
+                <div class="step-connector"></div>
+                <button class="journey-step-btn" onclick="goToStep(5)">5</button>
+                <div class="step-connector"></div>
+                <button class="journey-step-btn" onclick="goToStep(6)">6</button>
+                <div class="step-connector"></div>
+                <button class="journey-step-btn" onclick="goToStep(7)">7</button>
+            </div>
+
+            <!-- ══════════════════ STEP 1: CONNECTION ══════════════════ -->
+            <div class="journey-step active" id="step-1">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">Client Connection</h3>
+                    <p class="step-description">How your application connects to PostgreSQL</p>
+                </div>
+
+                <div class="animated-diagram">
+                    <div style="display: flex; justify-content: space-around; align-items: center; gap: 2rem; flex-wrap: wrap;">
+                        <!-- Client -->
+                        <div style="text-align: center;">
+                            <div class="client-icon">💻</div>
+                            <p style="margin-top: 0.5rem; font-weight: 600;">Your App</p>
+                            <p style="font-size: 0.8rem; color: var(--text-dim);">Java / Python / Node.js</p>
+                        </div>
+
+                        <!-- Connection Arrow with Data Packets -->
+                        <div style="flex: 1; max-width: 200px; position: relative; height: 60px;">
+                            <div style="position: absolute; top: 50%; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #3b82f6, #10b981); transform: translateY(-50%); border-radius: 2px;"></div>
+                            <div class="data-packet" style="top: 15px; left: 20%;">SQL</div>
+                            <div class="data-packet reverse" style="top: 35px; left: 60%;">📊</div>
+                            <div style="position: absolute; right: -10px; top: 50%; transform: translateY(-50%); font-size: 1.5rem;">→</div>
+                        </div>
+
+                        <!-- PostgreSQL Server -->
+                        <div style="text-align: center;">
+                            <div class="server-icon">
+                                <span style="font-size: 2rem;">🐘</span>
+                                <div class="lights">
+                                    <div class="light"></div>
+                                    <div class="light"></div>
+                                    <div class="light"></div>
+                                </div>
+                            </div>
+                            <p style="margin-top: 0.5rem; font-weight: 600;">PostgreSQL</p>
+                            <p style="font-size: 0.8rem; color: var(--text-dim);">Port 5432</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- fork() Animation Diagram - Enhanced -->
+                <div class="animated-diagram" style="background: linear-gradient(135deg, #fff7ed, #ffedd5); margin-top: 1rem; min-height: auto;">
+                    <h4 style="text-align: center; margin-bottom: 1.5rem; color: var(--orange);">🔀 Postmaster fork() — Step-by-Step Animation</h4>
+                    
+                    <!-- Step 1: Listening State -->
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: rgba(255,255,255,0.7); border-radius: 12px; border-left: 4px solid var(--orange);">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                            <span style="background: var(--orange); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;">1</span>
+                            <strong style="color: var(--orange);">Postmaster Waiting (listen state)</strong>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+                            <div style="background: white; border: 3px solid var(--orange); border-radius: 16px; padding: 1.2rem; text-align: center; min-width: 140px; position: relative;">
+                                <div style="position: absolute; top: -10px; right: -10px; background: var(--green); color: white; font-size: 0.6rem; padding: 3px 8px; border-radius: 10px; animation: blink 1s infinite;">LISTENING</div>
+                                <div style="font-size: 2.5rem;">👑</div>
+                                <div style="font-weight: 700; color: var(--orange); font-size: 1.1rem;">Postmaster</div>
+                                <div style="font-size: 0.8rem; color: var(--text-dim);">PID: 1</div>
+                                <div style="font-size: 0.75rem; background: #fef3c7; padding: 4px 10px; border-radius: 6px; margin-top: 6px; font-family: monospace;">:5432</div>
+                            </div>
+                            <div style="text-align: center; color: var(--text-dim); font-size: 0.85rem;">
+                                <div style="font-size: 1.5rem; animation: pulse 2s infinite;">📡</div>
+                                Waiting for connections...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Connection Request -->
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: rgba(255,255,255,0.7); border-radius: 12px; border-left: 4px solid var(--accent);">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                            <span style="background: var(--accent); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;">2</span>
+                            <strong style="color: var(--accent);">Client Sends Connection Request</strong>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                            <div style="background: #dbeafe; border: 3px solid var(--accent); border-radius: 16px; padding: 1rem; text-align: center; min-width: 120px; animation: bounce 1.5s infinite;">
+                                <div style="font-size: 2rem;">💻</div>
+                                <div style="font-weight: 600; color: var(--accent);">Client App</div>
+                                <div style="font-size: 0.7rem; color: var(--text-dim);">Java / Python</div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
+                                <div style="background: linear-gradient(90deg, var(--accent), var(--orange)); height: 4px; width: 80px; border-radius: 2px; position: relative; overflow: hidden;">
+                                    <div style="position: absolute; width: 20px; height: 100%; background: white; animation: flowRight 1.5s linear infinite;"></div>
+                                </div>
+                                <div style="font-size: 0.7rem; color: var(--text-dim);">TCP SYN → SYN-ACK → ACK</div>
+                            </div>
+                            <div style="background: white; border: 3px solid var(--orange); border-radius: 16px; padding: 1rem; text-align: center; min-width: 120px;">
+                                <div style="font-size: 2rem;">👑</div>
+                                <div style="font-weight: 600; color: var(--orange);">Postmaster</div>
+                                <div style="font-size: 0.7rem; background: #fef3c7; padding: 2px 6px; border-radius: 4px; margin-top: 4px;">accept()!</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: fork() Call -->
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: rgba(255,255,255,0.7); border-radius: 12px; border-left: 4px solid var(--pink);">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                            <span style="background: var(--pink); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;">3</span>
+                            <strong style="color: var(--pink);">Postmaster Calls fork() — The Magic Moment!</strong>
+                        </div>
+                        <div style="text-align: center; margin-bottom: 1rem;">
+                            <div style="display: inline-block; background: linear-gradient(135deg, var(--pink), var(--accent2)); color: white; padding: 0.75rem 2rem; border-radius: 25px; font-weight: 700; animation: glow 2s infinite; font-size: 1.1rem;">
+                                🔀 fork() — Process Duplicates!
+                            </div>
+                        </div>
+                        <div style="background: #1e293b; border-radius: 10px; padding: 1rem; font-family: 'Cascadia Code', monospace; font-size: 0.85rem; color: #e2e8f0; max-width: 500px; margin: 0 auto;">
+                            <span style="color: #c084fc;">pid_t</span> child = <span style="color: #60a5fa;">fork</span>();<br>
+                            <span style="color: #64748b;">// 🔮 Kernel creates exact copy of process</span><br>
+                            <span style="color: #64748b;">// Return value differs:</span><br>
+                            <span style="color: #64748b;">//   Parent → child's PID (e.g., 1234)</span><br>
+                            <span style="color: #64748b;">//   Child  → 0</span>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Two Processes Exist -->
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: rgba(255,255,255,0.7); border-radius: 12px; border-left: 4px solid var(--green);">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                            <span style="background: var(--green); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;">4</span>
+                            <strong style="color: var(--green);">Two Processes Now Exist!</strong>
+                        </div>
+                        <div style="display: flex; align-items: flex-start; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
+                            <!-- Parent (Postmaster) -->
+                            <div style="text-align: center; flex: 1; min-width: 180px; max-width: 220px;">
+                                <div style="background: white; border: 3px solid var(--orange); border-radius: 16px; padding: 1rem; position: relative;">
+                                    <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--orange); color: white; font-size: 0.65rem; padding: 3px 10px; border-radius: 10px; font-weight: 700;">PARENT</div>
+                                    <div style="font-size: 2rem;">👑</div>
+                                    <div style="font-weight: 700; color: var(--orange);">Postmaster</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-dim);">PID: 1</div>
+                                </div>
+                                <div style="margin-top: 0.75rem; font-size: 0.8rem; background: #fef3c7; padding: 0.5rem; border-radius: 8px;">
+                                    <div style="font-weight: 600; color: var(--orange);">Actions:</div>
+                                    <ul style="text-align: left; margin: 0.25rem 0 0 0; padding-left: 1.2rem; font-size: 0.75rem;">
+                                        <li>close(client_socket)</li>
+                                        <li>Back to listen()</li>
+                                        <li>Ready for next connection</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Fork Arrow -->
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 2rem;">
+                                <div style="font-size: 2rem; color: var(--pink); animation: pulse 1s infinite;">⇋</div>
+                                <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.25rem;">Shared<br>Memory</div>
+                            </div>
+                            
+                            <!-- Child (Backend) -->
+                            <div style="text-align: center; flex: 1; min-width: 180px; max-width: 220px;">
+                                <div style="background: #dcfce7; border: 3px solid var(--green); border-radius: 16px; padding: 1rem; position: relative; animation: slideInUp 0.5s ease;">
+                                    <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--green); color: white; font-size: 0.65rem; padding: 3px 10px; border-radius: 10px; font-weight: 700;">CHILD (NEW!)</div>
+                                    <div style="font-size: 2rem;">🔷</div>
+                                    <div style="font-weight: 700; color: var(--green);">Backend</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-dim);">PID: 1234</div>
+                                </div>
+                                <div style="margin-top: 0.75rem; font-size: 0.8rem; background: #dcfce7; padding: 0.5rem; border-radius: 8px;">
+                                    <div style="font-weight: 600; color: var(--green);">Actions:</div>
+                                    <ul style="text-align: left; margin: 0.25rem 0 0 0; padding-left: 1.2rem; font-size: 0.75rem;">
+                                        <li>close(listen_socket)</li>
+                                        <li>Authenticate client</li>
+                                        <li>Enter query loop</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Backend Serves Client -->
+                    <div style="padding: 1rem; background: rgba(255,255,255,0.7); border-radius: 12px; border-left: 4px solid var(--accent2);">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                            <span style="background: var(--accent2); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;">5</span>
+                            <strong style="color: var(--accent2);">Backend Serves Your Queries!</strong>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                            <div style="background: white; border: 2px solid var(--accent); border-radius: 12px; padding: 0.75rem; text-align: center;">
+                                <div style="font-size: 1.5rem;">💻</div>
+                                <div style="font-size: 0.8rem; font-weight: 600;">Client</div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                    <span style="font-size: 0.7rem;">SQL</span>
+                                    <span style="color: var(--accent); animation: slideInRight 1s infinite;">→→→</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                    <span style="color: var(--accent2); animation: slideInLeft 1s infinite;">←←←</span>
+                                    <span style="font-size: 0.7rem;">Results</span>
+                                </div>
+                            </div>
+                            <div style="background: #dcfce7; border: 2px solid var(--green); border-radius: 12px; padding: 0.75rem; text-align: center;">
+                                <div style="font-size: 1.5rem;">🔷</div>
+                                <div style="font-size: 0.8rem; font-weight: 600;">Backend</div>
+                            </div>
+                            <div style="font-size: 1.5rem; color: var(--text-dim);">↔</div>
+                            <div style="background: #e2e8f0; border-radius: 12px; padding: 0.75rem; text-align: center;">
+                                <div style="font-size: 1.5rem;">🧠</div>
+                                <div style="font-size: 0.8rem; font-weight: 600;">Shared Memory</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- What Gets Copied Visual - DETAILED -->
+                <div class="animated-diagram" style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe); margin-top: 1rem; min-height: auto;">
+                    <h4 style="text-align: center; margin-bottom: 0.5rem; color: var(--accent);">🧬 What Gets Copied in fork()?</h4>
+                    <p style="text-align: center; color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.5rem;">Understanding memory semantics when postmaster creates a backend process</p>
+                    
+                    <!-- ========== SECTION 1: COPIED (Copy-on-Write) ========== -->
+                    <div style="background: #dcfce7; border: 3px solid var(--green); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h5 style="color: var(--green); margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.2rem;">
+                            <span style="font-size: 1.5rem;">✅</span> Copied (Copy-on-Write)
+                            <span style="font-size: 0.75rem; background: var(--green); color: white; padding: 3px 10px; border-radius: 12px; margin-left: auto;">Virtual Copy — Real Copy on Modify</span>
+                        </h5>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                            <!-- Memory -->
+                            <div style="background: white; border-radius: 12px; padding: 1rem; border-left: 4px solid var(--green);">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <span style="font-size: 2rem;">🧠</span>
+                                    <div>
+                                        <div style="font-weight: 700; color: var(--green);">Memory (Heap & Stack)</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-dim);">Process address space</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #374151; line-height: 1.5;">
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>What it is:</strong> The entire process memory — local variables (stack), dynamically allocated data (heap), global variables, and code.</p>
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>How COW works:</strong> After fork(), both processes share the same physical memory pages. Pages are marked <em>read-only</em>. When either process writes, the kernel traps the write, copies ONLY that page, then allows the write.</p>
+                                    <div style="background: #f0fdf4; border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem;">
+                                        <strong style="color: var(--green);">PostgreSQL Impact:</strong><br>
+                                        • Backend inherits postmaster's ~15-50MB of initialized catalogs & caches<br>
+                                        • Memory grows per-backend as queries execute (work_mem, hash tables)<br>
+                                        • Each backend typically uses 2-10MB additional after fork()
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- File Descriptors -->
+                            <div style="background: white; border-radius: 12px; padding: 1rem; border-left: 4px solid var(--green);">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <span style="font-size: 2rem;">📂</span>
+                                    <div>
+                                        <div style="font-weight: 700; color: var(--green);">File Descriptors</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-dim);">Open files, sockets, pipes</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #374151; line-height: 1.5;">
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>What it is:</strong> Integer handles referencing open files, network sockets, pipes. Stored in kernel per-process file descriptor table.</p>
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>After fork():</strong> Child gets <em>copies</em> of all FDs pointing to same kernel file objects. Both share file offset position!</p>
+                                    <div style="background: #f0fdf4; border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem;">
+                                        <strong style="color: var(--green);">PostgreSQL Impact:</strong><br>
+                                        • Child inherits client_socket (FD for TCP connection)<br>
+                                        • Child inherits listen_socket (then closes it)<br>
+                                        • Parent closes client_socket (child owns it now)<br>
+                                        • This is HOW the backend "takes over" the connection!
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Environment Variables -->
+                            <div style="background: white; border-radius: 12px; padding: 1rem; border-left: 4px solid var(--green);">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <span style="font-size: 2rem;">🌍</span>
+                                    <div>
+                                        <div style="font-weight: 700; color: var(--green);">Environment Variables</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-dim);">PATH, PGDATA, LD_LIBRARY_PATH</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #374151; line-height: 1.5;">
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>What it is:</strong> Key-value pairs set in shell or process. Stored in process memory (typically at top of stack).</p>
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>After fork():</strong> Child gets exact copy. Modifications in child don't affect parent (and vice versa).</p>
+                                    <div style="background: #f0fdf4; border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem;">
+                                        <strong style="color: var(--green);">PostgreSQL Impact:</strong><br>
+                                        • PGDATA — data directory location<br>
+                                        • TZ, LC_* — timezone/locale settings<br>
+                                        • Backend inherits same config as postmaster
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Signal Handlers -->
+                            <div style="background: white; border-radius: 12px; padding: 1rem; border-left: 4px solid var(--green);">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <span style="font-size: 2rem;">📡</span>
+                                    <div>
+                                        <div style="font-weight: 700; color: var(--green);">Signal Handlers</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-dim);">SIGTERM, SIGHUP, SIGINT handlers</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #374151; line-height: 1.5;">
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>What it is:</strong> Functions registered to handle Unix signals. Signal disposition table stored per-process in kernel.</p>
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>After fork():</strong> Child inherits signal handler registrations. Child can then modify its own handlers.</p>
+                                    <div style="background: #f0fdf4; border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem;">
+                                        <strong style="color: var(--green);">PostgreSQL Impact:</strong><br>
+                                        • SIGTERM → graceful shutdown<br>
+                                        • SIGHUP → reload config (reads postgresql.conf)<br>
+                                        • SIGQUIT → immediate termination<br>
+                                        • Backend resets some handlers after fork()
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========== SECTION 2: SHARED (Same Address) ========== -->
+                    <div style="background: #dbeafe; border: 3px solid var(--accent); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h5 style="color: var(--accent); margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.2rem;">
+                            <span style="font-size: 1.5rem;">🔗</span> Shared (Same Physical Memory)
+                            <span style="font-size: 0.75rem; background: var(--accent); color: white; padding: 3px 10px; border-radius: 12px; margin-left: auto;">All Processes See Same Data</span>
+                        </h5>
+                        
+                        <div style="background: white; border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+                            <p style="margin: 0; font-size: 0.9rem; color: #374151;">
+                                <strong>How it works:</strong> PostgreSQL allocates shared memory using <code>shmget()/shmat()</code> or <code>mmap(MAP_SHARED)</code> at startup. 
+                                This memory is mapped at the <strong>same virtual address</strong> in postmaster and all forked backends. 
+                                Changes by any process are <strong>immediately visible</strong> to all others — this is how PostgreSQL coordinates!
+                            </p>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                            <!-- Shared Buffers -->
+                            <div style="background: white; border-radius: 12px; padding: 1rem; border-left: 4px solid var(--accent);">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <span style="font-size: 2rem;">📦</span>
+                                    <div>
+                                        <div style="font-weight: 700; color: var(--accent);">Shared Buffers</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-dim);">The buffer pool cache</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #374151; line-height: 1.5;">
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>What it is:</strong> In-memory cache of 8KB database pages. Set by <code>shared_buffers</code> (typically 25% of RAM).</p>
+                                    <div style="background: #eff6ff; border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem;">
+                                        <strong style="color: var(--accent);">Why Shared?</strong><br>
+                                        • Backend A reads page → cached in shared_buffers<br>
+                                        • Backend B reads same page → instant hit (no disk I/O)!<br>
+                                        • Backend A modifies page → B sees dirty version immediately<br>
+                                        • <strong>Buffer pins + locks</strong> coordinate access
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- WAL Buffers -->
+                            <div style="background: white; border-radius: 12px; padding: 1rem; border-left: 4px solid var(--accent);">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <span style="font-size: 2rem;">📝</span>
+                                    <div>
+                                        <div style="font-weight: 700; color: var(--accent);">WAL Buffers</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-dim);">Write-Ahead Log staging area</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #374151; line-height: 1.5;">
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>What it is:</strong> Buffer for WAL records before they're flushed to disk. Set by <code>wal_buffers</code> (default: 1/32 of shared_buffers).</p>
+                                    <div style="background: #eff6ff; border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem;">
+                                        <strong style="color: var(--accent);">Why Shared?</strong><br>
+                                        • Multiple backends INSERT concurrently<br>
+                                        • Each appends WAL to shared buffer<br>
+                                        • WAL Writer process flushes to disk<br>
+                                        • LSN (Log Sequence Number) is globally coordinated
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lock Tables -->
+                            <div style="background: white; border-radius: 12px; padding: 1rem; border-left: 4px solid var(--accent);">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <span style="font-size: 2rem;">🔒</span>
+                                    <div>
+                                        <div style="font-weight: 700; color: var(--accent);">Lock Tables</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-dim);">Heavyweight & lightweight locks</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #374151; line-height: 1.5;">
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>What it is:</strong> Hash tables tracking who holds what locks. Includes relation locks, page locks, tuple locks.</p>
+                                    <div style="background: #eff6ff; border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem;">
+                                        <strong style="color: var(--accent);">Why Shared?</strong><br>
+                                        • Backend A: <code>SELECT ... FOR UPDATE</code> → acquires row lock<br>
+                                        • Backend B: same row → sees lock, must wait<br>
+                                        • Deadlock detector monitors global lock state<br>
+                                        • <code>pg_locks</code> view reads this memory
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CLOG -->
+                            <div style="background: white; border-radius: 12px; padding: 1rem; border-left: 4px solid var(--accent);">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <span style="font-size: 2rem;">📊</span>
+                                    <div>
+                                        <div style="font-weight: 700; color: var(--accent);">CLOG (pg_xact)</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-dim);">Commit Log — transaction status</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #374151; line-height: 1.5;">
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>What it is:</strong> 2 bits per transaction ID tracking status: IN_PROGRESS, COMMITTED, ABORTED, SUB_COMMITTED.</p>
+                                    <div style="background: #eff6ff; border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem;">
+                                        <strong style="color: var(--accent);">Why Shared?</strong><br>
+                                        • Backend reads row with xmin=12345<br>
+                                        • Checks CLOG: "Is txn 12345 committed?"<br>
+                                        • If yes → row is visible<br>
+                                        • If no → row is invisible (MVCC magic!)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========== SECTION 3: DIFFERENT (Unique per Process) ========== -->
+                    <div style="background: #fef3c7; border: 3px solid var(--orange); border-radius: 16px; padding: 1.5rem;">
+                        <h5 style="color: var(--orange); margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.2rem;">
+                            <span style="font-size: 1.5rem;">❌</span> Different (Unique Per Process)
+                            <span style="font-size: 0.75rem; background: var(--orange); color: white; padding: 3px 10px; border-radius: 12px; margin-left: auto;">Kernel Assigns New Values</span>
+                        </h5>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                            <!-- Process ID -->
+                            <div style="background: white; border-radius: 12px; padding: 1rem; border-left: 4px solid var(--orange);">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <span style="font-size: 2rem;">🆔</span>
+                                    <div>
+                                        <div style="font-weight: 700; color: var(--orange);">Process ID (PID)</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-dim);">Unique process identifier</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #374151; line-height: 1.5;">
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>What it is:</strong> Kernel-assigned unique integer (1-32768 typical, up to 4M on modern Linux). Returned by <code>getpid()</code>.</p>
+                                    <div style="background: #fefce8; border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem;">
+                                        <strong style="color: var(--orange);">PostgreSQL Impact:</strong><br>
+                                        • <code>pg_stat_activity.pid</code> shows backend PID<br>
+                                        • <code>pg_cancel_backend(pid)</code> sends signal to PID<br>
+                                        • Postmaster tracks child PIDs for crash handling
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Parent PID -->
+                            <div style="background: white; border-radius: 12px; padding: 1rem; border-left: 4px solid var(--orange);">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <span style="font-size: 2rem;">👨‍👦</span>
+                                    <div>
+                                        <div style="font-weight: 700; color: var(--orange);">Parent PID (PPID)</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-dim);">Who forked this process</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #374151; line-height: 1.5;">
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>What it is:</strong> PID of the parent process. Child's PPID = Parent's PID. Get via <code>getppid()</code>.</p>
+                                    <div style="background: #fefce8; border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem;">
+                                        <strong style="color: var(--orange);">PostgreSQL Impact:</strong><br>
+                                        • All backend PPIDs = postmaster's PID<br>
+                                        • <code>ps -ef | grep postgres</code> shows hierarchy<br>
+                                        • If postmaster dies, backends become orphans (PPID=1)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CPU Time -->
+                            <div style="background: white; border-radius: 12px; padding: 1rem; border-left: 4px solid var(--orange);">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <span style="font-size: 2rem;">⏱️</span>
+                                    <div>
+                                        <div style="font-weight: 700; color: var(--orange);">CPU Time (Reset to 0)</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-dim);">User & system CPU counters</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #374151; line-height: 1.5;">
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>What it is:</strong> Cumulative CPU time consumed. Split into user time (your code) and system time (kernel calls). Tracked in <code>struct rusage</code>.</p>
+                                    <div style="background: #fefce8; border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem;">
+                                        <strong style="color: var(--orange);">PostgreSQL Impact:</strong><br>
+                                        • Child starts with 0 CPU time (fresh slate)<br>
+                                        • <code>pg_stat_statements</code> tracks per-query CPU<br>
+                                        • Allows measuring backend resource consumption
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- File Locks -->
+                            <div style="background: white; border-radius: 12px; padding: 1rem; border-left: 4px solid var(--orange);">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <span style="font-size: 2rem;">🔐</span>
+                                    <div>
+                                        <div style="font-weight: 700; color: var(--orange);">File Locks (flock/fcntl)</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-dim);">Advisory & mandatory locks</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #374151; line-height: 1.5;">
+                                    <p style="margin: 0 0 0.5rem 0;"><strong>What it is:</strong> Locks acquired via <code>flock()</code> or <code>fcntl(F_SETLK)</code>. NOT inherited by child — must be re-acquired.</p>
+                                    <div style="background: #fefce8; border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem;">
+                                        <strong style="color: var(--orange);">PostgreSQL Impact:</strong><br>
+                                        • Postmaster holds lock on <code>postmaster.pid</code><br>
+                                        • Prevents second postmaster on same data dir<br>
+                                        • Backends don't inherit this lock (intentional)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Memory Diagram -->
+                    <div style="background: white; border: 2px dashed var(--accent); border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem;">
+                        <h5 style="text-align: center; margin: 0 0 1rem 0; color: var(--accent);">📐 Memory Layout After fork()</h5>
+                        <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+                            <div style="text-align: center; min-width: 150px;">
+                                <div style="background: #fef3c7; border: 2px solid var(--orange); border-radius: 12px; padding: 1rem; margin-bottom: 0.5rem;">
+                                    <div style="font-weight: 700;">Postmaster</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-dim);">PID: 1234</div>
+                                </div>
+                                <div style="font-size: 0.8rem;">
+                                    Private Memory<br>
+                                    <span style="color: var(--text-dim);">(COW pages)</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                                <div style="font-size: 2rem; color: var(--accent);">⟷</div>
+                                <div style="background: #dbeafe; border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600; color: var(--accent);">
+                                    SHARED<br>MEMORY
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--text-dim); text-align: center; margin-top: 0.25rem;">
+                                    shared_buffers<br>wal_buffers<br>locks, CLOG
+                                </div>
+                            </div>
+                            <div style="text-align: center; min-width: 150px;">
+                                <div style="background: #dcfce7; border: 2px solid var(--green); border-radius: 12px; padding: 1rem; margin-bottom: 0.5rem;">
+                                    <div style="font-weight: 700;">Backend</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-dim);">PID: 5678</div>
+                                </div>
+                                <div style="font-size: 0.8rem;">
+                                    Private Memory<br>
+                                    <span style="color: var(--text-dim);">(COW pages)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="explain-card">
+                    <h4>💡 What's Happening?</h4>
+                    <ol>
+                        <li><strong>TCP Connection:</strong> Your app opens a TCP socket to PostgreSQL (default port 5432)</li>
+                        <li><strong>Handshake:</strong> SSL negotiation (if enabled) + authentication (password, certificate, etc.)</li>
+                        <li><strong>Postmaster fork():</strong> The main postmaster process creates a dedicated backend for YOU</li>
+                        <li><strong>Session begins:</strong> Your backend holds your connection state, prepared statements, temp tables</li>
+                    </ol>
+                </div>
+
+                <!-- fork() Deep Dive -->
+                <div class="explain-card" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.1), rgba(249, 115, 22, 0.1)); border-color: var(--orange);">
+                    <h4 style="color: var(--orange);">🔀 fork() Deep Dive</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        <div>
+                            <h5 style="margin: 0 0 0.5rem 0;">What fork() Does:</h5>
+                            <ul style="margin: 0; font-size: 0.9rem;">
+                                <li>Creates <strong>exact copy</strong> of postmaster process</li>
+                                <li>Copy-on-Write (COW) — memory shared until modified</li>
+                                <li>Child inherits file descriptors (including client socket)</li>
+                                <li>Both processes share access to shared memory</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h5 style="margin: 0 0 0.5rem 0;">After fork():</h5>
+                            <ul style="margin: 0; font-size: 0.9rem;">
+                                <li><strong>Parent:</strong> Closes client socket, keeps listening</li>
+                                <li><strong>Child:</strong> Closes listen socket, keeps client socket</li>
+                                <li><strong>Child:</strong> Performs authentication</li>
+                                <li><strong>Child:</strong> Enters query processing loop</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div style="background: #1e293b; border-radius: 8px; padding: 1rem; margin-top: 1rem; font-family: monospace; font-size: 0.8rem; color: #e2e8f0;">
+                        <span style="color: #c084fc;">pid_t</span> pid = <span style="color: #60a5fa;">fork</span>();<br>
+                        <span style="color: #f97316;">if</span> (pid == <span style="color: #4ade80;">0</span>) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #64748b;">// Child process (new backend)</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #60a5fa;">close</span>(listen_socket);<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #60a5fa;">BackendMain</span>(client_socket);<br>
+                        } <span style="color: #f97316;">else</span> {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #64748b;">// Parent (postmaster)</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #60a5fa;">close</span>(client_socket);<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #64748b;">// Continue accepting connections</span><br>
+                        }
+                    </div>
+                </div>
+
+                <div class="demo-container">
+                    <div class="demo-header">
+                        <div class="demo-dot red"></div>
+                        <div class="demo-dot yellow"></div>
+                        <div class="demo-dot green"></div>
+                    </div>
+                    <div class="demo-code">
+                        <span class="comment">-- Connecting from Java (Spring Boot)</span><br>
+                        <span class="keyword">spring.datasource.url</span>=<span class="string">jdbc:postgresql://localhost:5432/mydb</span><br>
+                        <span class="keyword">spring.datasource.username</span>=<span class="string">postgres</span><br>
+                        <span class="keyword">spring.datasource.password</span>=<span class="string">secret</span><br><br>
+                        <span class="comment">-- Or connect via psql</span><br>
+                        <span class="function">psql</span> -h localhost -U postgres -d mydb
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <span class="icon">⚠️</span>
+                    <div class="content">
+                        <strong>Memory Impact:</strong> Each connection = one backend process = 2-5 MB RAM. 
+                        With 1000 connections, that's 2-5 GB just for processes! Use connection pooling 
+                        (PgBouncer for server-side, HikariCP for Java) to reuse connections efficiently.
+                    </div>
+                </div>
+
+                <!-- Crash Handling Info -->
+                <div class="info-box" style="border-color: #dc2626; background: linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(239, 68, 68, 0.1));">
+                    <span class="icon">💥</span>
+                    <div class="content">
+                        <strong style="color: #dc2626;">What if a Backend Crashes?</strong><br>
+                        <p style="margin: 0.5rem 0;">
+                            If ANY backend receives a fatal signal (SIGSEGV, etc.), the postmaster:
+                        </p>
+                        <ol style="margin: 0.5rem 0; font-size: 0.9rem;">
+                            <li>Receives SIGCHLD notification</li>
+                            <li>Sends SIGQUIT to ALL other backends (immediate termination)</li>
+                            <li>Waits for children to exit</li>
+                            <li>Performs crash recovery (replay WAL)</li>
+                            <li>Respawns background workers</li>
+                            <li>Resumes accepting connections</li>
+                        </ol>
+                        <p style="margin: 0; font-size: 0.85rem; color: #dc2626;">
+                            <strong>Why terminate everyone?</strong> Shared memory might be corrupted — safer to restart clean.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════ STEP 2: QUERY EXECUTION ══════════════════ -->
+            <div class="journey-step" id="step-2">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">Query Execution Pipeline</h3>
+                    <p class="step-description">How PostgreSQL transforms SQL into results</p>
+                </div>
+
+                <div class="animated-diagram">
+                    <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.5rem;">
+                        <div class="anim-process highlight">
+                            <div class="icon">📝</div>
+                            <div class="label">Parser</div>
+                            <div class="sublabel">SQL → Parse Tree</div>
+                        </div>
+                        <div class="flow-arrow"><span class="flow-arrow-icon">→</span></div>
+                        <div class="anim-process">
+                            <div class="icon">🔍</div>
+                            <div class="label">Analyzer</div>
+                            <div class="sublabel">Resolve names</div>
+                        </div>
+                        <div class="flow-arrow"><span class="flow-arrow-icon">→</span></div>
+                        <div class="anim-process">
+                            <div class="icon">📐</div>
+                            <div class="label">Rewriter</div>
+                            <div class="sublabel">Apply rules/views</div>
+                        </div>
+                        <div class="flow-arrow"><span class="flow-arrow-icon">→</span></div>
+                        <div class="anim-process">
+                            <div class="icon">🧠</div>
+                            <div class="label">Planner</div>
+                            <div class="sublabel">Find best path</div>
+                        </div>
+                        <div class="flow-arrow"><span class="flow-arrow-icon">→</span></div>
+                        <div class="anim-process">
+                            <div class="icon">⚙️</div>
+                            <div class="label">Executor</div>
+                            <div class="sublabel">Run the plan</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline">
+                    <div class="timeline-item active">
+                        <h4>📝 Parser (Lexer + Grammar)</h4>
+                        <p>Checks SQL syntax. <code>SELECT * FORM users</code> fails here (typo "FORM"). Produces a raw parse tree.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>🔍 Analyzer (Semantic Analysis)</h4>
+                        <p>Looks up table/column names in system catalogs. Resolves data types. <code>WHERE age = 'twenty'</code> fails if age is INTEGER.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>📐 Rewriter (Rule System)</h4>
+                        <p>Applies rewrite rules (views are expanded here). <code>SELECT * FROM active_users</code> becomes <code>SELECT * FROM users WHERE active = true</code>.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>🧠 Planner/Optimizer</h4>
+                        <p>The brain! Generates multiple execution paths, estimates costs using statistics, picks the cheapest. Index scan vs. seq scan? Join order? All decided here.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>⚙️ Executor</h4>
+                        <p>Actually runs the plan. Fetches pages from shared buffers (or disk), applies filters, joins, aggregations. Returns results to client.</p>
+                    </div>
+                </div>
+
+                <div class="demo-container">
+                    <div class="demo-header">
+                        <div class="demo-dot red"></div>
+                        <div class="demo-dot yellow"></div>
+                        <div class="demo-dot green"></div>
+                    </div>
+                    <div class="demo-code">
+                        <span class="comment">-- See the execution plan</span><br>
+                        <span class="keyword">EXPLAIN ANALYZE</span><br>
+                        <span class="highlight-line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> email = <span class="string">'alice@example.com'</span>;</span>
+                        <br><br>
+                        <span class="comment">-- Output shows: Seq Scan vs Index Scan, costs, actual timing</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════ STEP 3: SHARED MEMORY ══════════════════ -->
+            <div class="journey-step" id="step-3">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">Shared Memory & Buffer Pool</h3>
+                    <p class="step-description">The in-memory heart of PostgreSQL</p>
+                </div>
+
+                <div class="animated-diagram">
+                    <h4 style="text-align: center; margin-bottom: 1rem;">🧠 Shared Buffers (8KB Pages)</h4>
+                    <div class="memory-block">
+                        <div class="memory-cell data">📄</div>
+                        <div class="memory-cell data">📄</div>
+                        <div class="memory-cell dirty">✏️</div>
+                        <div class="memory-cell data">📄</div>
+                        <div class="memory-cell empty"></div>
+                        <div class="memory-cell dirty">✏️</div>
+                        <div class="memory-cell empty"></div>
+                        <div class="memory-cell data">📄</div>
+                        <div class="memory-cell empty"></div>
+                        <div class="memory-cell data">📄</div>
+                        <div class="memory-cell dirty">✏️</div>
+                        <div class="memory-cell empty"></div>
+                        <div class="memory-cell data">📄</div>
+                        <div class="memory-cell empty"></div>
+                        <div class="memory-cell empty"></div>
+                        <div class="memory-cell data">📄</div>
+                        <div class="memory-cell dirty">✏️</div>
+                        <div class="memory-cell data">📄</div>
+                        <div class="memory-cell empty"></div>
+                        <div class="memory-cell data">📄</div>
+                        <div class="memory-cell empty"></div>
+                        <div class="memory-cell dirty">✏️</div>
+                        <div class="memory-cell data">📄</div>
+                        <div class="memory-cell data">📄</div>
+                    </div>
+                    <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="width: 20px; height: 20px; background: #374151; border-radius: 4px;"></div>
+                            <span style="font-size: 0.85rem;">Empty</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="width: 20px; height: 20px; background: #3b82f6; border-radius: 4px;"></div>
+                            <span style="font-size: 0.85rem;">Clean (synced)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="width: 20px; height: 20px; background: #f59e0b; border-radius: 4px;"></div>
+                            <span style="font-size: 0.85rem;">Dirty (modified)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comparison-grid" style="margin-top: 2rem;">
+                    <div class="version-box">
+                        <h3>📦 Shared Buffers</h3>
+                        <ul>
+                            <li>Cache of 8KB data pages from disk</li>
+                            <li>All backends read/write here</li>
+                            <li>Set to ~25% of total RAM</li>
+                            <li><code>shared_buffers = 4GB</code></li>
+                        </ul>
+                        <div class="perf-meter" style="margin-top: 1rem;">
+                            <div class="perf-fill fast" style="width: 85%;">
+                                <span class="perf-label">Buffer Hit: 99%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="version-box">
+                        <h3>📝 WAL Buffers</h3>
+                        <ul>
+                            <li>Staging area for WAL records</li>
+                            <li>Before commit, changes go here</li>
+                            <li>WAL Writer flushes to disk</li>
+                            <li><code>wal_buffers = 64MB</code></li>
+                        </ul>
+                        <div style="margin-top: 1rem;">
+                            <div class="loader" style="margin: 0 auto;"></div>
+                            <p style="text-align: center; font-size: 0.8rem; margin-top: 0.5rem;">Continuously flushing...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="explain-card">
+                    <h4>🎯 Why This Matters</h4>
+                    <p>When you <code>SELECT * FROM users WHERE id = 5</code>:</p>
+                    <ol>
+                        <li>Executor asks: "Is page containing id=5 in shared buffers?"</li>
+                        <li><strong>Buffer hit:</strong> Read directly from RAM → ⚡ microseconds</li>
+                        <li><strong>Buffer miss:</strong> Read from disk → 💾 milliseconds (1000x slower!)</li>
+                    </ol>
+                    <p style="margin-top: 1rem;"><strong>Goal:</strong> Maximize buffer cache hit ratio (aim for 99%+). 
+                    Check with: <code>SELECT * FROM pg_stat_database;</code></p>
+                </div>
+            </div>
+
+            <!-- ══════════════════ STEP 4: WAL & DURABILITY ══════════════════ -->
+            <div class="journey-step" id="step-4">
+                <div class="step-header">
+                    <div class="step-number">4</div>
+                    <h3 class="step-title">Write-Ahead Logging (WAL)</h3>
+                    <p class="step-description">How PostgreSQL guarantees your data never gets lost</p>
+                </div>
+
+                <div class="animated-diagram">
+                    <div class="timeline">
+                        <div class="timeline-item active">
+                            <h4>1️⃣ Transaction Starts</h4>
+                            <code>BEGIN; UPDATE accounts SET balance = balance - 100 WHERE id = 1;</code>
+                        </div>
+                        <div class="timeline-item">
+                            <h4>2️⃣ Modify in Memory</h4>
+                            <p>Change is made in shared buffers (page becomes <span style="color: #f59e0b; font-weight: bold;">dirty</span>)</p>
+                        </div>
+                        <div class="timeline-item">
+                            <h4>3️⃣ Write WAL Record</h4>
+                            <p>WAL record written to WAL buffers: <em>"Changed row X in page Y from A to B"</em></p>
+                        </div>
+                        <div class="timeline-item">
+                            <h4>4️⃣ COMMIT</h4>
+                            <p>WAL flushed to disk (fsync). <strong>Now durable!</strong> ✅</p>
+                        </div>
+                        <div class="timeline-item">
+                            <h4>5️⃣ Eventually...</h4>
+                            <p>Checkpointer writes dirty pages to data files (lazy, in background)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="side-by-side">
+                    <div class="side-panel old">
+                        <h4 style="color: var(--orange);">❌ Without WAL</h4>
+                        <p>Write directly to data files. If crash during write:</p>
+                        <ul>
+                            <li>Partial page write = corrupted data</li>
+                            <li>Lost transactions</li>
+                            <li>Database inconsistency</li>
+                        </ul>
+                    </div>
+                    <div class="vs-badge">VS</div>
+                    <div class="side-panel new">
+                        <h4 style="color: var(--green);">✅ With WAL</h4>
+                        <p>Write-ahead log first, then data. If crash:</p>
+                        <ul>
+                            <li>Replay WAL from last checkpoint</li>
+                            <li>All committed txns recovered</li>
+                            <li>Database consistent</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="demo-container">
+                    <div class="demo-header">
+                        <div class="demo-dot red"></div>
+                        <div class="demo-dot yellow"></div>
+                        <div class="demo-dot green"></div>
+                    </div>
+                    <div class="demo-code">
+                        <span class="comment">-- Check WAL settings</span><br>
+                        <span class="keyword">SHOW</span> wal_level;           <span class="comment">-- replica (default) or logical</span><br>
+                        <span class="keyword">SHOW</span> max_wal_size;        <span class="comment">-- 1GB default</span><br>
+                        <span class="keyword">SHOW</span> checkpoint_timeout;   <span class="comment">-- 5min default</span><br><br>
+                        <span class="comment">-- WAL usage stats</span><br>
+                        <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> pg_stat_wal;
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════ STEP 5: MVCC ══════════════════ -->
+            <div class="journey-step" id="step-5">
+                <div class="step-header">
+                    <div class="step-number">5</div>
+                    <h3 class="step-title">MVCC: Multi-Version Concurrency</h3>
+                    <p class="step-description">How PostgreSQL handles concurrent reads and writes</p>
+                </div>
+
+                <div class="animated-diagram">
+                    <h4 style="text-align: center; margin-bottom: 1rem;">📚 Row Versions (Tuple Lifecycle)</h4>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                        <div style="background: #e2e8f0; border-radius: 12px; padding: 1rem; text-align: center; min-width: 150px;">
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📝</div>
+                            <div style="font-weight: 600;">Version 1</div>
+                            <div style="font-size: 0.8rem; color: var(--text-dim);">xmin: 100</div>
+                            <div style="font-size: 0.8rem; color: var(--text-dim);">xmax: 200</div>
+                            <div style="background: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; margin-top: 0.5rem;">DEAD</div>
+                        </div>
+                        <div style="align-self: center; font-size: 1.5rem; color: var(--accent);">→</div>
+                        <div style="background: #dbeafe; border: 2px solid var(--accent); border-radius: 12px; padding: 1rem; text-align: center; min-width: 150px;">
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📝</div>
+                            <div style="font-weight: 600;">Version 2</div>
+                            <div style="font-size: 0.8rem; color: var(--text-dim);">xmin: 200</div>
+                            <div style="font-size: 0.8rem; color: var(--text-dim);">xmax: 0</div>
+                            <div style="background: var(--green); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; margin-top: 0.5rem;">LIVE</div>
+                        </div>
+                    </div>
+                    <p style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: var(--text-dim);">
+                        Each UPDATE creates a new row version. Old versions remain until VACUUM.
+                    </p>
+                </div>
+
+                <div class="comparison-grid">
+                    <div class="version-box">
+                        <h3>🔢 Transaction IDs</h3>
+                        <ul>
+                            <li><strong>xmin:</strong> Transaction that created this version</li>
+                            <li><strong>xmax:</strong> Transaction that deleted/updated (0 if live)</li>
+                            <li>Each transaction sees a "snapshot" of valid xids</li>
+                        </ul>
+                    </div>
+                    <div class="version-box">
+                        <h3>🧹 VACUUM</h3>
+                        <ul>
+                            <li>Removes dead tuples (old versions)</li>
+                            <li>Autovacuum runs automatically</li>
+                            <li>Frees space for reuse</li>
+                            <li><strong>Never disable autovacuum!</strong></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="explain-card">
+                    <h4>🎭 Concurrent Transactions Example</h4>
+                    <div class="demo-container" style="margin-top: 1rem;">
+                        <div class="demo-header">
+                            <div class="demo-dot red"></div>
+                            <div class="demo-dot yellow"></div>
+                            <div class="demo-dot green"></div>
+                        </div>
+                        <div class="demo-code">
+<span class="comment">-- Transaction A (xid=100)        -- Transaction B (xid=101)</span><br>
+<span class="keyword">BEGIN</span>;                            <span class="keyword">BEGIN</span>;<br>
+<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> users;              <span class="comment">-- Sees user.name = 'Alice'</span><br>
+<span class="keyword">UPDATE</span> users <span class="keyword">SET</span> name=<span class="string">'Bob'</span>;<br>
+<span class="keyword">COMMIT</span>;                           <span class="comment">-- Still sees 'Alice'! (snapshot)</span><br>
+                                  <span class="keyword">COMMIT</span>;  <span class="comment">-- Now sees 'Bob'</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════ STEP 6: BACKGROUND PROCESSES ══════════════════ -->
+            <div class="journey-step" id="step-6">
+                <div class="step-header">
+                    <div class="step-number">6</div>
+                    <h3 class="step-title">Background Processes</h3>
+                    <p class="step-description">The workers that keep PostgreSQL running smoothly</p>
+                </div>
+
+                <div class="animated-diagram">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div class="anim-process" style="padding: 1.5rem;">
+                            <div class="icon">✍️</div>
+                            <div class="label">WAL Writer</div>
+                            <div class="sublabel">Flushes WAL buffers to disk</div>
+                            <div style="margin-top: 0.5rem;">
+                                <div class="perf-meter" style="height: 8px;">
+                                    <div class="perf-fill fast" style="width: 70%; animation: pulse 1s infinite;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="anim-process" style="padding: 1.5rem;">
+                            <div class="icon">📤</div>
+                            <div class="label">BGWriter</div>
+                            <div class="sublabel">Writes dirty buffers</div>
+                            <div style="margin-top: 0.5rem;">
+                                <div class="perf-meter" style="height: 8px;">
+                                    <div class="perf-fill slow" style="width: 45%; animation: pulse 2s infinite;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="anim-process" style="padding: 1.5rem;">
+                            <div class="icon">✅</div>
+                            <div class="label">Checkpointer</div>
+                            <div class="sublabel">Periodic full sync</div>
+                            <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim);">Every 5 min or 1GB WAL</div>
+                        </div>
+                        <div class="anim-process highlight" style="padding: 1.5rem;">
+                            <div class="icon">🧹</div>
+                            <div class="label">Autovacuum</div>
+                            <div class="sublabel">Cleans dead tuples</div>
+                            <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--green);">⚡ Critical!</div>
+                        </div>
+                        <div class="anim-process" style="padding: 1.5rem;">
+                            <div class="icon">📊</div>
+                            <div class="label">Stats Collector</div>
+                            <div class="sublabel">Gathers table statistics</div>
+                        </div>
+                        <div class="anim-process" style="padding: 1.5rem;">
+                            <div class="icon">🗄️</div>
+                            <div class="label">Archiver</div>
+                            <div class="sublabel">Archives WAL files</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="explain-card">
+                    <h4>🔄 Process Lifecycle</h4>
+                    <p>All these run continuously in the background. You can see them with:</p>
+                    <div class="demo-container" style="margin-top: 1rem;">
+                        <div class="demo-header">
+                            <div class="demo-dot red"></div>
+                            <div class="demo-dot yellow"></div>
+                            <div class="demo-dot green"></div>
+                        </div>
+                        <div class="demo-code">
+<span class="comment">-- Linux: see all PostgreSQL processes</span><br>
+ps aux | grep postgres<br><br>
+<span class="comment">-- From SQL: see backend activity</span><br>
+<span class="keyword">SELECT</span> pid, backend_type, state, query<br>
+<span class="keyword">FROM</span> pg_stat_activity;
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box" style="border-color: var(--orange); background: rgba(234, 88, 12, 0.1);">
+                    <span class="icon">⚠️</span>
+                    <div class="content">
+                        <strong>Never disable autovacuum!</strong> Without it:
+                        <ul style="margin-top: 0.5rem;">
+                            <li>Dead tuples accumulate → table bloat → slower queries</li>
+                            <li>Transaction ID wraparound → database shutdown required</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════ STEP 7: PG 18 ASYNC I/O ══════════════════ -->
+            <div class="journey-step" id="step-7">
+                <div class="step-header">
+                    <div class="step-number">7</div>
+                    <h3 class="step-title">PG 18: Async I/O Revolution</h3>
+                    <p class="step-description">The biggest performance change in PostgreSQL 18</p>
+                </div>
+
+                <div class="side-by-side">
+                    <div class="side-panel old">
+                        <h4>🐢 Traditional I/O (PG 17 and earlier)</h4>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="background: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.8rem;">CPU Work</div>
+                                <div style="flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px;"></div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="background: #ef4444; color: white; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.8rem; animation: shake 0.5s infinite;">WAIT</div>
+                                <div style="flex: 1; height: 8px; background: #fecaca; border-radius: 4px;"></div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="background: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.8rem;">CPU Work</div>
+                                <div style="flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px;"></div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="background: #ef4444; color: white; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.8rem;">WAIT</div>
+                                <div style="flex: 1; height: 8px; background: #fecaca; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-dim);">Backend blocks on every disk read. CPU sits idle during I/O.</p>
+                    </div>
+                    <div class="vs-badge">VS</div>
+                    <div class="side-panel new">
+                        <h4>🚀 Async I/O (PG 18)</h4>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="background: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.8rem;">CPU</div>
+                                <div style="flex: 1; height: 8px; background: linear-gradient(90deg, #3b82f6, #10b981); border-radius: 4px; animation: pulse 1s infinite;"></div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="background: #10b981; color: white; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.8rem;">I/O Worker</div>
+                                <div style="flex: 1; height: 8px; background: #10b981; border-radius: 4px;"></div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="background: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.8rem;">CPU</div>
+                                <div style="flex: 1; height: 8px; background: linear-gradient(90deg, #3b82f6, #10b981); border-radius: 4px; animation: pulse 1s infinite;"></div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="background: #10b981; color: white; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.8rem;">I/O Worker</div>
+                                <div style="flex: 1; height: 8px; background: #10b981; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--green);">CPU continues working while I/O workers handle disk. 2-3x faster!</p>
+                    </div>
+                </div>
+
+                <div class="animated-diagram" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+                    <h4 style="text-align: center; margin-bottom: 1.5rem;">⚡ PG 18 Async I/O Architecture</h4>
+                    <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; align-items: flex-start;">
+                        <div class="anim-process highlight" style="min-width: 150px;">
+                            <div class="icon">🔷</div>
+                            <div class="label">Backend</div>
+                            <div class="sublabel">Issues async request</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: center;">
+                            <div style="font-size: 1.5rem; animation: slideInRight 1s infinite;">→</div>
+                            <div style="font-size: 0.7rem; color: var(--text-dim);">Non-blocking</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div class="anim-process" style="background: #dcfce7; border-color: var(--green);">
+                                <div class="icon">🔧</div>
+                                <div class="label">I/O Worker 1</div>
+                            </div>
+                            <div class="anim-process" style="background: #dcfce7; border-color: var(--green);">
+                                <div class="icon">🔧</div>
+                                <div class="label">I/O Worker 2</div>
+                            </div>
+                            <div class="anim-process" style="background: #dcfce7; border-color: var(--green);">
+                                <div class="icon">🔧</div>
+                                <div class="label">I/O Worker 3</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: center;">
+                            <div style="font-size: 1.5rem; animation: slideInRight 1s infinite;">→</div>
+                            <div style="font-size: 0.7rem; color: var(--text-dim);">Parallel I/O</div>
+                        </div>
+                        <div class="anim-process" style="min-width: 120px;">
+                            <div class="icon">💾</div>
+                            <div class="label">Disk</div>
+                            <div class="sublabel">NVMe/SSD</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demo-container">
+                    <div class="demo-header">
+                        <div class="demo-dot red"></div>
+                        <div class="demo-dot yellow"></div>
+                        <div class="demo-dot green"></div>
+                    </div>
+                    <div class="demo-code">
+<span class="comment">-- Check PG 18 async I/O settings</span><br>
+<span class="keyword">SHOW</span> io_method;              <span class="comment">-- worker (default) or io_uring</span><br>
+<span class="keyword">SHOW</span> io_workers;             <span class="comment">-- 3 (default)</span><br>
+<span class="keyword">SHOW</span> effective_io_concurrency; <span class="comment">-- 16 (increase for SSDs)</span><br><br>
+<span class="comment">-- Monitor I/O stats</span><br>
+<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> pg_stat_io <span class="keyword">WHERE</span> reads > 0;
+                    </div>
+                </div>
+
+                <div class="info-box" style="border-color: var(--green); background: rgba(22, 163, 74, 0.1);">
+                    <span class="icon">🎉</span>
+                    <div class="content">
+                        <strong>Congratulations!</strong> You've completed the PostgreSQL architecture journey. 
+                        Now you understand the internals from client connection through PG 18's async I/O improvements!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Journey Controls -->
+            <div class="journey-controls">
+                <button class="journey-btn prev" onclick="prevStep()" id="prev-btn" disabled>
+                    ← Previous
+                </button>
+                <span id="step-indicator" style="align-self: center; color: var(--text-dim);">Step 1 of 7</span>
+                <button class="journey-btn next" onclick="nextStep()" id="next-btn">
+                    Next →
+                </button>
+            </div>
+
+        </div><!-- End Journey Tab -->
+
+    </div><!-- End Tab Container -->
+
+</div>
+
+<script>
+    // Tab Switching
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+    }
+
+    // Journey Step Navigation
+    let currentStep = 1;
+    const totalSteps = 7;
+
+    function goToStep(step) {
+        if (step < 1 || step > totalSteps) return;
+        
+        // Update current step
+        currentStep = step;
+        
+        // Update step buttons
+        document.querySelectorAll('.journey-step-btn').forEach((btn, index) => {
+            btn.classList.remove('active');
+            if (index + 1 < step) {
+                btn.classList.add('completed');
+            } else if (index + 1 === step) {
+                btn.classList.add('active');
+                btn.classList.remove('completed');
+            } else {
+                btn.classList.remove('completed');
+            }
+        });
+        
+        // Update connectors
+        document.querySelectorAll('.step-connector').forEach((conn, index) => {
+            if (index + 1 < step) {
+                conn.classList.add('completed');
+            } else {
+                conn.classList.remove('completed');
+            }
+        });
+        
+        // Show/hide step content
+        document.querySelectorAll('.journey-step').forEach((content, index) => {
+            content.classList.remove('active');
+            if (index + 1 === step) {
+                content.classList.add('active');
+            }
+        });
+        
+        // Update nav buttons
+        document.getElementById('prev-btn').disabled = step === 1;
+        document.getElementById('next-btn').disabled = step === totalSteps;
+        document.getElementById('next-btn').textContent = step === totalSteps ? '🎉 Done!' : 'Next →';
+        
+        // Update indicator
+        document.getElementById('step-indicator').textContent = `Step ${step} of ${totalSteps}`;
+    }
+
+    function nextStep() {
+        if (currentStep < totalSteps) {
+            goToStep(currentStep + 1);
+        }
+    }
+
+    function prevStep() {
+        if (currentStep > 1) {
+            goToStep(currentStep - 1);
+        }
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (document.getElementById('tab-journey').classList.contains('active')) {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                nextStep();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                prevStep();
+            }
+        }
+    });
+</script>
+</body>
+</html>

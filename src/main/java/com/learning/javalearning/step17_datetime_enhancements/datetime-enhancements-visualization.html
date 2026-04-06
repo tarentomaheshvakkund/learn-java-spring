@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 17: DateTime Enhancements (Java 16+)</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --code-bg: #0d1117;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            padding: 30px 0 10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        .badges {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 0 4px;
+        }
+        .badge-java { background: #f97316; color: white; }
+        .badge-jep { background: var(--primary); color: white; }
+        .badge-status { background: var(--success); color: white; }
+        .section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+        .section h2 {
+            font-size: 1.4rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section h2 .emoji { font-size: 1.5rem; }
+        .grid { display: grid; gap: 16px; }
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+        .card {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid var(--border);
+        }
+        .card h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: var(--primary-light);
+        }
+        code, .code-block {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+        }
+        .code-block {
+            background: var(--code-bg);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            margin: 12px 0;
+        }
+        .code-block pre { color: #e6edf3; white-space: pre; }
+        .keyword { color: #ff7b72; }
+        .string { color: #a5d6ff; }
+        .comment { color: #8b949e; }
+        .type { color: #d2a8ff; }
+        .method { color: #79c0ff; }
+        .number { color: #f2cc60; }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+        }
+        .comparison-table th, .comparison-table td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .comparison-table th {
+            background: var(--bg);
+            color: var(--primary-light);
+            font-weight: 600;
+        }
+        .comparison-table tr:hover { background: rgba(99, 102, 241, 0.05); }
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            padding: 20px 0;
+            margin: 20px 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg,
+                #3b82f6 0%, #3b82f6 16.6%,
+                #f59e0b 16.6%, #f59e0b 33.3%,
+                #ef4444 33.3%, #ef4444 50%,
+                #10b981 50%, #10b981 66.6%,
+                #8b5cf6 66.6%, #8b5cf6 83.3%,
+                #ec4899 83.3%, #ec4899 100%);
+            border-radius: 2px;
+        }
+        .timeline-item {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .timeline-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary);
+            margin: 0 auto 8px;
+            border: 3px solid var(--bg);
+        }
+        .timeline-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            max-width: 80px;
+        }
+        .timeline-time {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+        .day-period-bar {
+            display: flex;
+            height: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+        .period-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+        }
+        .period-night { background: #1e3a5f; flex: 6; }
+        .period-morning { background: #f59e0b; flex: 6; }
+        .period-afternoon { background: #ef4444; flex: 6; }
+        .period-evening { background: #8b5cf6; flex: 6; }
+        .locale-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+        }
+        .locale-chip {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+        }
+        .locale-chip .flag { font-size: 1.2rem; margin-right: 6px; }
+        .locale-chip .name { color: var(--text-muted); }
+        .locale-chip .value { color: var(--primary-light); font-weight: 600; }
+        .highlight {
+            background: rgba(99, 102, 241, 0.15);
+            border-left: 3px solid var(--primary);
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 12px 0;
+        }
+        .old-new {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .old-way { border-top: 3px solid var(--danger); }
+        .new-way { border-top: 3px solid var(--success); }
+        .label {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .label-old { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .label-new { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .features-list {
+            list-style: none;
+            padding: 0;
+        }
+        .features-list li {
+            padding: 6px 0;
+            padding-left: 24px;
+            position: relative;
+        }
+        .features-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+        @media (max-width: 768px) {
+            .old-new { grid-template-columns: 1fr; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .grid-3 { grid-template-columns: 1fr; }
+            h1 { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Step 17: DateTime Enhancements</h1>
+    <p class="subtitle">Day Period Support, Advanced Formatters &amp; International Display</p>
+    <div class="badges">
+        <span class="badge badge-java">Java 16+</span>
+        <span class="badge badge-jep">CLDR 36</span>
+        <span class="badge badge-status">Implemented</span>
+    </div>
+
+    <!-- Section 1: Day Period Overview -->
+    <div class="section">
+        <h2><span class="emoji">🕐</span> Day Period Support ('B' Pattern)</h2>
+        <p style="color: var(--text-muted); margin-bottom: 16px;">
+            Java 16 introduced the <code>'B'</code> pattern for natural day period descriptions.
+            Instead of "AM/PM", display "in the morning", "in the afternoon", etc.
+        </p>
+
+        <div class="day-period-bar">
+            <div class="period-segment period-night">🌙 Night<br>00:00-05:59</div>
+            <div class="period-segment period-morning">🌅 Morning<br>06:00-11:59</div>
+            <div class="period-segment period-afternoon">☀️ Afternoon<br>12:00-17:59</div>
+            <div class="period-segment period-evening">🌆 Evening<br>18:00-23:59</div>
+        </div>
+
+        <div class="old-new">
+            <div class="card old-way">
+                <span class="label label-old">❌ OLD WAY (AM/PM)</span>
+                <div class="code-block">
+<pre><span class="type">DateTimeFormatter</span> fmt = <span class="type">DateTimeFormatter</span>
+    .<span class="method">ofPattern</span>(<span class="string">"h:mm a"</span>);
+
+<span class="comment">// Output: "3:30 PM"</span>
+<span class="comment">//         "9:00 AM"</span>
+<span class="comment">//         "12:00 PM"</span></pre>
+                </div>
+            </div>
+            <div class="card new-way">
+                <span class="label label-new">✅ NEW WAY (Day Period)</span>
+                <div class="code-block">
+<pre><span class="type">DateTimeFormatter</span> fmt = <span class="type">DateTimeFormatter</span>
+    .<span class="method">ofPattern</span>(<span class="string">"h:mm B"</span>);
+
+<span class="comment">// Output: "3:30 in the afternoon"</span>
+<span class="comment">//         "9:00 in the morning"</span>
+<span class="comment">//         "12:00 noon"</span></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: Pattern Comparison -->
+    <div class="section">
+        <h2><span class="emoji">🔤</span> Day Period Pattern Variations</h2>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Pattern</th>
+                    <th>Type</th>
+                    <th>3:30 PM</th>
+                    <th>9:00 AM</th>
+                    <th>12:00 PM</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>h:mm a</code></td>
+                    <td>AM/PM</td>
+                    <td>3:30 PM</td>
+                    <td>9:00 AM</td>
+                    <td>12:00 PM</td>
+                </tr>
+                <tr>
+                    <td><code>h:mm B</code></td>
+                    <td>Abbreviated</td>
+                    <td>3:30 in the afternoon</td>
+                    <td>9:00 in the morning</td>
+                    <td>12:00 noon</td>
+                </tr>
+                <tr>
+                    <td><code>h:mm BBBB</code></td>
+                    <td>Wide</td>
+                    <td>3:30 in the afternoon</td>
+                    <td>9:00 in the morning</td>
+                    <td>12:00 noon</td>
+                </tr>
+                <tr>
+                    <td><code>h:mm BBBBB</code></td>
+                    <td>Narrow</td>
+                    <td>3:30 in the afternoon</td>
+                    <td>9:00 in the morning</td>
+                    <td>12:00 noon</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Section 3: Advanced DateTimeFormatter -->
+    <div class="section">
+        <h2><span class="emoji">🔧</span> Advanced DateTimeFormatterBuilder</h2>
+        <div class="grid grid-2">
+            <div class="card">
+                <h3>Custom Builder</h3>
+                <div class="code-block">
+<pre><span class="type">DateTimeFormatter</span> custom = <span class="keyword">new</span> <span class="type">DateTimeFormatterBuilder</span>()
+    .<span class="method">appendText</span>(<span class="type">ChronoField</span>.DAY_OF_WEEK, <span class="type">TextStyle</span>.FULL)
+    .<span class="method">appendLiteral</span>(<span class="string">", "</span>)
+    .<span class="method">appendText</span>(<span class="type">ChronoField</span>.MONTH_OF_YEAR, <span class="type">TextStyle</span>.FULL)
+    .<span class="method">appendLiteral</span>(<span class="string">" "</span>)
+    .<span class="method">appendValue</span>(<span class="type">ChronoField</span>.DAY_OF_MONTH)
+    .<span class="method">appendLiteral</span>(<span class="string">" at "</span>)
+    .<span class="method">appendValue</span>(<span class="type">ChronoField</span>.HOUR_OF_AMPM)
+    .<span class="method">appendLiteral</span>(<span class="string">":"</span>)
+    .<span class="method">appendValue</span>(<span class="type">ChronoField</span>.MINUTE_OF_HOUR, <span class="number">2</span>)
+    .<span class="method">toFormatter</span>(<span class="type">Locale</span>.US);
+
+<span class="comment">// "Tuesday, February 24 at 3:30"</span></pre>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Optional Sections</h3>
+                <div class="code-block">
+<pre><span class="type">DateTimeFormatter</span> flexible = <span class="keyword">new</span> <span class="type">DateTimeFormatterBuilder</span>()
+    .<span class="method">appendPattern</span>(<span class="string">"yyyy-MM-dd HH:mm:ss"</span>)
+    .<span class="method">optionalStart</span>()
+    .<span class="method">appendLiteral</span>(<span class="string">" ["</span>)
+    .<span class="method">appendZoneId</span>()
+    .<span class="method">appendLiteral</span>(<span class="string">"]"</span>)
+    .<span class="method">optionalEnd</span>()
+    .<span class="method">toFormatter</span>();
+
+<span class="comment">// "2026-02-24 15:30:00"</span>
+<span class="comment">// "2026-02-24 15:30:00 [America/New_York]"</span></pre>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Case-Insensitive Parsing</h3>
+                <div class="code-block">
+<pre><span class="type">DateTimeFormatter</span> parser = <span class="keyword">new</span> <span class="type">DateTimeFormatterBuilder</span>()
+    .<span class="method">parseCaseInsensitive</span>()
+    .<span class="method">appendPattern</span>(<span class="string">"yyyy-MMM-dd"</span>)
+    .<span class="method">toFormatter</span>(<span class="type">Locale</span>.US);
+
+<span class="comment">// Parses: "2026-FEB-24", "2026-feb-24", "2026-Feb-24"</span></pre>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Duration Formatting</h3>
+                <div class="code-block">
+<pre><span class="type">Duration</span> d = <span class="type">Duration</span>.<span class="method">ofHours</span>(<span class="number">2</span>)
+    .<span class="method">plusMinutes</span>(<span class="number">30</span>)
+    .<span class="method">plusSeconds</span>(<span class="number">45</span>);
+
+<span class="type">String</span> readable = d.<span class="method">toHours</span>() + <span class="string">"h "</span>
+    + d.<span class="method">toMinutesPart</span>() + <span class="string">"m "</span>
+    + d.<span class="method">toSecondsPart</span>() + <span class="string">"s"</span>;
+
+<span class="comment">// "2h 30m 45s"</span></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: Temporal Adjusters & Date Streams -->
+    <div class="section">
+        <h2><span class="emoji">📅</span> Temporal Adjusters &amp; Date Streams</h2>
+        <div class="grid grid-2">
+            <div class="card">
+                <h3>Temporal Adjusters</h3>
+                <div class="code-block">
+<pre><span class="type">LocalDate</span> today = <span class="type">LocalDate</span>.<span class="method">of</span>(<span class="number">2026</span>, <span class="number">2</span>, <span class="number">24</span>);
+
+<span class="comment">// Built-in adjusters</span>
+today.<span class="method">with</span>(<span class="type">TemporalAdjusters</span>.<span class="method">firstDayOfMonth</span>());
+today.<span class="method">with</span>(<span class="type">TemporalAdjusters</span>.<span class="method">lastDayOfMonth</span>());
+today.<span class="method">with</span>(<span class="type">TemporalAdjusters</span>.<span class="method">next</span>(<span class="type">DayOfWeek</span>.MONDAY));
+today.<span class="method">with</span>(<span class="type">TemporalAdjusters</span>.<span class="method">firstInMonth</span>(<span class="type">DayOfWeek</span>.SUNDAY));
+
+<span class="comment">// Custom: next business day</span>
+today.<span class="method">with</span>(d -> {
+    <span class="type">LocalDate</span> next = <span class="type">LocalDate</span>.<span class="method">from</span>(d).<span class="method">plusDays</span>(<span class="number">1</span>);
+    <span class="keyword">while</span> (isWeekend(next)) next = next.<span class="method">plusDays</span>(<span class="number">1</span>);
+    <span class="keyword">return</span> next;
+});</pre>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Date Streams (Java 9+)</h3>
+                <div class="code-block">
+<pre><span class="type">LocalDate</span> start = <span class="type">LocalDate</span>.<span class="method">of</span>(<span class="number">2026</span>, <span class="number">2</span>, <span class="number">24</span>);
+<span class="type">LocalDate</span> end = <span class="type">LocalDate</span>.<span class="method">of</span>(<span class="number">2026</span>, <span class="number">3</span>, <span class="number">3</span>);
+
+<span class="comment">// All dates in range</span>
+start.<span class="method">datesUntil</span>(end).<span class="method">toList</span>();
+
+<span class="comment">// Every 3 days</span>
+start.<span class="method">datesUntil</span>(end, <span class="type">Period</span>.<span class="method">ofDays</span>(<span class="number">3</span>)).<span class="method">toList</span>();
+
+<span class="comment">// Business days only</span>
+start.<span class="method">datesUntil</span>(end)
+    .<span class="method">filter</span>(d -> d.<span class="method">getDayOfWeek</span>().getValue() &lt; <span class="number">6</span>)
+    .<span class="method">toList</span>();</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 5: International Display -->
+    <div class="section">
+        <h2><span class="emoji">🌍</span> International Time Display</h2>
+        <p style="color: var(--text-muted); margin-bottom: 16px;">
+            3:30 PM across different locales using the 'B' day period pattern:
+        </p>
+        <div class="locale-grid">
+            <div class="locale-chip">
+                <span class="flag">🇺🇸</span>
+                <div class="name">English (US)</div>
+                <div class="value">3:30 in the afternoon</div>
+            </div>
+            <div class="locale-chip">
+                <span class="flag">🇫🇷</span>
+                <div class="name">French</div>
+                <div class="value">3:30 de l'après-midi</div>
+            </div>
+            <div class="locale-chip">
+                <span class="flag">🇩🇪</span>
+                <div class="name">German</div>
+                <div class="value">3:30 nachmittags</div>
+            </div>
+            <div class="locale-chip">
+                <span class="flag">🇯🇵</span>
+                <div class="name">Japanese</div>
+                <div class="value">3:30 午後</div>
+            </div>
+            <div class="locale-chip">
+                <span class="flag">🇨🇳</span>
+                <div class="name">Chinese</div>
+                <div class="value">3:30 下午</div>
+            </div>
+            <div class="locale-chip">
+                <span class="flag">🇰🇷</span>
+                <div class="name">Korean</div>
+                <div class="value">3:30 오후</div>
+            </div>
+            <div class="locale-chip">
+                <span class="flag">🇸🇦</span>
+                <div class="name">Arabic</div>
+                <div class="value">٣:٣٠ بعد الظهر</div>
+            </div>
+            <div class="locale-chip">
+                <span class="flag">🇮🇳</span>
+                <div class="name">Hindi</div>
+                <div class="value">3:30 दोपहर</div>
+            </div>
+            <div class="locale-chip">
+                <span class="flag">🇷🇺</span>
+                <div class="name">Russian</div>
+                <div class="value">3:30 дня</div>
+            </div>
+            <div class="locale-chip">
+                <span class="flag">🇧🇷</span>
+                <div class="name">Portuguese</div>
+                <div class="value">3:30 da tarde</div>
+            </div>
+            <div class="locale-chip">
+                <span class="flag">🇲🇽</span>
+                <div class="name">Spanish</div>
+                <div class="value">3:30 de la tarde</div>
+            </div>
+            <div class="locale-chip">
+                <span class="flag">🇹🇭</span>
+                <div class="name">Thai</div>
+                <div class="value">3:30 ในตอนบ่าย</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 6: Calendar Systems -->
+    <div class="section">
+        <h2><span class="emoji">📆</span> Calendar Systems</h2>
+        <p style="color: var(--text-muted); margin-bottom: 16px;">
+            February 24, 2026 in different calendar systems:
+        </p>
+        <div class="grid grid-2">
+            <div class="card">
+                <h3>🌐 ISO (Gregorian)</h3>
+                <p style="font-size: 1.2rem; color: var(--primary-light);">2026-02-24</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Default worldwide standard</p>
+            </div>
+            <div class="card">
+                <h3>🇯🇵 Japanese Imperial</h3>
+                <p style="font-size: 1.2rem; color: var(--primary-light);">令和 8年 2月 24日</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Reiwa 8, Month 2, Day 24</p>
+            </div>
+            <div class="card">
+                <h3>🇹🇭 Thai Buddhist</h3>
+                <p style="font-size: 1.2rem; color: var(--primary-light);">BE 2569-02-24</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Buddhist Era 2569</p>
+            </div>
+            <div class="card">
+                <h3>🕌 Hijrah (Islamic)</h3>
+                <p style="font-size: 1.2rem; color: var(--primary-light);">AH 1447-08-26</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Sha'ban 26, 1447 AH</p>
+            </div>
+        </div>
+
+        <div class="code-block" style="margin-top: 16px;">
+<pre><span class="comment">// Convert ISO date to other calendar systems</span>
+<span class="type">LocalDate</span> iso = <span class="type">LocalDate</span>.<span class="method">of</span>(<span class="number">2026</span>, <span class="number">2</span>, <span class="number">24</span>);
+
+<span class="type">JapaneseDate</span> jp  = <span class="type">JapaneseDate</span>.<span class="method">from</span>(iso);   <span class="comment">// Reiwa 8</span>
+<span class="type">ThaiBuddhistDate</span> th = <span class="type">ThaiBuddhistDate</span>.<span class="method">from</span>(iso);  <span class="comment">// BE 2569</span>
+<span class="type">HijrahDate</span> hij = <span class="type">HijrahDate</span>.<span class="method">from</span>(iso);   <span class="comment">// AH 1447</span>
+<span class="type">MinguoDate</span> mg  = <span class="type">MinguoDate</span>.<span class="method">from</span>(iso);   <span class="comment">// ROC 115</span></pre>
+        </div>
+    </div>
+
+    <!-- Section 7: Natural Language Formatting -->
+    <div class="section">
+        <h2><span class="emoji">💬</span> Natural Language Formatting</h2>
+        <div class="grid grid-2">
+            <div class="card">
+                <h3>Relative Timestamps</h3>
+                <ul class="features-list">
+                    <li>"Just now"</li>
+                    <li>"5 minutes ago"</li>
+                    <li>"3 hours ago"</li>
+                    <li>"Yesterday at 8:15 in the evening"</li>
+                    <li>"3 days ago at 2:45 in the afternoon"</li>
+                    <li>"Feb 15 at 9:00 in the morning"</li>
+                    <li>"Tomorrow at 10:00 in the morning"</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Chat-Style Display</h3>
+                <div style="background: var(--code-bg); border-radius: 8px; padding: 12px; font-size: 0.85rem;">
+                    <div style="color: var(--text-muted); text-align: center; margin-bottom: 8px;">--- Today ---</div>
+                    <div style="margin: 4px 0;"><span style="color: var(--text-muted);">[8:00 in the morning]</span> <span style="color: var(--success);">Alice:</span> Good morning!</div>
+                    <div style="margin: 4px 0;"><span style="color: var(--text-muted);">[8:05 in the morning]</span> <span style="color: var(--primary-light);">Bob:</span> Morning!</div>
+                    <div style="margin: 4px 0;"><span style="color: var(--text-muted);">[2:00 in the afternoon]</span> <span style="color: var(--primary-light);">Bob:</span> Here's the update</div>
+                    <div style="margin: 4px 0;"><span style="color: var(--text-muted);">[2:15 in the afternoon]</span> <span style="color: var(--success);">Alice:</span> Looks great!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 8: World Clock -->
+    <div class="section">
+        <h2><span class="emoji">🌐</span> World Clock with Day Periods</h2>
+        <p style="color: var(--text-muted); margin-bottom: 16px;">
+            Reference: Tuesday, Feb 24, 2026 at 15:30 UTC
+        </p>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>City</th>
+                    <th>Local Time</th>
+                    <th>Day Period</th>
+                    <th>Offset</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>🗽 New York</td><td>10:30</td><td>in the morning</td><td>UTC-5</td></tr>
+                <tr><td>🌴 Los Angeles</td><td>7:30</td><td>in the morning</td><td>UTC-8</td></tr>
+                <tr><td>🏰 London</td><td>15:30</td><td>in the afternoon</td><td>UTC+0</td></tr>
+                <tr><td>🗼 Paris</td><td>16:30</td><td>in the afternoon</td><td>UTC+1</td></tr>
+                <tr><td>🕌 Dubai</td><td>19:30</td><td>in the evening</td><td>UTC+4</td></tr>
+                <tr><td>🏛️ Mumbai</td><td>21:00</td><td>at night</td><td>UTC+5:30</td></tr>
+                <tr><td>🗾 Tokyo</td><td>00:30</td><td>at night (+1)</td><td>UTC+9</td></tr>
+                <tr><td>🦘 Sydney</td><td>02:30</td><td>at night (+1)</td><td>UTC+11</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Section 9: Files in Module -->
+    <div class="section">
+        <h2><span class="emoji">📁</span> Module Files</h2>
+        <div class="grid grid-3">
+            <div class="card">
+                <h3>DayPeriodExample.java</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Core 'B' pattern usage, format variations, locale comparison</p>
+            </div>
+            <div class="card">
+                <h3>DateTimeFormatterExample.java</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">FormatterBuilder, optional sections, padding, duration formatting</p>
+            </div>
+            <div class="card">
+                <h3>DateTimeEnhancementsExample.java</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Temporal adjusters, zone conversions, date streams, epoch ops</p>
+            </div>
+            <div class="card">
+                <h3>NaturalLanguageTimeFormatter.java</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Relative timestamps, chat UI, schedule display</p>
+            </div>
+            <div class="card">
+                <h3>InternationalTimeDisplay.java</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Calendar systems, numeral styles, world clock, greetings</p>
+            </div>
+            <div class="card">
+                <h3>README.md</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Comprehensive documentation with learning objectives</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 10: Best Practices -->
+    <div class="section">
+        <h2><span class="emoji">✅</span> Best Practices</h2>
+        <div class="grid grid-2">
+            <div class="card">
+                <h3>Do</h3>
+                <ul class="features-list">
+                    <li>Use 'B' for user-facing time displays</li>
+                    <li>Always specify a Locale with formatters</li>
+                    <li>Cache DateTimeFormatter instances (thread-safe)</li>
+                    <li>Use DateTimeFormatterBuilder for complex patterns</li>
+                    <li>Use datesUntil() for date range generation</li>
+                    <li>Handle time zones explicitly</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Don't</h3>
+                <ul class="features-list" style="list-style: none;">
+                    <li style="padding-left: 24px; position: relative;">
+                        <span style="position: absolute; left: 0; color: var(--danger);">✗</span>
+                        Use AM/PM for i18n user-facing displays
+                    </li>
+                    <li style="padding-left: 24px; position: relative;">
+                        <span style="position: absolute; left: 0; color: var(--danger);">✗</span>
+                        Assume system default time zone
+                    </li>
+                    <li style="padding-left: 24px; position: relative;">
+                        <span style="position: absolute; left: 0; color: var(--danger);">✗</span>
+                        Create new formatter per format call
+                    </li>
+                    <li style="padding-left: 24px; position: relative;">
+                        <span style="position: absolute; left: 0; color: var(--danger);">✗</span>
+                        Use java.util.Date for new code
+                    </li>
+                    <li style="padding-left: 24px; position: relative;">
+                        <span style="position: absolute; left: 0; color: var(--danger);">✗</span>
+                        Mix old and new date/time APIs
+                    </li>
+                    <li style="padding-left: 24px; position: relative;">
+                        <span style="position: absolute; left: 0; color: var(--danger);">✗</span>
+                        Ignore locale in formatting
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
